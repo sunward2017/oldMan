@@ -1,0 +1,148 @@
+import React from 'react';
+import { Row, Col, Card, notification, Tag, Button, Steps, Collapse } from 'antd';
+// import moment from 'moment';
+import httpServer from '../../../axios/index';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+const Panel = Collapse.Panel;
+const Step = Steps.Step;
+
+export default class LeaveAudit extends React.Component {
+    state = {
+        list: [],
+        auditObj:{},
+        nursingGrade:{},
+        elderlyInfo:{},
+        
+    };
+    componentDidMount(){
+        this.fetchElderlyList();
+        this.fetchNursingGrade();
+        //this.fetchChangeNursingGrade()
+    }
+    
+    fetchElderlyList(){
+    	const {customerId} = this.props.auth;
+		httpServer.listElderlyInfo({
+			customerId,
+			listStatus:'3',
+			langchFlag:0,
+		}).then(res => {
+			if(res.code === 200) {
+				const elderlys ={};
+				res.data&&res.data.forEach(item=>{
+					elderlys[item.id]= {name:item.name,age:item.age,roomName:item.roomName};
+				})
+				this.setState({elderlyInfo:elderlys},()=>{
+					this.fetchChangeNursingGrade()
+				})
+			}else{
+				this.setState({elderlyInfo:{}})
+			}
+		})
+    }
+    fetchNursingGrade(){
+    	const {customerId} = this.props.auth;
+	    httpServer.listNursingGrade({customerId}).then((res)=>{
+	       if (res.code === 200) {
+	           let nursingGrade = {};
+	           res.data&&res.data.forEach(t=>{
+	           	  nursingGrade[t.nursingGradeCode]= t.nursingGradeName;
+	           })
+	           this.setState({nursingGrade});
+	        } else {
+	           this.setState({nursingGrade:{}})
+	        }
+	    }).catch((err)=>{
+	      console.log(err);
+	    });
+    }
+    fetchChangeNursingGrade(){
+        const { customerId } = this.props.auth;
+        const { elderlyInfo } = this.state;
+        httpServer.listChangeNursingGrade({customerId}).then(res => {
+            const list = res.data?res.data.filter(item=>(item.flag===0)).map(item=>({...item,...elderlyInfo[item.elderlyId]})):[];
+            this.setState({list, activeKey:list[0] && list[0].id.toString() });
+            list.length>0 && this.fetchOneAudit(list[0]);
+        })
+    }
+    fetchOneAudit(record){
+    	console.log(record)
+    	const {id,elderlyId} = record
+        httpServer.listChangeNursingGradeAudit({changeId:id,elderlyId}).then(res => {
+            if(res.code===200){
+                 
+            } else {
+                this.notice('error', res.msg);
+            }
+        })
+    }
+    notice(status, msg) {
+        let text = status==='success' ? '成功' : (status === 'error'? '失败' : '');
+        notification[status]({
+            message: `${text}提示:`,
+            description:msg,
+            duration:2
+        })
+    }
+    onCollapseChangeHandler = (key) => {
+        const { auditObj } = this.state;
+        this.setState({activeKey: key});
+        key&&(auditObj[key] || this.fetchOneAudit(key));
+    };
+    onCheckOutHandler = (elderlyId, auditId) => {
+        const { customerId, id } = this.props.auth;
+        httpServer.outHomeAudit({customerId, elderlyId, optId:id, id:auditId}).then(res => {
+            this.notice('info',res.msg);
+            res.code === 200 && this.fetchOneAudit(elderlyId);
+        })
+    };
+    render() {
+        const { list, activeKey, auditObj,elderlyInfo,nursingGrade} = this.state;
+        const { auth } = this.props;
+        return (
+            <div>
+                <BreadcrumbCustom first="审核管理" second="出院审核" />
+                <Card title="待审核老人:">
+                    {
+                        list.length > 0 ?
+                        <Collapse bordered={false} accordion activeKey={activeKey} onChange={this.onCollapseChangeHandler}>
+                            {
+                                list.map(item => (
+                                    <Panel
+                                        header={<div>
+                                            <Tag color="#108ee9">{item.name}</Tag> -- {item.age}岁 -- {item.roomName}房间
+                                            <span className="pull-right">护理变更申请:<Tag color="geekblue">{nursingGrade[item.oldNursingGradeCode]}</Tag>==&gt;<Tag color="purple">{nursingGrade[item.oldNursingGradeCode]}</Tag></span>
+                                        </div>}
+                                        key={item.id}
+                                    >
+                                        <p>出院流程进度：</p>
+                                        <Steps direction="vertical" size="small">
+                                            {
+                                                auditObj[item.id] ? auditObj[item.id].map(s =>
+                                                    <Step key={s.id}
+                                                         description={s.status ? "审核完成"
+                                                             : (s.deptId === auth.tbDeptInfo.id.toString() ?
+                                                                 <div>审核中 ...
+                                                                     <Button
+                                                                         type="primary"
+                                                                         size="small"
+                                                                         onClick={() => this.onCheckOutHandler(item.id, s.id)}
+                                                                     >确认审核</Button>
+                                                                 </div>
+                                                                 : "待审核")}
+                                                         status={s.status ? "finish" : (s.deptId === auth.tbDeptInfo.id.toString() ? "process" : "wait")}
+                                                         title={s.deptName}
+                                                    />)
+                                                    : null
+                                            }
+                                        </Steps>
+                                    </Panel>
+                                ))
+                            }
+                        </Collapse> : '无审核数据'
+                    }
+                </Card>
+            </div>
+        )
+    }
+}

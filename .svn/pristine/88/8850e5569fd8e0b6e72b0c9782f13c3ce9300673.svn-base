@@ -1,0 +1,16 @@
+import React, {Component,Fragment} from 'react';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import httpServer from '../../../axios';
+import {Row,Popconfirm,notification,Col,Input,Button,Table,Divider,Tag} from 'antd';
+
+class OldManOutHome extends Component{
+  render(){
+    return(
+      <Fragment>
+        <BreadcrumbCustom first="老人管理" second="出院管理" />
+      </Fragment>
+    )
+  }
+}
+
+export default OldManOutHome;

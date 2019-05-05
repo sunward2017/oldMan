@@ -1,0 +1,68 @@
+import React from 'react';
+import BasicForm from '../components/forms/BasicForm';
+import BasicTable from '../components/tables/BasicTables';
+import AdvancedTable from '../components/tables/AdvancedTables';
+import Echarts from '../components/charts/Echarts';
+import Recharts from '../components/charts/Recharts';
+import Icons from '../components/ui/Icons';
+import Buttons from '../components/ui/Buttons';
+import Spins from '../components/ui/Spins';
+import Modals from '../components/ui/Modals';
+import Notifications from '../components/ui/Notifications';
+import Tabs from '../components/ui/Tabs';
+import Banners from '../components/ui/banners';
+import Drags from '../components/ui/Draggable';
+import Dashboard from '../components/dashboard/Dashboard';
+import ClientDashboard from '../components/dashboard/Dashboard';
+import Gallery from '../components/ui/Gallery';
+import BasicAnimations from '../components/animation/BasicAnimations';
+import ExampleAnimations from '../components/animation/ExampleAnimations';
+import AuthBasic from '../components/auth/Basic';
+import RouterEnter from '../components/auth/RouterEnter';
+import Wysiwyg from 'bundle-loader?lazy!../components/ui/Wysiwyg';  // 按需加载富文本配置
+import Bundle from '../components/widget/Bundle';
+import Cssmodule from '../components/cssmodule';
+import MapUi from '../components/ui/map';
+import CustomerInfo from '../components/ui/customerManagment';
+import Worker from '../components/user/worker';
+import SysParams from '../components/basicSetting/Systemparameters';
+import DrugInfo from '../components/basicSetting/DrugInfo';
+import Estimate from '../components/basicSetting/Estimate';
+
+const WysiwygBundle = (props) => (
+    <Bundle load={Wysiwyg}>
+        {(Component) => <Component {...props} />}
+    </Bundle>
+);
+
+
+export default {
+    BasicForm,
+    BasicTable,
+    AdvancedTable,
+    Echarts,
+    Recharts,
+    Icons,
+    Buttons,
+    Spins,
+    Modals,
+    Notifications,
+    Tabs,
+    Banners,
+    Drags,
+    Dashboard,
+    ClientDashboard,
+    Gallery,
+    BasicAnimations,
+    ExampleAnimations,
+    AuthBasic,
+    RouterEnter,
+    WysiwygBundle,
+    Cssmodule,
+    MapUi,
+    CustomerInfo,
+    Worker,
+    SysParams,
+    DrugInfo,
+    Estimate,
+}

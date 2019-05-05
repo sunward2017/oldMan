@@ -1,0 +1,23 @@
+import React,{Component} from 'react';
+import {Modal, } from 'antd';
+
+class ModalInfo extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+
+    }
+  }
+
+  render(){
+    return(
+      <Modal 
+        visible={true}
+      >
+        123
+      </Modal>
+    )
+  }
+}
+
+export default ModalInfo;

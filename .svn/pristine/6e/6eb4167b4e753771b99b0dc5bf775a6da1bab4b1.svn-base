@@ -1,0 +1,17 @@
+/**
+ * 接口地址配置文件
+ */
+export const host = (() => {
+    switch (process.env.NODE_ENV) {
+        case "development": return { api: 'http://192.168.10.235:9751' };
+        default: return { api: '' };
+    }
+
+})();
+/*params
+ * fn:url
+ * 接口
+*/
+export default {
+    login: host.api + '/Login',
+}

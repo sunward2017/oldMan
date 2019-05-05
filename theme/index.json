@@ -1,0 +1,9 @@
+{ 
+    "@primary-color": "#337ab7",
+    "@font-size-base": "14px",
+    "@menu-dark-highlight-color":"#65cea7",
+    "@menu-dark-item-active-bg":"#2A323F",
+    "@menu-dark-bg":"#424F63",
+    "@menu-dark-color":"#FFF",
+    "@menu-dark-submenu-bg":"#353F4F"
+}  

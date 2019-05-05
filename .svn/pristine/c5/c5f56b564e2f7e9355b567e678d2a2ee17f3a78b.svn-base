@@ -1,0 +1,182 @@
+ import React,{Fragment,Component} from 'react';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import httpServer from '../../../axios';
+import moment from 'moment';
+import {notification,Card,Table,Divider,Popconfirm,DatePicker} from 'antd';
+
+class MealInit extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      dataSource:[],
+      edit:false,
+      id:'',
+    }
+  }
+  componentDidMount(){
+    this.getMealInitList();
+  }
+  getMealInitList(){
+    const {customerId} = this.props.auth;
+    httpServer.listOldManMealIni({customerId}).then((res)=>{
+       if (res.code === 200) {
+        console.log(res.data);
+          res.data?this.setState({dataSource:res.data}):this.setState({dataSource:[]});
+        }else{
+          const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          }
+          notification.error(args);
+        }
+    }).catch((err)=>{
+      console.log(err);
+    });
+  }
+
+  changeHandler(record,e){ //表格字段值发生变化
+    const id = record.id;
+    console.log(e);
+    const dataSource = this.state.dataSource;
+    const newDataSource = dataSource && dataSource.map((item,index)=>{
+      if(item.id === id){
+        item["endTime"] = e.target ? e.target.value : e;
+      }
+      return item;
+    });
+    this.setState({dataSource:newDataSource});
+  }
+
+  handleModify(r){ //编辑
+    const {id} = r;
+    this.setState({edit:true,id,});
+  }
+
+  handleSave(r){
+    const {customerId} = this.props.auth;
+    const {endTime,tbElderlyMealInfo} = r;
+    if(!endTime){
+      const args = {
+        message: '通信失败',
+        description: '上次结算日期不能为空',
+        duration: 2,
+      }
+      notification.error(args);
+      return false;
+    }
+    const data={};
+    if(tbElderlyMealInfo){
+      const {id} = tbElderlyMealInfo;
+      data.id = id;
+    }
+    data.elderlyId = r.id;
+    data.customerId = customerId;
+    if(endTime){
+      data.endTime = moment(endTime).format('YYYY-MM-DD HH:mm:ss');
+    }
+    httpServer.settOldManMealIni(data).then((res)=>{
+      if(res.code === 200){
+        const args = {
+          message: '通信成功',
+          description: res.msg,
+          duration: 2,
+        }
+        notification.success(args);
+        this.setState({edit:false,id:''});
+        this.getMealInitList();
+      }else{
+        const args = {
+          message: '通信失败',
+          description: res.msg,
+          duration: 2,
+        }
+        notification.error(args);
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  handleCancle(){//取消编辑
+    this.setState({edit:false,id:''},()=>{
+      this.getMealInitList();
+    });
+  }
+  render(){
+    const {dataSource,edit,id} = this.state;
+    const columns = [{
+      title: '序号',
+      render: (text, record, index) => `${index+1}`,
+      width: '5%',
+      key:'index'
+    }, {
+      title: '老人姓名',
+      dataIndex: 'name',
+      key: 'name',
+      width: '10%'
+    },{
+      title: '房间名称',
+      dataIndex: 'roomName',
+      key: 'roomName',
+      width: '10%'
+    },{
+      title: '入院日期',
+      dataIndex: 'checkInDate',
+      key: 'checkInDate',
+      width: '10%'
+    },{
+      title: '上次结算日期',
+      dataIndex:'endTime',
+      key:'endTime',
+      render:(text,record)=>{
+        return (
+          edit && (record.id === id)?
+          <DatePicker 
+            allowClear={false}
+            format="YYYY-MM-DD"
+            value={record.endTime?moment(record.endTime,'YYYY-MM-DD'):null } 
+            onChange={(e) => this.changeHandler(record,e)}
+          />:record.tbElderlyMealInfo?record.tbElderlyMealInfo.endTime.substr(0,10):''
+        ) 
+      },
+      width:'10%'
+    },{
+      title: '操作',
+      dataIndex: 'action',
+      key: 'action',
+      width: '8%',
+      render: (text, record) => {
+        return(
+          edit && (record.id === id)?
+          <span>
+            <a href="javascript:;" onClick={() => { this.handleSave(record) }} style={{color:'#2ebc2e'}}>保存</a>
+            <Divider type="vertical" />
+            <a href="javascript:;" onClick={() => { this.handleCancle() }} style={{color:'#2ebc2e'}}>取消</a>
+          </span>:
+          <span>
+            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>编辑</a>
+          </span>
+        )
+      },
+    }];
+    return(
+      <Fragment>
+        <BreadcrumbCustom first="基础信息" second="餐费结算初始化" />
+        <Card 
+          title="餐费结算初始化列表" 
+          bordered={false} 
+        >
+            <Table 
+              bordered
+              rowKey='id' 
+              dataSource={dataSource} 
+              columns={columns}
+              pagination={{ defaultPageSize:10000,showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+            />
+          </Card>
+      </Fragment>
+    )   
+  }
+}
+
+export default MealInit;

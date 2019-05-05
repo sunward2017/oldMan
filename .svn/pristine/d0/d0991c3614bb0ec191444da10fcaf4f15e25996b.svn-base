@@ -1,0 +1,172 @@
+import React,{Component} from 'react';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import {Tag,Table,Divider,Popconfirm,notification,Button,Card} from 'antd';
+import httpServer from '../../../axios';
+import EvaluateInfo from './evaluateInfo';
+
+class OldManEvaluate extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      dataSource:[],
+      customerId:'',
+      tabKey:'tab1',
+    }
+    this.handleAdd = this.handleAdd.bind(this);
+  }
+
+  componentDidMount(){
+    this.getEvaluateList();
+  }
+
+  onTabChange = (tabKey, type) => {
+    this.setState({ tabKey});
+  }
+
+  //getWorkerList获取护工列表
+  getEvaluateList(){
+    const {customerId} = this.props.auth;
+    this.setState({customerId});
+     httpServer.listEvaluateList({customerId}).then((res)=>{
+      console.log(res);
+     })
+    httpServer.listOldManEvaluate({customerId}).then((res)=>{
+       if (res.code === 200) {
+          const args = {
+            message: '通信成功',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.success(args);
+          res.data?this.setState({dataSource:res.data}):this.setState({dataSource:[]});
+        } else {
+          if(res.message ==='Request failed with status code 500'){
+              console.log(res.message);
+           }else{
+               const args = {
+              message: '通信失败',
+              description: res.msg,
+              duration: 2,
+            };
+            notification.error(args);
+           }
+        }
+    }).catch((err)=>{
+      console.log(err);
+    });
+  }
+
+  //
+  handleAdd(){
+    this.setState({ tabKey:'tab2'});
+  }
+
+  //查看护工信息
+  handleRead(record){
+    this.setState({modalFlag:true,record,action:'read',disFlag:true, });
+  }
+
+  handleModify(record){
+    this.setState({modalFlag:true,record,action:'',disFlag:false, });
+  }
+
+  handleRowDelete(id,record){
+    const _this = this;
+    httpServer.deleteWorkerInfo({id},{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(res => {
+      if (res.code === 200) {
+        const args = {
+          message: '通信成功',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.success(args);
+        _this.getWorkerList();
+      } else {
+        console.log(res.message);
+      }
+    }).catch(
+      err => { console.log(err) }
+    )
+  }  
+
+  render(){
+    const {dataSource} = this.state;
+    const tabList = [{
+      key: 'tab1',
+      tab: 'tab1',
+    }, {
+      key: 'tab2',
+      tab: 'tab2',
+    }];
+    const columns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber',
+      width:'15%'
+    },{
+      title: '姓名',
+      dataIndex: 'name',
+      key: 'name',
+      width:'15%'
+    },{
+      title:'评估时间',
+      dataIndex: 'addtime',
+      key: 'addtime',
+      width:'15%'
+    },{
+      title: '评估等级',
+      dataIndex: 'estimateGradeCode',
+      key: 'estimateGradeCode',
+      width:'15%'
+    },{
+      title: '操作员',
+      dataIndex: 'opetator',
+      key: 'opetator',
+      width:'15%'
+    },{
+      title:'操作',
+      dataIndex:'action',
+      key:'action',
+      render:(text,record)=>{
+        return(
+          <span>
+            <a href="javascript:;" onClick={() => { this.handleRead(record) }} style={{color:'#2ebc2e'}}>查看</a>
+            <Divider type="vertical" />
+            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+              <Divider type="vertical" />
+              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+              </Popconfirm>
+          </span>
+        )
+      },
+    }];
+    const contentList = {
+      tab1: <Table 
+          bordered
+          dataSource={dataSource} 
+          columns={columns} 
+          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+          rowKey={record => record.id}
+        />,
+      tab2: <EvaluateInfo />,
+    };
+    return(
+      <div>
+        <BreadcrumbCustom first="老人管理" second="入院评估" />
+        <Card 
+          title="入院评估" 
+          bordered={false} 
+          style={{ width: '100%' }}
+          extra={<Button type="primary" onClick={this.handleAdd} >新增</Button>}
+          activeTabKey={this.state.tabKey}
+        >
+          {contentList[this.state.tabKey]}
+        </Card>
+       
+      </div>
+    )
+  }
+}
+
+export default OldManEvaluate;

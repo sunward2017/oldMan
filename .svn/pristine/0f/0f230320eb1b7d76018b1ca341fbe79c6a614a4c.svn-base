@@ -1,0 +1,155 @@
+import React from 'react';
+import { Row, Col, Card, Timeline, notification, Tag } from 'antd';
+import { Link } from 'react-router-dom';
+import BreadcrumbCustom from '../BreadcrumbCustom';
+import EchartsAgeViews from './EchartsAgeViews';
+import EchartsProjects from './EchartsProjects';
+import httpServer from '../../axios/index';
+import { MinCard, LongCard } from './displayCard';
+
+class Dashboard extends React.Component {
+    state = {
+        singleData:{},
+        ageMapData:[],
+        checkInMonthlyData:[],
+        birthdayData:[],
+        taskAndWaringData:{}
+    };
+    componentDidMount(){
+        this.fetchCountHomeData();
+        this.fetchAgeMap();
+        this.fetchCheckInMap();
+        this.fetchTaskAndWaring();
+        this.fetchBirthdayElderly();
+    }
+    fetchCountHomeData(){
+        httpServer.countHomeData({customerId:this.props.auth.customerId}).then(res => {
+            // console.log('countHomeData res:',res);
+            this.setState({singleData: res.data || {}});
+            res.code !== 200 && this.errNotice(res.msg);
+        })
+    }
+    fetchAgeMap(){
+        const rangeTxt = {5:'50-60周岁', 6:'60-70周岁', 7: '70-80周岁', 8:'80-90周岁', 9:'90-100周岁', 10:'100周岁及以上'};
+        httpServer.countAgeMap({customerId:this.props.auth.customerId}).then(res => {
+            // console.log('AgeMap res:',res);
+            res.data && this.setState({ageMapData: res.data.map(o => ({name:rangeTxt[o.ageRatio], value:o.peopleCount}) )});
+            res.code !== 200 && this.errNotice(res.msg);
+        })
+    }
+    fetchCheckInMap(){
+        httpServer.countInHome({customerId:this.props.auth.customerId}).then(res => {
+            // console.log('CheckIn res:',res);
+            res.data && this.setState({checkInMonthlyData: res.data.map(o => [o.months, o.peopleCount] )});
+            res.code !== 200 && this.errNotice(res.msg);
+        })
+    }
+    fetchTaskAndWaring(){
+        httpServer.countTaskAndWaring({customerId:this.props.auth.customerId}).then(res => {
+            // console.log('task res:',res);
+            res.data && this.setState({taskAndWaringData: res.data });
+            res.code !== 200 && this.errNotice(res.msg);
+        })
+    }
+    fetchBirthdayElderly(){
+        httpServer.countBirthdayElderly({customerId:this.props.auth.customerId}).then(res => {
+            // console.log('Birthday res:',res);
+            this.setState({birthdayData:res.data || []});
+            res.code !== 200 && this.errNotice(res.msg);
+        })
+    }
+    errNotice(msg) {
+        notification.error({
+            message: `提示:`,
+            description:msg,
+            duration:2
+        })
+    }
+    render() {
+        const { singleData, checkInMonthlyData, ageMapData, birthdayData, taskAndWaringData } = this.state;
+        return (
+            <div className="gutter-example button-demo">
+                <BreadcrumbCustom />
+                <Row gutter={10}>
+                    <Col className="gutter-row" xxl={9} xl={11} md={12}>
+                        <Col className="gutter-row" md={8}>
+                            <MinCard icon="user" data={singleData.peopleNumber} title="在院总数" color="rgb(106,138,190)" />
+                        </Col>
+                        <Col className="gutter-row" md={8}>
+                            <MinCard icon="user-add" data={singleData.curMonthNumber} title="本月新增" color="rgb(252,134,117)" />
+                        </Col>
+                        <Col className="gutter-row" md={8}>
+                            <MinCard icon="usergroup-add" data={singleData.curMonthNumber} title="入住总数" color="rgb(90,182,223)" />
+                        </Col>
+                        <Col className="gutter-row" md={24}>
+                            <LongCard data={singleData} color="rgb(74,202,203)" />
+                        </Col>
+                    </Col>
+                    <Col className="gutter-row" xxl={15} xl={13} md={12}>
+                        <div className="gutter-box">
+                            <Card bordered={false} className={'no-padding'}>
+                                <EchartsProjects data={checkInMonthlyData} />
+                            </Card>
+                        </div>
+                    </Col>
+                </Row>
+                <Row gutter={10}>
+                    <Col className="gutter-row" md={8}>
+                        <div className="gutter-box">
+                            <Card bordered={false} className="mb-s">
+                                <div className="pb-m">
+                                    <h3 className="dotted-bottom">告警</h3>
+                                </div>
+                                <Timeline>
+                                    <Timeline.Item color="red">
+                                        <p><Link to={{ pathname: '/app/pension-agency/alarm/drugAlarm'}}>缺药告警</Link></p>
+                                        <p>数量 : {taskAndWaringData.drugLessNumber}</p>
+                                    </Timeline.Item>
+                                </Timeline>
+                                <Timeline>
+                                    <Timeline.Item color="red">
+                                        <p><Link to={{ pathname:'/app/pension-agency/alarm/arrearageAlarm'}}>欠费提醒</Link></p>
+                                        <p>数量 : {taskAndWaringData.lessFreeNumber}</p>
+                                    </Timeline.Item>
+                                </Timeline>
+                            </Card>
+                            <Card bordered={false}>
+                                <div className="pb-m">
+                                    <h3 className="dotted-bottom">任务</h3>
+                                </div>
+                                <Timeline>
+                                    <Timeline.Item color="#108ee9">
+                                        <p><Link to={{ pathname:'/app/pension-agency/elderlyManage/oldManOutHome'}}>出院进程中</Link></p>
+                                        <p>人数 : {taskAndWaringData.outNumber}</p>
+                                    </Timeline.Item>
+                                </Timeline>
+                            </Card>
+                        </div>
+                    </Col>
+                    <Col className="gutter-row" md={6}>
+                        <div className="gutter-box">
+                            <Card bordered={false}>
+                                <div className="pb-m">
+                                    <h3 className="dotted-bottom">当月及下月生日老人</h3>
+                                </div>
+                                { birthdayData.map((one,idx) => <Tag color="#2db7f5" className="mb-s" key={idx}>{one.name}</Tag>) }
+                            </Card>
+                        </div>
+                    </Col>
+                    <Col className="gutter-row" md={10}>
+                        <div className="gutter-box">
+                            <Card bordered={false}>
+                                <div className="pb-m">
+                                    <h3 className="dotted-bottom">入住老人年龄分布</h3>
+                                </div>
+                                <EchartsAgeViews data={ageMapData} />
+                            </Card>
+                        </div>
+                    </Col>
+                </Row>
+            </div>
+        )
+    }
+}
+
+export default Dashboard;

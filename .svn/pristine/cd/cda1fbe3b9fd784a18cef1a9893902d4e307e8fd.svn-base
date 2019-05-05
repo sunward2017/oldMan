@@ -1,0 +1,121 @@
+import React from 'react';
+import { Row, Col, Card, Button, notification } from 'antd';
+import debounce from 'lodash/debounce';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import httpServer from '../../../axios/index';
+import { Charge } from './charge';
+import { Balance, DetailTable } from './feeInfo';
+
+export default class HealthRecord extends React.Component {
+    state = {
+        elderlyArr:[],
+        feeData:{},
+        fetching:false,
+        elderSelected:'',
+        chargeFeeObj:{},
+        feeDetailData:[]
+    };
+    constructor(props) {
+        super(props);
+        this.fetchElderlyHandler = debounce(this.fetchElderlyHandler, 1000);
+    }
+    componentDidMount(){
+        console.log('fee index props:',this.props);
+    }
+    fetchElderlyBalance(id){
+        const { customerId } = this.props.auth;
+        httpServer.getMoneyInfo({elderlyId:id, customerId}).then(res => {
+            console.log('info :', res);
+            res.code === 200 ? this.setState({feeData:res.data || {}}) : this.notice('error','费用余额获取失败');
+        })
+    }
+    fetcheFeeListDetail(){
+        const { customerId } = this.props.auth;
+        const { elderSelected } = this.state;
+        httpServer.listMoneyDeposits({customerId, elderlyId:elderSelected}).then(res => {
+            console.log('list res:',res);
+            res.code ===200 ? this.setState({feeDetailData: res.data || []}) : this.notice('error','费用明细获取失败');
+        })
+    }
+    canRecharge = (obj) => {
+        const { elderSelected } = this.state;
+        return !(elderSelected && obj.type && obj.money);
+    };
+    notice(status, msg) {
+        let text = status==='success' ? '成功' : (status === 'error'? '失败' : '');
+        notification[status]({
+            message: `${text}提示:`,
+            description:msg,
+            duration:2
+        })
+    }
+    fetchElderlyHandler = (value) => {
+        console.log('fetching user', value);
+        this.setState({ elderlyArr: [], fetching: true });
+        httpServer.listElderlyInfo({customerId:this.props.auth.customerId, listStatus:'3', name:value }).then(res => {
+            console.log(res);
+            this.setState({elderlyArr: res.data || [], fetching: false});
+            // res.code ===200 ? this.notice('success', res.msg) : this.notice('error', res.msg) ;
+        })
+    };
+    elderlySelectedChangeHandler = (value) => {
+        this.setState({elderSelected:value});
+        this.fetchElderlyBalance(Number(value));
+    };
+    feeChangeHandler = (key,val) => {
+        const { chargeFeeObj } = this.state;
+        this.setState({chargeFeeObj:{...chargeFeeObj, [key]:val}})
+    };
+    feeSaveHandler = () => {
+        const { customerId, account } = this.props.auth;
+        const { elderSelected, chargeFeeObj } = this.state;
+        httpServer.saveMoneyDeposits({operator:account, customerId, elderlyId:elderSelected ,settlementMethod:2, ...chargeFeeObj})
+        .then(res => {
+            console.log('save res :',res);
+            if(res.code ===200){
+                this.notice('success', res.msg);
+                this.fetchElderlyBalance(Number(elderSelected));
+            } else {this.notice('error', res.msg)}
+        })
+    };
+    showFeeDetailHandler = () => {
+        const showDetail = (this.state.showDetail && this.state.showDetail==='feeDetailAnimOut') ? 'feeDetailAnimIn' : 'feeDetailAnimOut';
+        this.setState({ showDetail });
+        if(showDetail === 'feeDetailAnimOut'){
+            this.fetcheFeeListDetail();
+        }
+    };
+    render() {
+        const {feeData, fetching, chargeFeeObj, elderlyArr, showDetail, feeDetailData } = this.state;
+        return (
+            <div>
+                <BreadcrumbCustom first="财务管理" second="费用收支" />
+                <Card className={showDetail ? showDetail :''} style={{position: 'absolute'}}>
+                    <Charge
+                        fetching={fetching}
+                        chargeFeeObj={chargeFeeObj}
+                        elderlyArr={elderlyArr}
+                        disabled={this.canRecharge(chargeFeeObj)}
+                        onFeeSave={this.feeSaveHandler}
+                        onFeeChange={this.feeChangeHandler}
+                        onElderlySearch={this.fetchElderlyHandler}
+                        onElderlyChange={this.elderlySelectedChangeHandler}
+                    />
+                    <Row style={{marginTop:'25px'}}>
+                        <Col>
+                            <Balance feeData={feeData} showFeeDetail={this.showFeeDetailHandler} />
+                        </Col>
+                    </Row>
+                </Card>
+                {
+                    showDetail === 'feeDetailAnimOut' ?
+                    <Card>
+                        <Button onClick={this.showFeeDetailHandler} size="small">返回</Button>
+                        <DetailTable listData={feeDetailData} />
+                    </Card> : null
+                }
+            </div>
+        )
+    }
+}
+

@@ -1,0 +1,91 @@
+import React from 'react';
+import Banners from '../components/ui/banners';
+import Drags from '../components/ui/Draggable';
+import Dashboard from '../components/dashboard/Dashboard';
+import ClientDashboard from '../components/dashboard/Dashboard';
+import Wysiwyg from 'bundle-loader?lazy!../components/ui/Wysiwyg';  // 按需加载富文本配置
+import Bundle from '../components/widget/Bundle';
+import MapUi from '../components/ui/map';
+import CustomerInfo from '../components/auth/CustomerInfo';
+import Worker from '../components/user/worker';
+import SysParams from '../components/basicSetting/Systemparameters';
+import DrugInfo from '../components/basicSetting/DrugInfo';
+import Estimate from '../components/basicSetting/Estimate';
+import EstimateGrade from '../components/basicSetting/EstimateGrade';
+import AuthManage from '../components/auth/AuthManage';
+import WorkerInfo from '../components/basicInfo/workerInfo';
+import PayItem from '../components/financial/payItem';
+import FeeInOut from '../components/financial/feeInOut';
+import SettleAccounts from '../components/financial/settleAccounts';
+import HealthRecord from '../components/medicalCare/healthRecord';
+import HealthExMemo from '../components/medicalCare/healthExaminationMemo';
+import LeaveAudit from '../components/processAudit/leaveAudit';
+import ArrearageAlarm from '../components/alarm/arrearageAlarm';
+import NurseInfo from '../components/basicInfo/nurseInfo';
+import NursingGrade from '../components/basicInfo/nursingGrade';
+import WorkProjects from '../components/basicInfo/workProjects';
+import Room from '../components/basicInfo/room';
+import ReductionMonth from '../components/basicInfo/reductionMonth';
+import DiseaseLibrary from '../components/basicInfo/diseaseLibrary';
+import Examine  from '../components/basicInfo/examine';
+import DeptInfo from '../components/systemManage/deptInfo';
+import LeaveAuditSet from '../components/systemManage/leaveAuditSet';
+import Appointments from '../components/appointments';
+import OldManEvaluate from '../components/elderlyManage/oldManEvaluate';
+import EstimateLib from '../components/basicInfo/estimate';
+import EntryContract from '../components/elderlyManage/entryContract';
+import CarePlan from '../components/elderlyManage/nursingScheduled';
+import Leave from '../components/elderlyManage/leave';
+import NursingRecord from '../components/elderlyManage/nursingRecord'
+import OldManAdmission from '../components/elderlyManage/oldManAdmission';
+import DrugUseTemplate from '../components/drugManage/drugUseTemplate';
+import WaterKwh from '../components/elderlyManage/waterKwh';
+
+const WysiwygBundle = (props) => (
+    <Bundle load={Wysiwyg}>
+        {(Component) => <Component {...props} />}
+    </Bundle>
+);
+
+export default {
+    Banners,
+    Drags,
+    Dashboard,
+    ClientDashboard,
+    WysiwygBundle,
+    MapUi,
+    CustomerInfo,
+    Worker,
+    SysParams,
+    DrugInfo,
+    Estimate,
+    EstimateGrade, 
+    AuthManage,
+    WorkerInfo,
+    PayItem,
+    FeeInOut,
+    SettleAccounts,
+    HealthRecord,
+    HealthExMemo,
+    LeaveAudit,
+    ArrearageAlarm,
+    NurseInfo,
+    NursingGrade,
+    WorkProjects,
+    Room,
+    ReductionMonth,
+    DiseaseLibrary,
+    Examine,
+    DeptInfo,
+    LeaveAuditSet,
+    Appointments,
+    OldManEvaluate,
+    EstimateLib,
+    EntryContract,
+    CarePlan,
+    NursingRecord,
+    Leave,
+    OldManAdmission,
+    DrugUseTemplate,
+    WaterKwh,
+}

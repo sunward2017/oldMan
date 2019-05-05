@@ -1,0 +1,333 @@
+import React,{Component,Fragment} from 'react';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import httpServer from '../../../axios';
+import {Row,Popconfirm,notification,Col,Input,Button,Table,Divider,Tag} from 'antd';
+import OldManInfo from './oldManInfo';
+
+class OldManAdmission extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      pageFlag:true,
+      customerId:'',
+      oldManList:[],//老人列表数据
+      oldManList_copy:[],//老人列表数据拷贝
+      searchText:'',
+      oldManInfoList:{},
+      tab2Flag:false,
+      roomDisflag:false,
+      editFlag:false,
+      btnSubmitFlag:false,
+      estimateGradeLists:[],//评估等级列表
+      nursingGradeLists:[],
+    }
+    this.handleInputChange = this.handleInputChange.bind(this);//老人信息搜索框发生变化
+    this.handleSearchElderly = this.handleSearchElderly.bind(this);//搜索老人信息
+    this.handleClickReset = this.handleClickReset.bind(this);//清楚搜索条件
+    this.handleAddOldMan = this.handleAddOldMan.bind(this);
+    this.elderlyListFlagToTrue = this.elderlyListFlagToTrue.bind(this);//返回
+  }
+  componentDidMount(){
+    //获取入院老人信息列表
+    this.getListElderlyInfo();
+    this.getListEstimateGrade();
+    this.getListNursingGrade();
+  }
+  //获取入院老人信息列表
+  getListElderlyInfo(){
+    const {customerId} = this.props.auth;
+    this.setState({customerId});
+    httpServer.listElderlyInfo({listStatus:"1,2,3",customerId,launchFlag:0}).then((res) => {
+      if (res.code === 200) {
+        res.data?this.setState({oldManList:res.data,oldManList_copy:res.data}):this.setState({oldManList:[],oldManList_copy:[]});
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+             const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  //获取评估等级列表
+  getListEstimateGrade(){
+    const {customerId} = this.props.auth;
+    httpServer.listEstimateGrade({customerId}).then((res) => {
+      if (res.code === 200) {
+        res.data?this.setState({estimateGradeLists:res.data}):this.setState({estimateGradeLists:[]});
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+             const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  //获取护理等级列表
+  getListNursingGrade(){
+    const {customerId} = this.props.auth;
+    httpServer.listNursingGrade({customerId}).then((res) => {
+      if (res.code === 200) {
+        res.data?this.setState({nursingGradeLists:res.data}):this.setState({nursingGradeLists:[]});
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+             const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  //搜索老人信息相关操作
+  handleInputChange(e){ //搜索框数据发生变化
+    this.setState({searchText:e.target.value});
+  }
+  handleSearchElderly(){//搜索老人信息
+    const { searchText } = this.state;
+    if(searchText){
+      const reg = new RegExp(searchText, 'gi');
+      this.setState({
+        oldManList_copy: this.state.oldManList.map((record) => {
+          const match = record.name && record.name.match(reg);
+          if (!match) {
+            return null;
+          }
+          return record;
+        }).filter(record => !!record),
+      });
+    }else{
+      const args = {
+        message: '友情提示',
+        description: "请先输入老人姓名",
+        duration: 2,
+      };
+      notification.info(args);
+    }
+  }
+  handleClickReset(){//清楚搜索条件
+    this.setState({
+      oldManList_copy:this.state.oldManList,
+      searchText:'',
+    });
+  }
+
+  //返回
+  elderlyListFlagToTrue(){
+  this.setState({pageFlag:true});
+  this.getListElderlyInfo();
+  }
+  //老人信息新增、查看、修改、删除相关操作
+  handleClickRead(record){
+    const {id} = record;
+    this.setState({pageFlag:false,oldManInfoList:record,tab2Flag:false,elderlyId:id,roomDisflag:true,editFlag:true,btnSubmitFlag:false});
+  }
+  handleAddOldMan(){
+    const {account} = this.props.auth;
+    this.setState({pageFlag:false,oldManInfoList:{opetator:account,shareProportionWater:50,shareProportionPower:50},tab2Flag:true,elderlyId:'',roomDisflag:false,editFlag:false,btnSubmitFlag:false,});
+  }
+
+  handleClickModify(record){
+    const {id} = record;
+    this.setState({pageFlag:false,oldManInfoList:record,tab2Flag:false,elderlyId:id,roomDisflag:true,editFlag:false,btnSubmitFlag:false});
+  }
+
+  handleRowDelete(record){
+    const {customerId} = this.props.auth;
+    const {id} = record;
+    httpServer.delElderlyInfo({id,customerId,status:5}).then((res)=>{
+      if(res.code === 200){
+        const args = {
+          message: '通信成功',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.success(args);
+        this.getListElderlyInfo();
+      }else{
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+            const args = {
+              message: '通信失败',
+              description: res.msg,
+              duration: 2,
+            };
+          notification.error(args);
+         }
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+
+  handleOutHome(record){//出院申请
+    const {id} = record;
+    httpServer.outHomeInfo({id}).then((res) => {
+      if (res.code === 200) {
+        const args = {
+            message: '通信成功',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.success(args);
+          this.getListElderlyInfo();
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+             const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  render(){
+    const {pageFlag,oldManList_copy,customerId,oldManInfoList} = this.state;
+    const columns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber',
+      width:'5%'
+    },{
+      title:'入院编号',
+      dataIndex: 'elderlyNo',
+      key: 'elderlyNo',
+      width:'10%'
+    },{
+      title: '老人姓名',
+      dataIndex: 'name',
+      key: 'name',
+      width:'10%'
+    },{
+      title:'身份证号',
+      dataIndex: 'idNumber',
+      key: 'idNumber',
+      width:'15%'
+    },{
+      title: '房间名称',
+      dataIndex: 'roomName',
+      key: 'roomName',
+      width:'10%'
+    },{
+      title:'入院时间',
+      dataIndex: 'checkInDate',
+      key: 'checkInDate',
+      width:'15%'
+    },{
+      title:'状态',
+      dataIndex: 'status',
+      key: 'status',
+      render:(text,record)=>{
+        if(record.status === 1){
+          return <Tag color="#f50">预约</Tag>
+        }
+        if(record.status === 2){
+          return <Tag color="#2db7f5">临时</Tag>
+        }
+        if(record.status === 3){
+          return <Tag color="#87d068">入住</Tag>
+        }
+      },
+      width:'10%'
+    },{
+      title: '操作员',
+      dataIndex: 'opetator',
+      key: 'opetator',
+      width:'10%',
+    },{
+      title: '操作',
+      dataIndex: 'action',
+      key: 'action',
+      render:(text,record)=>{
+        return(
+          <span>
+            <a href="javascript:;" onClick={() => { this.handleClickRead(record) }} style={{color:'#2ebc2e'}}>查看</a>
+            <Divider type="vertical" />
+            <a href="javascript:;" onClick={() => { this.handleClickModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+            <Divider type="vertical" />
+            <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record)}>
+              <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+            </Popconfirm>
+            <Divider type="vertical" />
+            {
+              record.status === 3?
+                <Popconfirm title="是否发起出院申请?" onConfirm={() => this.handleOutHome(record)}>
+                  <a href="javascript:;" style={{color:'#2ebc2e'}}>出院申请</a>
+                </Popconfirm>:null
+            }    
+          </span>
+        )
+      }
+    }];
+    return(
+      <Fragment>
+        <BreadcrumbCustom first="老人管理" second="在院管理" />
+        {
+          pageFlag?
+          <Row>
+            <Row gutter={16} style={{marginBottom:20}}>
+              <Col md={4}>
+                <Input 
+                  placeholder="按老人姓名搜索"  
+                  value={this.state.searchText}
+                  onChange={this.handleInputChange}
+                  onPressEnter={this.handleSearchElderly}
+                />
+              </Col>
+              <Col md={4}>
+                <Button onClick={this.handleSearchElderly}>搜索</Button>
+                <Button onClick={this.handleClickReset}>刷新</Button>
+              </Col>
+              <Col md={4}>
+                <Button onClick={this.handleAddOldMan}>新增入院老人</Button>
+              </Col>
+            </Row>
+              <Row>
+                <Table 
+                  bordered
+                  dataSource={oldManList_copy} 
+                  columns={columns} 
+                  pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                  rowKey={record => record.id}
+                />
+              </Row>
+          </Row>:<OldManInfo customerId={customerId} oldManInfoList ={oldManInfoList} tab2Flag={this.state.tab2Flag} elderlyId={this.state.elderlyId} roomDisflag={this.state.roomDisflag} editFlag={this.state.editFlag} elderlyListFlagToTrue={this.elderlyListFlagToTrue} nursingGradeLists={this.state.nursingGradeLists} estimateGradeLists={this.state.estimateGradeLists}/>
+        }
+      </Fragment>
+    )
+  }
+}
+
+export default OldManAdmission;

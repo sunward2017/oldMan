@@ -1,0 +1,237 @@
+import React,{Component,Fragment} from 'react';
+import {Row,Col,Button,Select,List,Divider,Avatar,notification,Popover} from 'antd';
+import httpServer from '@/axios'
+import moment from 'moment'
+import {host} from '@/axios/config'
+
+const  Option = Select.Option;
+
+
+export default class Evaluate extends Component{
+	constructor(props){	
+		super(props);
+		this.state={
+			newData:[],
+			elderlyEvaluate:{},
+			dateByElderly:[],
+			visible:false,
+			flag:'',
+			itemId:'',
+			status:true,
+		}
+	}
+	listEvaluateLib=()=>{
+	    const {customerId} = this.props;
+	    httpServer.listEvaluateList({customerId}).then((res)=>{
+	       if (res.code === 200) {
+	          res.data?this.setState({newData:res.data}):this.setState({newData:[]});
+	          const elderlyEvaluate = this.props.tbElderlyEstimate;
+	          if(elderlyEvaluate&&elderlyEvaluate.tbElderlyEstimateItem){
+	          	var details = {};
+	            elderlyEvaluate.tbElderlyEstimateItem.forEach(item=>{
+	     	  	  	 details[item.estimateId]=item.tbElderlyEstimateItemDetail.map(i=>(i.itemId.toString()));
+	     	  	  })
+	            this.setState({elderlyEvaluate:details})
+	          }
+	          
+	       } else { 
+	       	    this.setState({newData:[]});
+	            const args = {
+	              message: '通信失败',
+	              description: res.msg,
+	              duration: 2,
+	            };
+	            notification.error(args);
+	        }    
+        })
+	}
+	handleSelectText=(item,v)=>{
+    	const  elderlyEvaluate = this.state.elderlyEvaluate;
+    		   elderlyEvaluate[item.id]=v;
+        this.setState({elderlyEvaluate})
+    }
+	handleSubmit=()=>{
+	  	 const { newData,elderlyEvaluate} = this.state;
+	  	 const data = [];
+	  	 newData.forEach(item=>{
+	  	 	if(elderlyEvaluate[item.id]){
+	  	 	  	const obj = {};
+		  	 	  obj.tbElderlyEstimateItemDetail=[];
+		  	 	  item.tbEstimateLibraryDetail.forEach(i=>{
+		  	 	  	if(elderlyEvaluate[item.id].includes(i.id+'')){
+		  	 	     let item = JSON.parse(JSON.stringify(i).replace(/id/g,"itemId"));
+		  	 	      obj.tbElderlyEstimateItemDetail.push(item);
+		  	 	    }
+		  	 	  });
+		  	 	  obj.estimateId = item.id;  
+		  	 	  data.push(obj);
+	  	 	}
+	  	});
+	  	if(data.length===0){
+	  		const args = {
+              message: '提示',
+              description: '你还没有选择评估项，无法评估',
+              duration: 2,
+            };
+            notification.error(args);
+  			return;
+	  	}
+	  	const {elderlyId,nursingScheduledId} = this.props;
+	  	var values = {
+                elderlyId,
+                nursingScheduledId,
+				"tbElderlyEstimateItem":data,
+				estimate:moment().format('YYYY-MM-DD HH:mm:ss')
+	   }
+	   var url='';
+	   if(this.state.flag==='add'){
+	   	   url = '/saveEvaluateDetail';
+	   	    let request = new Request(host.api+url, {
+			   	body: JSON.stringify(values),
+			   	method: 'POST',
+			   	headers: new Headers({
+			   		'Content-Type': 'application/json;charset=utf-8'
+			   	})
+			   });
+			   fetch(request).then(resp => resp.json()).then(res => {
+			   	this.setState({status:false})
+			   	this.setState({
+			   		subLoading: false
+			   	})
+			   	const args = {
+			   		message: '保存成功',
+			   		duration: 2,
+			   	};
+			   	
+			   	notification.success(args);
+			   })
+	   }else{
+	   	   const id = this.state.itemId;  
+	   	   httpServer.saveEstimateSheet2({id,nursingScheduledId}).then(res=>{
+	   	   	  if(res.code===200){
+	   	   	  	const args = {
+			   		message: '保存成功',
+			   		duration: 2,
+			   	};
+			   	notification.success(args);
+			   	this.setState({status:false})
+	   	   	  }else{
+	   	   	  	const args = {
+			   		message: '保存失败',
+			   		duration: 2,
+			   	};
+			   	notification.error(args);
+	   	   	  }
+	   	   })
+	   }
+	   
+	  
+	   
+	}
+	bring=(v)=>{
+		this.setState({visible:v});
+		if(v){
+			const { elderlyId,customerId } =this.props; 
+			httpServer.listOldManEvaluate({customerId,elderlyId}).then(res=>{
+	     	    if(res.code===200){
+	     	        if(res.data){
+	     	        	const dates = res.data.map(i=>({id:i.id,estimate:i.estimate.split(' ')[0]}));
+	     	        	this.setState({dateByElderly:dates,visible:true})
+	     	        }else{
+	     	           const args = {
+				   			message: '没有老人的评估数据',
+				   			duration: 2,
+					   	};
+					   	notification.error(args);	
+	     	        }
+	     	    }else{
+	     	    	const args = {
+				   		message: '导入失败',
+				   		duration: 2,
+				   	};
+				   	notification.error(args);
+	     	    }
+	        })
+		}
+	};
+	add=()=>{
+		this.setState({elderlyEvaluate:{},flag:'add'})
+	}
+	handleSelectDate=(id)=>{
+	   httpServer.getEvaluateDetail({id}).then(res=>{
+	     	 if(res.code===200){
+	     	  	if(res.data){
+	     	  	  const details = {};
+	     	  	  res.data.tbElderlyEstimateItem.forEach(item=>{
+	     	  	  	 details[item.estimateId]=item.tbElderlyEstimateItemDetail.map(i=>(i.itemId.toString()));
+	     	  	  })
+	     	  	  
+	     	  	  this.setState({elderlyEvaluate:details,flag:'bring',visible:false,itemId:id})
+	     	  	};	 
+     	    }else{
+     	      this.setState({elderlyEvaluate:{},flag:'add',visible:false})
+     	  	  const args = {
+			   	message: '导入失败',
+			   	duration: 2,
+			  };
+			  notification.error(args);
+     	  }
+    	})
+	}
+	componentDidMount(){
+		this.listEvaluateLib();
+	}
+	 
+	render(){
+	   const { newData,elderlyEvaluate,visible,dateByElderly,flag,status} = this.state;
+	   const handleSelectDate = this.handleSelectDate;
+	   return(
+	   <Fragment>
+	      {
+	      	this.props.tbElderlyEstimate||!status?null:
+	      	<div>
+			   <Popover
+		        content={<div>{dateByElderly.map((item,index)=>(<Button key={index} onClick={()=>{handleSelectDate(item.id)}}>{item.estimate}</Button>))}</div>}
+		        title="评估日期"
+		        trigger="hover"
+		        visible={visible}
+		        placement="rightTop"
+		        onVisibleChange={this.bring}
+		      >
+		        <Button type="primary" disabled={this.props.disFlag}>导入</Button>
+		      </Popover>
+		   <Button type="primary" onClick={this.add} disabled={this.props.disFlag}>新增</Button>
+		   </div>
+		   }
+		   <Divider/>
+		   <Row style={{marginTop:"10px"}}>
+	          <p style={{color:"#000",fontSize:"14px",fontWeight:"bold"}}>评估项</p>
+	          <List
+	            itemLayout="horizontal"
+	            dataSource={newData}
+	            renderItem={(item,index) => (
+	              <List.Item>
+	                <List.Item.Meta
+	                  avatar={<Avatar icon="star" />}
+	                  title={item.title}
+	                  description={
+	                    <Select style={{width:"80%"}} mode="multiple"  value={elderlyEvaluate[item.id]} onChange={(value)=>{this.handleSelectText(item,value)}} 
+	                    disabled={this.props.disFlag?true:flag==='bring'}>
+	                      {
+	                        item.tbEstimateLibraryDetail.map((child,index)=>{
+	                            return <Option key={child.id}>{child.content}</Option>
+	                        })
+	                      }
+	                    </Select>
+	                  }
+	                />
+	              </List.Item>
+	            )}
+	          />
+	        </Row>
+	        <Row style={{textAlign:'center'}}><Button type="primary" onClick={this.handleSubmit} disabled={this.props.disFlag||!flag||!status}>提交保存</Button></Row> 
+        </Fragment>)
+        
+	}
+}
+

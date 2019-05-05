@@ -1,0 +1,125 @@
+import React from 'react';
+import { Row, Col, Card, Button, notification, Select } from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import httpServer from '../../../axios/index';
+import { FeeTabs } from './feeTabs';
+const Option = Select.Option;
+
+export default class SettleAccounts extends React.Component {
+    state={
+        elderlyArr:[],
+        fee:{},
+        activeKey:'nursingFee'
+    };
+    componentDidMount(){
+        const {customerId, account}= this.props.auth;
+        this.customerId = customerId;
+        this.param = {account,customerId};
+        this.fetchElderlyList();
+        this.fetchSysParams();
+        this.urlObj = {
+            urlLists:{
+                nursingFee:'listNursingAndCheckItem',
+                mealFee:'listMealFeeList',
+                waterFee:'listWaterRecoder',
+                roomFee:'listRoomFeeList',
+                drugFee:'listDrugFeeList'
+            },
+            urlSaves:{
+                nursingFee:'settlementNursingItem',
+                mealFee:'saveSettlementMealFee',
+                waterFee:'saveSettlementWaterFee',
+                roomFee:'saveSettlementRoomFee',
+                drugFee:'saveSettlementDrugFee'
+            }
+        }
+    }
+    fetchSysParams(){
+        httpServer.listParam({customerId:this.customerId,type:12}).then(res => {
+            // console.log('param res:',res);
+            this.param = {creditList:res.data || [],...this.param} ;
+        })
+    }
+    fetchElderlyList() {
+        const launchFlag = this.props.location.pathname.includes('leaveSettle') ? 1 : 0 ;
+        httpServer.listElderlyInfo({customerId:this.customerId, listStatus:'3', launchFlag}).then(res => {
+            // console.log('elderly list:',res);
+            res.code ===200 ? this.setState({elderlyArr: res.data || []}) : this.notice('error', res.msg) ;
+        });
+        this.setState({pageTxt:launchFlag? '出院' : '在院'})
+    }
+    fetchElderlyInfo(){
+        const { activeKey, fee, elderSelected } = this.state;
+        const url = this.urlObj.urlLists[activeKey] ;
+        httpServer[url]({customerId:this.customerId,elderlyId:this.elderlyId}).then(res => {
+            // console.log('list res:',res);
+            res.code === 200 ? this.setState({
+                fee: { ...fee ,[activeKey]: {list:res.data ? res.data: {data:[]}, elderly:elderSelected, param:this.param}}
+            }) : this.notice('error', res.msg) ;
+        })
+    }
+    notice(status, msg) {
+        let text = status==='success' ? '成功' : (status === 'error'? '失败' : '');
+        notification[status]({
+            message: `${text}提示:`,
+            description:msg,
+            duration:2
+        })
+    }
+    elderlySelectedChangeHandler = (value) => {
+        // console.log('selected change:', value);
+        this.elderlyId = Number(value.key);
+        this.setState({elderSelected:value, fee:{} },this.fetchElderlyInfo);
+    };
+    onBillSubmitHandler = (data) => {
+        // console.log('submit:',data);
+        const {activeKey, elderSelected} = this.state;
+        httpServer[this.urlObj.urlSaves[activeKey]]({customerId:this.customerId, elderlyId:elderSelected.key, ...data}).then(res => {
+            // console.log('save res :',res);
+            if(res.code ===200 ){
+                this.notice('success', res.msg);
+                this.fetchElderlyInfo();
+            }else {
+                this.notice('error', res.msg);
+            }
+        })
+    };
+    onTabChangeHandler = (activeKey) => {
+        const {fee } = this.state;
+        this.setState({activeKey},() => {
+            !fee[activeKey] && this.fetchElderlyInfo();
+        });
+    };
+    render() {
+        const {elderlyArr, fee, elderSelected, pageTxt} = this.state;
+        return (
+            <div>
+                <BreadcrumbCustom first="财务管理" second={`${pageTxt}结算`} />
+                <Card>
+                    <Row className="mb-s">
+                        <Col md={7}>{pageTxt}老人 :
+                            <Select className="w60p ml-m"
+                                    showSearch
+                                    showArrow={false}
+                                    placeholder="搜索老人"
+                                    labelInValue
+                                    onChange={this.elderlySelectedChangeHandler}
+                                    filterOption={(inputValue, option) => option.props.children[0].toLowerCase().indexOf(inputValue.toLowerCase()) >= 0}
+                            >
+                                {elderlyArr.map(d => <Option key={d.id} >{d.name} -- {d.sex ? '男' : '女'} -- {d.age}岁 -- {d.tbBedInfo ? d.tbBedInfo.bedName : ''}房间</Option>)}
+                            </Select>
+                        </Col>
+                    </Row>
+                    <Row className="mb-s">
+                        <FeeTabs
+                            data={fee}
+                            selected={elderSelected}
+                            onBillSubmit={this.onBillSubmitHandler}
+                            onTabChange={this.onTabChangeHandler}
+                        />
+                    </Row>
+                </Card>
+            </div>
+        )
+    }
+}

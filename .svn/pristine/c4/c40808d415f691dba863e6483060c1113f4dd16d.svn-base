@@ -1,0 +1,93 @@
+/**
+ * Created by hao.cheng on 2017/4/16.
+ */
+import React from 'react';
+import { Form, Icon, Input, Button, Checkbox, message } from 'antd';
+import { connect } from 'react-redux';
+import { authResolver } from '../../action';
+import httpServer from '../../axios/index';
+
+const FormItem = Form.Item;
+
+class Login extends React.Component {
+    state = {
+        auth: JSON.parse(localStorage.getItem('auth')) || null,
+    };
+    componentWillMount() {
+        const { history } = this.props;
+        const { auth } = this.state;
+        auth && history.goBack();
+    }
+    handleSubmit = (e) => {
+        e.preventDefault();
+        this.props.form.validateFields((err, values) => {
+            if (!err) {
+                console.log('Received values of form: ', values);
+                const { history } = this.props;
+                httpServer.login({account:values.account, password:values.password}, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(res => {
+                    console.log('login res:',res);
+                    if(res.code === 200) {
+                        localStorage.setItem('auth', JSON.stringify(res.data));
+                        console.log('login props:',this.props);
+                        this.props.saveAuth(res.data);
+                        history.push('/');
+                    }else {
+                        message.warning(res.msg);
+                    }
+                })
+            }
+        });
+    };
+    render() {
+        const { getFieldDecorator } = this.props.form;
+        return (
+            <div className="login">
+                <div className="login-form" >
+                    <div className="login-logo">
+                        <span>梧斯源养老平台</span>
+                    </div>
+                    <Form onSubmit={this.handleSubmit} style={{maxWidth: '300px'}}>
+                        <FormItem>
+                            {getFieldDecorator('account', {
+                                rules: [{ required: true, message: '请输入用户名!' }],
+                            })(
+                                <Input prefix={<Icon type="user" style={{ fontSize: 13 }} />} placeholder="请输入用户名" />
+                            )}
+                        </FormItem>
+                        <FormItem>
+                            {getFieldDecorator('password', {
+                                rules: [{ required: true, message: '请输入密码!' }],
+                            })(
+                                <Input prefix={<Icon type="lock" style={{ fontSize: 13 }} />} type="password" placeholder="请输入密码" />
+                            )}
+                        </FormItem>
+                        <FormItem>
+                            {getFieldDecorator('remember', {
+                                valuePropName: 'checked',
+                                initialValue: true,
+                            })(
+                                <Checkbox>记住我</Checkbox>
+                            )}
+                            <a className="login-form-forgot" href="" style={{float: 'right'}}>忘记密码?</a>
+                            <Button type="primary" htmlType="submit" className="login-form-button" style={{width: '100%'}}>
+                                登录
+                            </Button>
+                        </FormItem>
+                    </Form>
+                </div>
+            </div>
+        );
+    }
+}
+
+const mapStateToPorps = state => {
+    const { auth } = state.myAuth;
+    return { auth };
+};
+const mapDispatchToProps = dispatch => ({
+    saveAuth:(data) => {
+        dispatch(authResolver(data))
+    }
+});
+
+export default connect(mapStateToPorps, mapDispatchToProps)(Form.create()(Login));

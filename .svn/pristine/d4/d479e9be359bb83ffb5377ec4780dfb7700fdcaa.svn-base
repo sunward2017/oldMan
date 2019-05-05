@@ -1,0 +1,46 @@
+export const clientMenus = [
+    { key: '/app/pension-agency/dashboard/index', title: '首页', icon: 'mobile', component: 'ClientDashboard' },
+    {
+        key: '/app/pension-agency/ui', title: '预约管理', icon: 'scan',
+        sub: [
+            { key: '/app/pension-agency/appointments', title: '入院预约', component: 'Appointments' },
+        ],
+    },
+    {
+        key: '/app/pension-agency/basicInfo', title: '基础信息', icon: 'tool',
+        sub: [
+            { key: '/app/pension-agency/basicInfo/workerInfo', title: '护工信息', component: 'WorkerInfo' },
+            { key: '/app/pension-agency/basicInfo/nurseInfo', title: '护士信息', component: 'NurseInfo' },
+            { key: '/app/pension-agency/basicInfo/examine', title: '检查项', component:'Examine'},
+            { key: '/app/pension-agency/basicInfo/nursingGrade', title: '护理等级', component: 'NursingGrade' },
+            { key: '/app/pension-agency/basicInfo/workProjects', title: '工作项目', component: 'WorkProjects' },
+            { key: '/app/pension-agency/basicInfo/room', title: '房间管理', component:'Room'},
+            { key: '/app/pension-agency/basicInfo/reductionMonth', title: '水费减免月', component: 'ReductionMonth' },
+            { key: '/app/pension-agency/basicInfo/diseaseLibrary', title: '病症库', component: 'DiseaseLibrary' },
+            { key: '/app/pension-agency/basicInfo/deptInfo', title: '部门信息', component: 'DeptInfo' },
+            { key: '/app/pension-agency/basicInfo/leaveAuditSet', title: '出院审核部门设置', component: 'LeaveAuditSet' },
+            { key: '/app/pension-agency/basicInfo/estimate', title: '评估库', component: 'EstimateLib' },
+            { key: '/app/pension-agency/basicSetting/EstimateGrade', title: '评估等级', component: 'EstimateGrade' },
+        ],
+    },
+    {
+        key: '/app/pension-agency/medicalCare', title: '医护管理', icon: 'copy',
+        sub: [
+            { key: '/app/pension-agency/medicalCare/healthRecord', title: '健康档案', component: 'HealthRecord'},
+        ],
+    },
+    {
+        key: '/app/pension-agency/financial', title: '财务管理', icon: 'tool',
+        sub: [
+            { key: '/app/pension-agency/financial/payItem', title: '收费项目', component: 'PayItem' },
+        ],
+    },
+    {
+        key: '/app/pension-agency/elderlyManage', title: '老人管理', icon: 'team',
+        sub: [
+            { key: '/app/pension-agency/elderlyManage/oldManEvaluate', title: '入院评估', component: 'OldManEvaluate' },
+            { key: '/app/pension-agency/elderlyManage/entryContract', title: '入院合同', component: 'EntryContract' },
+            { key: '/app/pension-agency/elderlyManage/nursingScheduled', title: '护理计划', component: 'CarePlan' },
+        ],
+    },
+];

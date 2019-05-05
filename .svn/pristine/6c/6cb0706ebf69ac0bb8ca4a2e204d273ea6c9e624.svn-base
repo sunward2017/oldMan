@@ -1,0 +1,43 @@
+import React, { Component } from 'react';
+// import { Router, Route, hashHistory, IndexRedirect } from 'react-router';
+import { Route, Redirect, Switch } from 'react-router-dom';
+import { adminMenus } from './config.admin';
+import { clientMenus } from './config.client';
+import AllComponents from './config';
+
+export default class CRouter extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            routesConfig : adminMenus.concat(clientMenus),
+            auth:props.auth || JSON.parse(localStorage.getItem('auth')) || null,
+        }
+    }
+    componentDidMount () {
+        // console.log('routesConfig:',this.state.routesConfig);
+    }
+    render() {
+        const { routesConfig } = this.state;
+        return (
+            <Switch>
+                {
+                    routesConfig.map(rt => {
+                        const route = r => {
+                            const Component = AllComponents[r.component];
+                            return (
+                                <Route
+                                    key={r.key}
+                                    exact
+                                    path={ r.key}
+                                    component={Component}
+                                />
+                            )
+                        };
+                        return rt.component ? route(rt) : rt.sub.map(r => route(r));
+                    })
+                }
+                <Route render={() => <Redirect to="/404" />} />
+            </Switch>
+        )
+    }
+}

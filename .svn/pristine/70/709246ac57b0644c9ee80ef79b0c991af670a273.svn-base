@@ -1,0 +1,196 @@
+import React , {Component , Fragment } from 'react';
+import {Card,Input,Row,Col,Form,Button,notification} from 'antd';
+import httpServer from '../../../axios';
+const { TextArea } = Input;
+class PersonInfo1 extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      healthFileRecord:props.tbNursingScheduledOne,
+    }
+    this.handleSubmit = this.handleSubmit.bind(this);//提交健康和疾病情况评估数据
+  }
+
+  //提交健康和疾病情况评估数据
+  handleSubmit = (e) => {
+    e.preventDefault();
+    let _this = this;
+    const {healthFileRecord} = this.state;
+    this.props.form.validateFieldsAndScroll((err, fieldsValue) => {
+      if(!err) {
+        const values = {
+          ...fieldsValue,
+          'customerId': this.props.customerId,
+          elderlyId:this.props.elderlyId
+        };
+        if(healthFileRecord.id){
+          values.id = healthFileRecord.id;
+          values.nursingScheduledId = healthFileRecord.nursingScheduledId;
+          httpServer.updateNursingScheduledSheet1(values).then((res)=>{
+           if (res.code === 200) {
+              const args = {
+                message: '通信成功',
+                description: res.msg,
+                duration: 2,
+              };
+              notification.success(args);
+              _this.props.tabFlagChange();
+              _this.props.getNursingScheduledId(res.data.nursingScheduledId);
+
+            } else {
+              if(res.message ==='Request failed with status code 500'){
+                  console.log(res.message);
+               }else{
+                   const args = {
+                  message: '通信失败',
+                  description: res.msg,
+                  duration: 2,
+                };
+                notification.error(args);
+               }
+            }
+        }).catch((err)=>{
+          console.log(err);
+        });
+        }else{
+          httpServer.saveNursingScheduledSheet1(values).then((res)=>{
+            if (res.code === 200) {
+                const args = {
+                  message: '通信成功',
+                  description: res.msg,
+                  duration: 2,
+                };
+                notification.success(args);
+                _this.props.tabFlagChange();
+                _this.props.getNursingScheduledId(res.data.nursingScheduledId);
+                _this.props.getSheet1Id(res.data.id);
+                _this.setState({healthFileRecord:res.data});
+                _this.props.getListNursingScheduled();
+              } else {
+                if(res.message ==='Request failed with status code 500'){
+                    console.log(res.message);
+                 }else{
+                     const args = {
+                    message: '通信失败',
+                    description: res.msg,
+                    duration: 2,
+                  };
+                  notification.error(args);
+                 }
+              }
+            }).catch((err)=>{
+              console.log(err);
+            });
+        }
+        
+      }
+    });
+  }
+  render(){
+    const {disFlag} = this.props;
+    const {name , age , sex , elderlyNo , roomName , bedNumber , checkInDate , nursingGradeCode } = this.props.personInfo;
+    const {nursingGradeList} = this.props;
+    const itemName = nursingGradeList&&nursingGradeList.find(item=>item.nursingGradeCode === nursingGradeCode);
+    const {height1 , weight1 , medicalHistory } = this.state.healthFileRecord;
+    const {getFieldDecorator} = this.props.form;
+    const formItemLayout = {
+      labelCol: {
+        xs: {
+          span: 24
+        },
+        sm: {
+          span: 4
+        },
+      },
+      wrapperCol: {
+        xs: {
+          span: 24
+        },
+        sm: {
+          span: 20
+        },
+      },
+    };
+    return(
+      <Fragment>
+        <Card title="个人信息" style={{ width: "100%" }}>
+          <Row gutter={16} className="personInfoRow">
+            <Col md={6}>
+              老人姓名：<Input disabled style={{width:"60%"}} value={name} />
+            </Col>
+            <Col md={6}>
+              老人年龄：<Input disabled style={{width:"60%"}} value={age} />
+            </Col>
+            <Col md={6}>
+              老人性别：<Input disabled style={{width:"60%"}} value={sex&sex===1?"男":"女"} />
+            </Col>
+            <Col md={6}>
+              入院编号：<Input disabled style={{width:"60%"}} value={elderlyNo} />
+            </Col>
+          </Row>
+          <Row gutter={16} className="personInfoRow">
+            <Col md={6}>
+              房间名称：<Input disabled style={{width:"60%"}} value={roomName} />
+            </Col>
+            <Col md={6}>
+              老人床号：<Input disabled style={{width:"60%"}} value={bedNumber} />
+            </Col>
+            <Col md={6}>
+              入院日期：<Input disabled style={{width:"60%"}} value={checkInDate} />
+            </Col>
+            <Col md={6}>
+              护理等级：<Input disabled style={{width:"60%"}} value={itemName?itemName.nursingGradeName:'无'} />
+            </Col>
+          </Row>
+        </Card>
+        <Card title="健康和疾病情况评估" style={{ width: "100%" }}>
+          <Form hideRequiredMark onSubmit={this.handleSubmit}>
+            <Form.Item
+              label='身高'
+              {...formItemLayout}
+              style={{marginBottom:'4px'}}
+            >
+              {getFieldDecorator('height1', {
+                rules: [{ required: true, message: '请输入身高!' }],
+                initialValue:height1,
+              })(
+                <Input disabled={disFlag}/>
+              )}
+            </Form.Item>
+            <Form.Item
+              label='体重'
+              {...formItemLayout}
+              style={{marginBottom:'4px'}}
+            >
+              {getFieldDecorator('weight1', {
+                rules: [{ required: true, message: '请输入体重'}],
+                initialValue:weight1
+              })(
+                <Input disabled={disFlag}/>
+              )}
+            </Form.Item>
+            <Form.Item
+              label='病历'
+              {...formItemLayout}
+              style={{marginBottom:'4px'}}
+            >
+              {getFieldDecorator('medicalHistory', {
+                rules: [{ required: true, message: '请输入病历'}],
+                initialValue:medicalHistory
+              })(
+                <TextArea rows={4} disabled={disFlag}/>
+              )}
+            </Form.Item>
+            <Form.Item  wrapperCol={{ span: 16, offset: 8 }}>
+              <Button type="primary" htmlType="submit" disabled={disFlag}>确认提交
+              </Button>
+            </Form.Item>
+          </Form>
+        </Card>
+      </Fragment>
+    )
+  }
+}
+
+const PersonInfo = Form.create()(PersonInfo1);
+export default PersonInfo;

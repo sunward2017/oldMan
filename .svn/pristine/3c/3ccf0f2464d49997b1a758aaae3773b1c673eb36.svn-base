@@ -1,0 +1,17 @@
+import React from 'react';
+import { Row, Col, Card, Button, notification } from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import httpServer from '../../../axios/index';
+
+export default class SettleAccounts extends React.Component {
+    render() {
+        return (
+            <div>
+                <BreadcrumbCustom first="财务管理" second="费用结算" />
+                <Card>
+
+                </Card>
+            </div>
+        )
+    }
+}

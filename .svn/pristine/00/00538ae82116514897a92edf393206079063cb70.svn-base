@@ -1,0 +1,131 @@
+import React from 'react';
+import { Row, Col, Card, Icon } from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import Tree from '../../../common/tree';
+import PriceSlider from './priceSlider';
+import httpServer from '../../../axios/index';
+
+export default class PayItem extends React.Component {
+    state = {
+        zNodes :[],
+        payItem:[]
+    };
+    componentDidMount() {
+        console.log('payitem auth:',this.props);
+        this.fetchTreeData();
+        this.fetchPayItem();
+    }
+    fetchTreeData() {
+        httpServer.getPayItemTree({customerId:this.props.auth.customerId}).then(res => {
+            console.log('pay tree res:',res);
+            if(res.code === 200 ) {
+                res.data ? this.setState({ zNodes : [{...res.data, open:true}]}) : this.setState({ zNodes : []})
+            }
+        })
+    }
+    fetchPayItem() {
+        this.setState({
+            payItem : [
+                { id:1, name: '单人间:',price:50, unit: 3},
+                { id:2, name: 'shuang人间:',price:70, unit: 2},
+                { id:3, name: '单人间:',price:30, unit: 1},
+                ]
+        })
+    }
+    nodeEditHandler = (nodeData, cb) => {
+        console.log('edit nodeData:', nodeData);
+        const { customerId,id,name } = nodeData;
+        httpServer.updatePayItem({ customerId,id,name }).then(res => {
+            console.log('edit res:',res);
+            res.code ===200 ? cb(true) : cb(false);
+        });
+    };
+    nodeDeleteHandler = (nodeData, cb) => {
+        console.log('delete nodeData:', nodeData);
+        const { customerId,id } = nodeData;
+        httpServer.deletePayItem({customerId,id}).then(res => {
+            console.log('del res:',res);
+            res.code === 200 && cb(true,nodeData);
+        });
+    };
+    nodeAddHandler = (pNode, cb) => {
+        const { pid, id, customerId } = pNode;
+        const url = pid === 0 ? 'savePayItem' : 'savePayItemChild';
+        const data = pid ===0 ? {name:'new', customerId, pid:1} : {name:'新建收费项', pid: id, price: 0, unit: 4};
+        console.log('add nodeData:', pNode,'new data:',data);
+        httpServer[url](data).then(res => {
+            console.log('add res:',res);
+            pid === 0 ? (res.code === 200 && cb(true,res.data)) : this.addItemChild(res);
+        }).catch(err => {});
+    };
+    nodeClickHandler = (nodeData) => {
+        console.log('click nodes:', nodeData);
+        // httpServer.lisPayItemChild({}).then(res => {
+        //
+        // })
+    };
+    payItemChildDataChangeHandler = (resRecord) => {
+        console.log('resRecord:',resRecord);
+        this.setState({payItem: this.state.payItem.map(item => {
+            return item.id === resRecord.id ? resRecord : item;
+        })})
+    };
+    payItemChildSaveHandler = (resRecord) => {
+
+    };
+    payItemChildDelHandler = (resRecord) => {
+
+    };
+    addItemChild(childRes) {
+        childRes.code===200 && this.setState({payItem : [ ...this.payItem]});
+        return false;
+    }
+    render() {
+        const { zNodes, payItem } = this.state;
+        return (
+            <div>
+                <BreadcrumbCustom first="财务管理" second="收费项目" />
+                <Row gutter={16}>
+                    <Col className="gutter-row" md={4}>
+                        <div className="gutter-box">
+                            <Card bordered={false}>
+                                <Tree id={'tree1'} zNodes={zNodes}
+                                      onEdit={this.nodeEditHandler}
+                                      onDelete={this.nodeDeleteHandler}
+                                      onAddNew={this.nodeAddHandler}
+                                      onNodeClick={this.nodeClickHandler}
+                                      editableTree="true"
+                                      levelMax={1}
+                                />
+                            </Card>
+                        </div>
+                    </Col>
+                    <Col className="gutter-row" md={20}>
+                        <div className="gutter-box" >
+                            <Card bordered={false}>
+                                <PriceSlider data={payItem}
+                                    onDataChange={this.payItemChildDataChangeHandler}
+                                    onRowSave={this.payItemChildSaveHandler}
+                                    onRowDelete={this.payItemChildDelHandler}
+                                />
+                            </Card>
+                        </div>
+                    </Col>
+                </Row>
+                <style>{`
+                    .sliderNameIpt{
+                        border:none;
+                        border-bottom:1px solid #d9d9d9;
+                        position: relative;
+                        z-index:50;
+                        width:100%;
+                        background-color:transparent;
+                    }
+                    .sliderNameIpt:focus{
+                        outline:none;
+                    }
+                `}</style>
+            </div>
+        )
+    }
+}

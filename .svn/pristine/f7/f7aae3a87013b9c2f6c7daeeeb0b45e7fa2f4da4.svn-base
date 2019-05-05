@@ -1,0 +1,324 @@
+import React ,{ Component } from 'react';
+import {Modal , Form , Input,Button,DatePicker,Select,Radio,notification} from 'antd';
+import httpServer from '../../axios';
+import moment from 'moment';
+const Option = Select.Option;
+const RadioGroup = Radio.Group;
+class ModalInfo extends Component{
+  constructor(props){
+    super(props);
+    console.log(props.record);
+    this.state = {
+      dataList:props.record,
+    }
+    // this.handleSelectChange = this.handleSelectChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+
+  handleIptText(target,e) {
+    let dataList = Object.assign({},this.state.dataList);
+    const reg =/^[0-9]+.?[0-9]*$/;
+    dataList[target] = e.target ? e.target.value : e;
+    if(target === 'referencePrice'){
+      if(e.target.value && !reg.test(e.target.value)){
+        notification.warning({
+          message: '提示：',
+          description: '只能输入数字！',
+        });
+        dataList[target] = '';
+        this.setState({dataList});
+        return false
+      }
+    }
+    this.setState({dataList});
+  }
+
+  handleSubmit(){
+    const {customerId} = JSON.parse(localStorage.getItem('auth'));
+    const {dataList} = this.state;
+    const {action} = this.props;
+    const _this = this;
+    const {vender, name, alias, shortName, dosageForm, barcode, specification,minUnit, store ,prescription ,insurance ,status,auditOn} =dataList;
+    if( !(vender && name && alias && shortName && dosageForm && barcode && specification && minUnit && store)) {
+        notification.warning({
+          message: '提示：',
+          description: '单据存在数据未填的情况，请仔细核对！',
+        });
+        return false
+    }
+    if(action !=='read'){
+      const data = dataList;
+      if(prescription !==0){
+        data.prescription =1;
+      }
+      if(insurance !==0){
+        data.insurance = 1;
+      }
+      if(status !==0){
+        data.status = 1;
+      }
+      data.customerId = customerId;
+      if(auditOn && typeof(auditOn)==='object'){
+          data.auditOn = auditOn.format('YYYY-MM-DD HH:mm:ss');
+      }
+      if(data.id){
+        httpServer.updateDrugInfo(data,{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then((res)=>{
+           if (res.code === 200) {
+              const args = {
+                message: '通信成功',
+                description: res.msg,
+                duration: 2,
+              };
+              notification.success(args);
+              _this.props.getDrugList();
+              _this.props.cancleClick();
+            } else {
+              if(res.message ==='Request failed with status code 500'){
+                  console.log(res.message);
+               }else{
+                   const args = {
+                  message: '通信失败',
+                  description: res.msg,
+                  duration: 2,
+                };
+                notification.error(args);
+               }
+            }
+        }).catch((err)=>{
+          console.log(err);
+        });
+      }else{
+        httpServer.saveDrugInfo(data,{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then((res)=>{
+           if (res.code === 200) {
+              const args = {
+                message: '通信成功',
+                description: res.msg,
+                duration: 2,
+              };
+              notification.success(args);
+              _this.props.getDrugList();
+              _this.props.cancleClick();
+            } else {
+              if(res.message ==='Request failed with status code 500'){
+                  console.log(res.message);
+               }else{
+                   const args = {
+                  message: '通信失败',
+                  description: res.msg,
+                  duration: 2,
+                };
+                notification.error(args);
+               }
+            }
+        }).catch((err)=>{
+          console.log(err);
+        });
+      }
+      
+    }else{
+      this.props.cancleClick();
+    }
+    
+  }
+  render(){
+    const {unitList,flag} = this.props;
+    const {vender, name, alias, shortName, referencePrice, dosageForm, auditOn, barcode, specification,prescription=1, insurance=1, indicationsFunction, usage1, minUnit, store, classOne, approvalNo, status=1, operatedOn, addtime} = this.state.dataList;
+    const formItemLayout = {
+      labelCol: {
+        xs: { span: 24 },
+        sm: { span: 5 },
+      },
+      wrapperCol: {
+        xs: { span: 24 },
+        sm: { span: 19 },
+      },
+    };
+    const tailFormItemLayout = {
+      wrapperCol: {
+        xs: {
+          span: 24,
+          offset: 0,
+        },
+        sm: {
+          span: 16,
+          offset: 8,
+        },
+      },
+    };
+    return (
+      <Modal
+        title="药品信息添加"
+        okText='提交'
+        visible={true}
+        onOk={()=>{this.handleOk()}}
+        onCancel={this.props.cancleClick}
+        maskClosable={false}
+        footer={null}
+      >
+        <Form hideRequiredMark onSubmit={this.handleSubmit}>
+              <Form.Item
+                label='厂家名称'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input placeholder='必填项' value={vender} onChange={(e) => this.handleIptText('vender',e)} disabled={flag}/>
+              </Form.Item>
+              <Form.Item
+                label='药品名称'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input placeholder='必填项' value={name} onChange={(e) => this.handleIptText('name',e)} disabled={flag}/>
+              </Form.Item>
+              <Form.Item
+                label='药品别名'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input placeholder='必填项' value={alias} onChange={(e) => this.handleIptText('alias',e)} disabled={flag}/>
+              </Form.Item>
+              <Form.Item
+                label='药品简称'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input placeholder='必填项' value={shortName} onChange={(e) => this.handleIptText('shortName',e)} disabled={flag}/>
+              </Form.Item>      
+              <Form.Item
+                label='剂型'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input placeholder='必填项' value={dosageForm} onChange={(e) => this.handleIptText('dosageForm',e)} disabled={flag}/>
+              </Form.Item>
+              <Form.Item
+                label='条码'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input placeholder='必填项' value={barcode} onChange={(e) => this.handleIptText('barcode',e)} disabled={flag}/>
+              </Form.Item>
+              <Form.Item
+                label='规格'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input placeholder='必填项' value={specification} onChange={(e) => this.handleIptText('specification',e)} disabled={flag}/>
+              </Form.Item>
+              <Form.Item
+                label='单位'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                 <Select
+                  showSearch
+                  style={{ width: 200 }}
+                  placeholder="Select a person"
+                  optionFilterProp="children"
+                  filterOption={(input, option) => option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
+                  value={minUnit}
+                  onChange={(e) => this.handleIptText('minUnit',e)}
+                  disabled={flag}
+                >
+                  {
+                    unitList&&unitList.map((item,index)=>{
+                      return  <Option value={item.value}>{item.value}</Option>
+                    })
+                  }
+                 
+                </Select> （必选项）
+              </Form.Item>
+              <Form.Item
+                label='存储方式'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input placeholder='必填项' value={store} onChange={(e) => this.handleIptText('store',e)} disabled={flag}/>
+              </Form.Item>
+              <Form.Item
+                label='单价'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input value={referencePrice} onChange={(e) => this.handleIptText('referencePrice',e)} disabled={flag}/>
+              </Form.Item>
+              <Form.Item
+                label='是否为处方药'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <RadioGroup value={prescription} onChange={(e) => this.handleIptText('prescription',e)} disabled={flag}>
+                    <Radio value={1}>处方药</Radio>
+                    <Radio value={0}>非处方药</Radio>
+                  </RadioGroup>
+                  （默认值：处方药）
+              </Form.Item>
+              <Form.Item
+                label='是否为医保用药'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <RadioGroup  value={insurance} onChange={(e) => this.handleIptText('insurance',e)} disabled={flag}>
+                    <Radio value={1}>医保用药</Radio>
+                    <Radio value={0}>非医保用药</Radio>
+                  </RadioGroup>
+                  （默认值：医保用药）
+              </Form.Item>
+              <Form.Item
+                label='药品功能'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input value={indicationsFunction} onChange={(e) => this.handleIptText('indicationsFunction',e)} disabled={flag}/>
+              </Form.Item>
+              <Form.Item
+                label='使用方式'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input value={usage1} onChange={(e) => this.handleIptText('usage1',e)} disabled={flag}/>
+              </Form.Item>
+              <Form.Item
+                label='类别'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input value={classOne} onChange={(e) => this.handleIptText('classOne',e)} disabled={flag}/>
+              </Form.Item>
+              <Form.Item
+                label='批次编号'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <Input value={approvalNo} onChange={(e) => this.handleIptText('approvalNo',e)} disabled={flag}/>
+              </Form.Item>
+              <Form.Item
+                label='状态'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                  <RadioGroup value={status} onChange={(e) => this.handleIptText('status',e)} disabled={flag}>
+                    <Radio value={1}>正常</Radio>
+                    <Radio value={0}>注销</Radio>
+                  </RadioGroup>
+                  （默认值：正常）
+              </Form.Item>
+              <Form.Item
+                label='审计日期'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                 <DatePicker format='YYYY-MM-DD HH:mm:ss' showTime value={auditOn?moment(auditOn,'YYYY-MM-DD HH:mm:ss'):null} onChange={(e) => this.handleIptText('auditOn',e)} disabled={flag}/>
+              </Form.Item>
+             
+              <Form.Item {...tailFormItemLayout}>
+                <Button type="primary" htmlType="submit">确认提交</Button>
+              </Form.Item>
+            </Form>
+      </Modal>
+    )
+  }
+}
+
+export default ModalInfo;

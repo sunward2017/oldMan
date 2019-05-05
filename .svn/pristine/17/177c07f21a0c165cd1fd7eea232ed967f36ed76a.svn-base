@@ -1,0 +1,44 @@
+export const adminMenus = [
+    { key: '/app/admin/dashboard/index', title: '首页', icon: 'mobile', component: 'Dashboard' },
+    {
+        key: '/app/admin/basicSetting', title: '基础设置', icon: 'tool',
+        sub: [
+            { key: '/app/admin/basicSetting/Systemparameters', title: '系统参数', component: 'SysParams' },
+            { key: '/app/admin/basicSetting/DrugInfo', title: '药品信息库', component: 'DrugInfo' },
+            { key: '/app/admin/basicSetting/Estimate', title: '评估库', component: 'Estimate' },
+            { key: '/app/admin/basicSetting/EstimateGrade', title: '评估等级', component: 'EstimateGrade' },
+        ],
+    },
+    {
+        key: '/app/admin/ui', title: '预约管理', icon: 'scan',
+        sub: [
+            { key: '/app/admin/ui/banners', title: '轮播图', component: 'Banners'},
+            { key: '/app/admin/ui/wysiwyg', title: '富文本', component: 'WysiwygBundle'},
+            { key: '/app/admin/ui/drags', title: '拖拽', component: 'Drags'},
+            { key: '/app/admin/ui/map', title: '地图', component: 'MapUi'},
+        ],
+    },
+    {
+        key: '/app/admin/form', title: '告警信息', icon: 'edit',
+        sub: [
+            { key: '/app/admin/form/basicForm', title: '基础表单', component: 'BasicForm' },
+        ],
+    },
+    {
+        key: '/app/admin/chart', title: '财务管理', icon: 'area-chart',
+        sub: [
+            { key: '/app/admin/chart/echarts', title: 'echarts', component: 'Echarts' },
+            { key: '/app/admin/chart/recharts', title: 'recharts', component: 'Recharts' },
+        ],
+    },
+    {
+        key: '/app/admin/auth', title: '系统管理', icon: 'safety',
+        sub: [
+            { key: '/app/admin/auth/CustomerInfo', title: '客户信息', component:'CustomerInfo'},
+            { key: '/app/admin/auth/worker', title: '操作员', component:'Worker'},
+            { key: '/app/admin/auth/AuthManage', title: '权限管理', component:'AuthManage'},
+            { key: '/app/admin/auth/basic', title: '基础演示', component: 'AuthBasic' },
+            { key: '/app/admin/auth/routerEnter', title: '路由拦截', component: 'RouterEnter', auth: 'auth/testPage' },
+        ],
+    }
+];

@@ -1,0 +1,434 @@
+import React ,{Component , Fragment } from 'react';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import {Row,Col,Table,notification,Button,Input,Tabs,Card,TreeSelect,Tag,Avatar} from 'antd';
+import httpServer from '../../../axios';
+import PersonInfo from './personInfo';
+import HealthCarePlan from './healthCarePlan';
+import CaseCare from './caseCare';
+import Evaluate from './evaluate';
+import './index.css';
+
+const TabPane = Tabs.TabPane;
+const SHOW_PARENT = TreeSelect.SHOW_PARENT;
+const TreeNode = TreeSelect.TreeNode;
+const Search = Input.Search;
+const { Meta } = Card;
+class CarePlan extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      customerId:'',
+      oldManList:[],//老人列表数据
+      elderlyListFlag:true,
+      id:'',
+      elderlyName:'',
+      elderlyId:'',
+      personInfo:{},//老人信息集合
+      tabFlag:true,//tab2，3，4标志
+      nursingScheduledId:'',
+      nursingScheduledList:[],//老人对应的护理计划列表
+      sheet1Id:'',
+      disFlag:false,
+      tbNursingScheduledOne:{},//tab1数据
+      tbElderlyEstimate:null,//tab2数据
+      tbNursingScheduledTwos:[],//tab3数据
+      tbNursingScheduledThree:{},//tab4数据
+      disFlagTab4:false,
+      activeKey:'1',
+      treeData:[],
+      oldManInfoFlag:false,
+      nursingGradeList:[],
+      estimateGradeList:[],
+    }
+    this.handleAddCarePlan = this.handleAddCarePlan.bind(this);//跳转到护理计划填写界面
+    this.elderlyListFlagToTrue = this.elderlyListFlagToTrue.bind(this);//跳转会老人列表界面
+    this.tabFlagChange = this.tabFlagChange.bind(this);//激活Tab2，3，4
+    this.getNursingScheduledId  = this.getNursingScheduledId.bind(this);//获取nursingScheduledId
+    this.getSheet1Id = this.getSheet1Id.bind(this);//获取sheet1Id
+    this.getDisFlagChange = this.getDisFlagChange.bind(this);
+    this.handleClickToOldmanList = this.handleClickToOldmanList.bind(this);
+  }
+
+  componentDidMount(){
+    //获取入院老人信息列表
+    this.getListElderlyInfo();
+    this.fetchElderlyRoomTree();
+    this.getListNursingGrade();
+    this.getListEstimateGrade();
+  }
+  //获取入院老人信息列表
+  getListElderlyInfo(searchKey){
+    const {customerId} = this.props.auth;
+    this.setState({customerId});
+    httpServer.listElderlyInfo({listStatus:"3",customerId,launchFlag:0,...searchKey}).then((res) => {
+      if (res.code === 200) {
+        res.data?this.setState({oldManList:res.data}):this.setState({oldManList:[]});
+         
+      } else {
+      	   const args = { 
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);         
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  getListNursingGrade(){//获取护理等级
+    const {customerId} = this.props.auth;
+    httpServer.listNursingGrade({customerId}).then((res) => {
+      if (res.code === 200) {
+        res.data?this.setState({nursingGradeList:res.data}):this.setState({nursingGradeList:[]});  
+      } else {
+           const args = { 
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);         
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  getListEstimateGrade(){//获取评估等级
+    const {customerId} = this.props.auth;
+    httpServer.listEstimateGrade({customerId}).then((res) => {
+      if (res.code === 200) {
+        res.data?this.setState({estimateGradeList:res.data}):this.setState({estimateGradeList:[]});
+      } else {
+           const args = { 
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);         
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+  //获取老人对应的护理计划列表
+  getListNursingScheduled(){
+    httpServer.listNursingScheduled({elderlyId:this.state.elderlyId}).then((res)=>{
+      if (res.code === 200) {
+         res.data ? this.setState({ nursingScheduledList: res.data }) : this.setState({ nursingScheduledList: [] });
+      } else {
+        const args = {
+          message: '通信失败',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.error(args);
+      }
+    }).catch((err)=>{
+      console.log(err);
+    });
+  }
+
+  
+  //护理计划相关操作
+  hangdleCheck(record){ //单击选中老人信息
+    this.setState({id:record.id,elderlyName:record.name,personInfo:record,elderlyId:record.id,oldManInfoFlag:true},()=>{
+      this.getListNursingScheduled();
+    });
+  }
+  handleAddCarePlan(){ //新增当前选中老人的护理计划
+    const {id} = this.state;
+    if(id){
+      this.setState({elderlyListFlag:false,disFlag:false,tbElderlyEstimate:null,tbNursingScheduledOne:{}, tbNursingScheduledTwos:[], tbNursingScheduledThree:{},tabFlag:true,disFlagTab4:false});
+    }else{
+      const args = {
+        message: '友情提示',
+        description: "请先从列表中单击选中老人姓名",
+        duration: 2,
+      };
+      notification.info(args);
+    }
+  }
+  elderlyListFlagToTrue(){//返回到老人信息列表
+    this.setState({elderlyListFlag:true,tabFlag:true});
+  }
+  tabFlagChange(){//激活tab2，3，4
+    this.setState({tabFlag:false});
+  }
+  getNursingScheduledId(param){ //获取nursingScheduledId
+     this.setState({nursingScheduledId:param});
+  }
+  getSheet1Id(param){
+    this.setState({sheet1Id:param});
+  }
+  getDisFlagChange(){
+    this.setState({disFlag:true});
+  }
+  tabsChange=(v)=>{
+  	this.setState({activeKey:v})
+  }
+  handleClickRead(record){//查看护理计划详情
+    const {id , nursingScheduledId , elderlyId } = record;
+
+    httpServer.getNursingScheduledDetail({id,nursingScheduledId,elderlyId}).then((res)=>{
+      if( res.code === 200 ){
+        const {tbNursingScheduledOne, tbNursingScheduledTwos,tbElderlyEstimate,tbNursingScheduledThree} = res.data;
+        if( tbNursingScheduledOne.familyConfirm && tbNursingScheduledOne.nursingDept && tbNursingScheduledOne.officeDept &&  tbNursingScheduledOne.opt2Date && tbNursingScheduledOne.optDate){
+          this.setState({disFlag:true});
+        }else{
+          this.setState({disFlag:false});
+        }
+        this.setState({nursingScheduledId});
+        if(tbNursingScheduledThree && tbNursingScheduledThree.familyConfirm && tbNursingScheduledThree.nursingDept && tbNursingScheduledThree.officeDept &&  tbNursingScheduledThree.opt2Date && tbNursingScheduledThree.optDate){
+          this.setState({disFlagTab4:true});
+        }else{
+          this.setState({disFlagTab4:false});
+        }
+
+        res.data?this.setState({tbNursingScheduledOne,tbNursingScheduledTwos,tbNursingScheduledThree,tbElderlyEstimate,tabFlag:false,elderlyListFlag:false}):this.setState({tbNursingScheduledOne:{},tbNursingScheduledTwos:[],tbNursingScheduledThree:{},tbElderlyEstimate:null,tabFlag:false,elderlyListFlag:false});
+      }else{
+        const args = {
+          message: '错误提示',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.error(args);
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+
+  fetchElderlyRoomTree(){
+    httpServer.listAreaInfo({customerId:this.props.auth.customerId}).then(res => {
+      res.code ===200 ? this.setState({treeData:[res.data]}) : this.setState({treeData:[]});
+    })
+  }
+  renderTreeNodes = data => data.map(item => {
+    if (item.children) {
+        return (
+            <TreeNode title={item.areaName} key={item.id} value={item.areaCode}>
+                {this.renderTreeNodes(item.children)}
+            </TreeNode>
+        );
+    }
+    return <TreeNode title={item.areaName} key={item.id} value={item.areaCode} />;
+  });
+  onTreeSelectChangeHandler = (value) => {
+    value.length >0 ? this.getListElderlyInfo({areaCode:value.join(',')}) : this.setState({oldManList: []});
+  };
+  onNameSearchHandler = (value) => {
+      /\S+/.test(value) && this.getListElderlyInfo({name:value.trim()});
+  };
+
+  handleClickToOldmanList(){
+    this.setState({oldManInfoFlag:false,id:''});
+  }
+  render(){
+    const {
+      oldManList,
+      elderlyListFlag,
+      personInfo,
+      customerId,
+      tabFlag,
+      nursingScheduledId,
+      elderlyId,
+      nursingScheduledList,
+      disFlag,
+      tbElderlyEstimate,
+      treeData,
+      oldManInfoFlag,
+      nursingGradeList,
+      estimateGradeList,
+    } = this.state;
+    const columns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber',
+      width:'10%'
+    },{
+      title:'入院编号',
+      dataIndex: 'elderlyNo',
+      key: 'elderlyNo',
+      width:'10%'
+    },{
+      title: '老人姓名',
+      dataIndex: 'name',
+      key: 'name',
+      width:'10%'
+    },{
+      title:'身份证号',
+      dataIndex: 'idNumber',
+      key: 'idNumber',
+      width:'20%'
+    },{
+      title: '房间名称',
+      dataIndex: 'roomName',
+      key: 'roomName',
+      width:'15%'
+    },{
+      title:'评估等级',
+      dataIndex: 'estimateGradeCode',
+      key: 'estimateGradeCode',
+      render:(text,record)=>{
+        const arr = estimateGradeList && estimateGradeList.find(item=>item.estimateGradeCode===record.estimateGradeCode);
+        return arr?arr.estimateGradeName:'无';
+      },
+      width:'15%'
+    },{
+      title: '护理等级',
+      dataIndex: 'nursingGradeCode',
+      key: 'nursingGradeCode',
+      render:(text,record)=>{
+        const arr = nursingGradeList && nursingGradeList.find(item=>(item.nursingGradeCode===record.nursingGradeCode));
+        return arr?arr.nursingGradeName:'无';
+      },
+    }];
+    const nursingScheduledColumns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber1',
+      width:'25%'
+    },{
+      title:'计划生成时间',
+      dataIndex: 'addtime',
+      key: 'addtime',
+      width:'50%'
+    },{
+      title: '操作',
+      dataIndex: 'action',
+      key: 'action',
+      render:(text,record)=>{
+        return <Button type="primary" onClick={()=>this.handleClickRead(record)}>编辑</Button>
+      }
+    }];
+    return(
+      <Fragment>
+        <BreadcrumbCustom first="医护管理" second="护理计划" />
+        {
+          elderlyListFlag?
+            <Row>
+              
+              {
+                oldManInfoFlag?
+                  <Card bordered={false}>
+                    <Card 
+                    style={{marginBottom:10}}
+                      title="当前选中老人的基本信息" 
+                      extra={<span><Button type="primary" onClick={this.handleAddCarePlan}>新增护理计划</Button><Button type="primary" onClick={this.handleClickToOldmanList}>返回</Button></span>}
+                    >
+                      <h3>
+                        姓名:&emsp;<Tag color="blue">{personInfo.name}</Tag>&emsp;
+                        性别:&emsp;<Tag color="geekblue">{personInfo.sex===1?'男':'女'}</Tag>&emsp;
+                        年龄:&emsp;<Tag color="purple">{personInfo.age}岁</Tag>
+                      </h3>
+                    </Card>
+                    <Table 
+                      bordered
+                      dataSource={nursingScheduledList} 
+                      columns={nursingScheduledColumns} 
+                      pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                      rowKey={record => record.id}
+                    />
+                  </Card>:
+                    <Row>
+                      <Card bordered={false} style={{marginBottom:10}}>
+                        <Row gutter={16}>
+                            <Col md={4}>
+                                <TreeSelect className="w-full"
+                                    dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+                                    treeDefaultExpandedKeys={['1']}
+                                    onChange={this.onTreeSelectChangeHandler}
+                                    treeCheckable="true"
+                                    showCheckedStrategy={SHOW_PARENT}
+                                    searchPlaceholder="选择楼层房间" >
+                                    {this.renderTreeNodes(treeData)}
+                                </TreeSelect>
+                            </Col>
+                            <Col md={4}>
+                              <Search
+                                placeholder="按姓名搜索"
+                                onSearch={value => this.onNameSearchHandler(value)}
+                                enterButton
+                              />
+                            </Col>
+                            <Col md={4}>
+                              <Button onClick={this.handleAddCarePlan} type="primary">新增护理计划</Button>
+                            </Col>
+                        </Row>
+                      </Card>
+                      <Row>
+                        <Card bordered={false} title="老人列表">
+                          <Table 
+                            bordered
+                            dataSource={oldManList} 
+                            columns={columns} 
+                            pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                            rowKey={record => record.id}
+                            onRow={(record) => {
+                                return {
+                                  onClick: () => {this.hangdleCheck(record);},       // 点击行
+                              };
+                            }}
+                          />
+                        </Card>
+                      </Row>
+                    </Row>
+              }
+              
+            </Row>:
+            <Row>
+              <div className="card-container">
+                <Tabs onChange={this.tabsChange} type="card" tabBarExtraContent={<Button onClick={this.elderlyListFlagToTrue} type="primary">返回</Button>}>
+                  <TabPane tab="人员信息" key="1">
+                    <PersonInfo 
+                      personInfo={personInfo}
+                      customerId={customerId}
+                      tabFlagChange = {this.tabFlagChange}
+                      getNursingScheduledId = {this.getNursingScheduledId}
+                      getSheet1Id = {this.getSheet1Id}
+                      elderlyId = {elderlyId}
+                      getListNursingScheduled = {()=>this.getListNursingScheduled()}
+                      disFlag = {disFlag}
+                      tbNursingScheduledOne = {this.state.tbNursingScheduledOne}
+                      nursingGradeList = {nursingGradeList}
+                    />
+                  </TabPane>
+                  <TabPane tab="日常生活能力评估" key="2" disabled={tabFlag}>
+                    <Evaluate customerId={customerId} tbElderlyEstimate={tbElderlyEstimate} nursingScheduledId={nursingScheduledId}  elderlyId = {elderlyId} disFlag = {disFlag} /> 
+                  </TabPane>
+                  <TabPane tab="健康护理计划" key="3" disabled={tabFlag}>
+                    <HealthCarePlan 
+                      nursingScheduledId = {nursingScheduledId}
+                      customerId={customerId}
+                      elderlyId = {elderlyId}
+                      sheet1Id = {this.state.sheet1Id}
+                      getDisFlagChange = {this.getDisFlagChange}
+                      tbNursingScheduledTwos = {this.state.tbNursingScheduledTwos}
+                      tbNursingScheduledOne = {this.state.tbNursingScheduledOne}
+                      disFlag = {disFlag}
+                    />
+                  </TabPane>
+                  <TabPane tab="个案护理工作计划" key="4" disabled={tabFlag}>
+                    <CaseCare 
+                      nursingScheduledId = {nursingScheduledId}
+                      tbNursingScheduledThree = {this.state.tbNursingScheduledThree}
+                      disFlagTab4 = {this.state.disFlagTab4}
+                    />
+                  </TabPane>
+                </Tabs>
+              </div>
+            </Row>
+        }   
+      </Fragment>
+    )
+  }
+}
+
+export default CarePlan;
+/*<Meta
+                          avatar={<Avatar src="http://imgsrc.baidu.com/imgad/pic/item/09fa513d269759ee03b7bedab8fb43166d22df38.jpg" />}
+                          title={personInfo.name}
+                          description={<span>性别:&emsp;<Tag color="#108ee9">{personInfo.sex===0?'女':'男'}</Tag>&emsp;年龄:&emsp;<Tag color="orange">{personInfo.age}岁</Tag></span>}
+                      />*/

@@ -1,0 +1,58 @@
+/**
+ * http通用工具函数
+ */
+import axios from 'axios';
+import qs from 'qs';
+import { host } from './config';
+
+axios.interceptors.request.use(function (config) {
+    if (config.url.indexOf(host.api+'/Login') !== -1) {
+        config.data = qs.stringify(config.data);
+        config.headers["Content-Type"]= "application/x-www-form-urlencoded";
+        return config;
+    }
+    const { uId, client, cId, session } = JSON.parse(localStorage.getItem('auth'));
+    config.data = {...config.data, uId, client, cId, session};
+    return config;
+}, function (error) {
+    return Promise.reject(error);
+});
+
+
+/**
+ * 公用get请求
+ * @param url       接口地址
+ * @param msg       接口异常提示
+ * @param headers   接口所需header配置
+ */
+export const get = ({url, msg = '接口异常', headers}) =>
+    axios.get(url, headers).then(res => res.data).catch(err => {
+       console.log(err);
+    });
+
+/**
+ * 公用post请求
+ * @param url       接口地址
+ * @param data      接口参数
+ * @param msg       接口异常提示
+ * @param headers   接口所需header配置
+ */
+export const post = ({url, data, msg = '接口异常', headers={headers: {'Content-Type': 'application/json'}}}, cb) => {
+    return axios.post(url, data, headers).then(res => cb(res.data)).catch(err => {
+        console.log(err);
+        cb(err);
+    });
+}
+
+/**
+ * 特殊请求
+ * @param url       接口地址
+ * @param data      接口参数
+ * @param msg       接口异常提示
+ * @param headers   接口所需header配置
+ */
+/*
+const EASY_MOCK = 'https://www.easy-mock.com/mock';
+const MOCK_AUTH = EASY_MOCK + '/597b5ed9a1d30433d8411456/auth';         // 权限接口地址
+export const MOCK_AUTH_ADMIN = MOCK_AUTH + '/admin';                           // 管理员权限接口
+export const MOCK_AUTH_VISITOR = MOCK_AUTH + '/visitor';                       // 访问权限接口*/

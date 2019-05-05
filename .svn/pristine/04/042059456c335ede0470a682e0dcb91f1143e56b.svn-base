@@ -1,0 +1,66 @@
+/**
+ * http通用工具函数
+ */
+import axios from 'axios';
+import qs from 'qs';
+import { host } from './config';
+import {notification} from 'antd';
+axios.interceptors.request.use(function (config) {
+    if (config.url.indexOf(host.api+'/Login') !== -1) {
+        config.data = qs.stringify(config.data);
+        return config;
+    }
+    const { customerId, level, id, session } = JSON.parse(localStorage.getItem('auth'));
+    config.data = level===2 ? qs.stringify({...config.data, uId:id, client:'admin', cId: customerId, session}) :
+        qs.stringify({...config.data, uId:id, client:'client', cId: customerId, session});
+    return config;
+}, function (error) {
+    return Promise.reject(error);
+});
+
+/**
+ * 公用get请求
+ * @param url       接口地址
+ * @param msg       接口异常提示
+ * @param headers   接口所需header配置
+ */
+export const get = ({url, msg = '接口异常', headers}) =>
+    axios.get(url, headers).then(res => res.data).catch(err => {
+       console.log(err);
+    });
+
+/**
+ * 公用post请求
+ * @param url       接口地址
+ * @param data      接口参数
+ * @param msg       接口异常提示
+ * @param headers   接口所需header配置
+ */
+export const post = ({url, data, msg = '接口异常', headers={headers: {'Content-Type': 'application/x-www-form-urlencoded'}}}, cb) => {
+    return axios.post(url, data, headers).then(res => cb(res.data)).catch(err => {
+        if(err.response.status === 500){
+        	if(err.response.config.url.indexOf(host.api+'/checkEestimateLib') !== -1){
+        	   cb(err);
+        	   return ;
+            }
+            const args = {
+                message: '错误提示',
+                description: err.response.request.responseText,
+                duration: 2,
+            };
+            notification.error(args); 
+        }else{
+            cb(err);
+        }
+        
+    });
+}
+
+/**
+ * 特殊请求
+ * @param url       接口地址
+ * @param data      接口参数
+ * @param msg       接口异常提示
+ * @param headers   接口所需header配置
+ */
+

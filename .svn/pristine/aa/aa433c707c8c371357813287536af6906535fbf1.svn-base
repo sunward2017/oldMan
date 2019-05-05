@@ -1,0 +1,88 @@
+import React from 'react';
+import ReactEcharts from 'echarts-for-react';
+
+export default ({data}) => {
+    const option = {
+        title: {
+            text: '近期入住情况',
+            left: 'center',
+            textStyle: {
+                color: '#ccc',
+                fontSize: 12
+            }
+        },
+        backgroundColor: '#08263a',
+        xAxis: [{
+            show: true,
+            data: data.map(arr => arr[0]),
+            axisLabel: {
+                textStyle: {
+                    color: '#ccc'
+                }
+            },
+            splitLine: {
+                show: false,
+            },
+        }],
+        tooltip: {
+            trigger:'axis',
+            formatter: "{a} <br/>{b} : {c} 人"
+        },
+        visualMap: {
+            show: false,
+            min: 0,
+            max: 50,
+            dimension: 0,
+            inRange: {
+                color: ['#4a657a', '#308e92', '#b1cfa5', '#f5d69f', '#f5898b', '#ef5055']
+            }
+        },
+        yAxis: {
+            name:'人数',
+            nameTextStyle:{color:'#ccc', fontSize: 10},
+            axisLine: {
+                show: false
+            },
+            axisLabel: {
+                textStyle: {
+                    color: '#ccc',
+                }
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: '#08263f'
+                }
+            },
+            axisTick: {
+                show: false
+            }
+        },
+        series: [{
+                name: '当月入住人数',
+                type: 'bar',
+                barWidth: 5,
+                data: data.map(arr => arr[1]),
+                itemStyle: {
+                    normal: {
+                        barBorderRadius: 5
+                    }
+                }
+            }],
+        animationEasing: 'elasticOut',
+        animationEasingUpdate: 'elasticOut',
+        animationDelay: function (idx) {
+            return idx * 20;
+        },
+        animationDelayUpdate: function (idx) {
+            return idx * 20;
+        }
+    };
+    return (
+        <ReactEcharts
+            option={option}
+            style={{height: '212px', width: '100%'}}
+            className={'react_for_echarts'}
+        />
+    );
+}

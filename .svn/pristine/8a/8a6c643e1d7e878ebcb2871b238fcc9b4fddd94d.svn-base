@@ -1,0 +1,477 @@
+import React,{Component , Fragment} from 'react';
+import {Row,Col,Input,Button,Modal,Divider,Popconfirm,Table,Form,Radio,notification,Tag,InputNumber,Card,List,Avatar,Select,Progress} from 'antd';
+import httpServer from '../../../axios';
+
+const RadioGroup = Radio.Group;
+const Option = Select.Option;
+class EvaluateInfo extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      modalFlag:false,
+      infoFlag:false,
+      dataSource:[],//老人信息列表
+      dataSource_copy:[],//老人信息列表复制
+      dataList:{},//老人信息（age，name，sex）
+      searchText:'',//搜索框内容
+      estimateElderly:props.evaluateByElderly.elderly||{},
+      newData:[],//原始数据
+      elderlyEvaluate:{},
+      EstimateGrades:[],
+      estimateGrade:{},
+      selectData:[],
+      subLoading:false,
+    }
+    this.handleCancel = this.handleCancel.bind(this);//关闭弹出框
+    this.handleSearch = this.handleSearch.bind(this);//搜索获取老人列表
+    this.handleAdd = this.handleAdd.bind(this);//添加老人信息
+    this.handleCancelClick = this.handleCancelClick.bind(this);//取消添加/修改老人信息
+    this.handleSubmit = this.handleSubmit.bind(this);//提交新增老人信息
+    this.handleInputChange = this.handleInputChange.bind(this); //老人搜索框发生变化
+    this.handleSearchElderly = this.handleSearchElderly.bind(this);//按老人姓名搜索
+    this.handleClickReset = this.handleClickReset.bind(this);//重新获取老人列表，清楚查询条件
+  }
+
+  componentDidMount(){ // 组件加载完成之后调用
+    this.getListElderlyInfo();
+    this.List();
+  }
+
+
+  getListElderlyInfo(){
+    const {customerId} = this.props;
+    httpServer.listEvaluateList({customerId}).then((res)=>{
+       if (res.code === 200) {
+       	  const {details} = this.props.evaluateByElderly;
+          res.data?this.setState({newData:res.data,elderlyEvaluate:details}):this.setState({newData:[]});
+        } else {
+          if(res.message ==='Request failed with status code 500'){
+              console.log(res.message);
+           }else{
+               const args = {
+              message: '通信失败',
+              description: res.msg,
+              duration: 2,
+            };
+            notification.error(args);
+           }
+        }
+      httpServer.listElderlyInfo({listStatus:"1,2",customerId}).then((res) => {
+		      if (res.code === 200) {
+		        res.data?this.setState({dataSource:res.data,dataSource_copy:res.data}):this.setState({dataSource:[],dataSource_copy:[]});
+		      } else {
+		        if(res.message ==='Request failed with status code 500'){
+		            console.log(res.message);
+		         }else{
+		             const args = {
+		            message: '通信失败',
+		            description: res.msg,
+		            duration: 2,
+		          };
+		          notification.error(args);
+		         }
+		      }
+	    }).catch((error) => {
+	      console.log(error);
+	    });
+
+    }).catch((err)=>{
+      console.log(err);
+    });
+  }
+
+  handleAdd(){  //新增老人
+    this.setState({infoFlag:true,dataList:{}});
+  }
+
+  handleIptText(target,e) { //老人信息各字段发生变化
+    let dataList = Object.assign({},this.state.dataList);
+    dataList[target] = e.target ? e.target.value : e;
+    this.setState({dataList});
+  }
+  List() {
+		const customerId = this.props.customerId;
+		httpServer.listEstimateGrade({customerId}).then(res => {
+			if(res.code===200) {
+				this.setState({
+					EstimateGrades: res.data?res.data:[]
+				})
+			}else{
+			     const args = {
+              message: '获取评估等级发生错误',
+              description: res.msg,
+              duration: 2,
+            };
+            notification.error(args);
+			}
+		})
+	}
+  handleSubmit(){ //提交新增老人信息
+    const _this = this;
+    const {customerId} = this.props;
+    const {name, sex, age} = _this.state.dataList;
+    if( !(name && sex && age )) {
+      notification.warning({
+        message: '提示：',
+        description: '单据存在数据未填的情况，请仔细核对！',
+      });
+      return false
+    }
+    const data = _this.state.dataList;
+    data.customerId = customerId;
+    data.status = 2;
+    httpServer.saveElderlyInfo(data).then((res)=>{
+        if (res.code === 200) {
+          const args = {
+            message: '通信成功',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.success(args);
+          _this.getListElderlyInfo();
+          _this.handleCancelClick();
+        } else {
+          if(res.message ==='Request failed with status code 500'){
+              console.log(res.message);
+           }else{
+               const args = {
+              message: '通信失败',
+              description: res.msg,
+              duration: 2,
+            };
+            notification.error(args);
+           }
+        }
+    }).catch((err)=>{
+      console.log(err);
+    });
+  }
+  handleCancelClick(){//取消添加/修改老人信息
+    this.setState({infoFlag:false,dataList:{}});
+  }
+
+  handleInputChange(e) { //老人姓名搜索框发生变化
+    this.setState({ searchText: e.target.value });
+  }
+
+  handleSearchElderly() {
+    const { searchText } = this.state;
+    if(searchText){
+      const reg = new RegExp(searchText, 'gi');
+      this.setState({
+        dataSource_copy: this.state.dataSource.map((record) => {
+          const match = record.name && record.name.match(reg);
+          if (!match) {
+            return null;
+          }
+          return record;
+        }).filter(record => !!record),
+      });
+    }else{
+      const args = {
+        message: '友情提示',
+        description: "请先输入老人姓名",
+        duration: 2,
+      };
+      notification.info(args);
+    }
+  }
+
+  handleClickReset(){//清楚搜索条件
+    this.setState({
+      dataSource_copy:this.state.dataSource,
+      searchText:'',
+    });
+  }
+
+  handleSearch(){ //搜索货物老人列表
+    this.setState({modalFlag:true});
+  }
+
+  handleCancel(){ //取消弹框
+    this.setState({modalFlag:false});
+  }
+
+  hangdleCheck(record){//单击选中老人
+    this.setState({estimateElderly:record,modalFlag:false});
+  }
+
+  handleSelectText=(item,v)=>{
+    const  elderlyEvaluate = this.state.elderlyEvaluate;
+    elderlyEvaluate[item.id]=v;
+    this.setState({elderlyEvaluate})
+  }
+  startEvaluate=()=>{
+  	 let score=0;
+  	 const { newData,elderlyEvaluate,EstimateGrades } = this.state;
+  	 const data = [];
+  	 newData.forEach(item=>{
+  	 	  if(elderlyEvaluate[item.id]){
+  	 	  	const obj = {};
+	  	 	  obj.tbElderlyEstimateItemDetail=[];
+	  	 	  item.tbEstimateLibraryDetail.forEach(i=>{
+	  	 	  	if(elderlyEvaluate[item.id].includes(i.id+'')){
+	  	 	     let item = JSON.parse(JSON.stringify(i).replace(/id/g,"itemId"));
+	  	 	       score+=i.score;
+	  	 	      obj.tbElderlyEstimateItemDetail.push(item);
+	  	 	    }
+	  	 	  });
+	  	 	  obj.estimateId = item.id;  
+	  	 	  data.push(obj);
+  	 	  }
+  	 });
+  	 
+  	let max = 0,estimateGrade;
+  	EstimateGrades.forEach(item=>{
+  		if(max<item.highScore) max=item.highScore;
+  	})
+  	if(!score||score===0){
+  		 const args = {
+              message: '提示',
+              description: '你还没有选择评估项，无法评估',
+              duration: 2,
+            };
+            notification.error(args);
+  		return;
+  	}
+  	if(score>max){
+  		estimateGrade =  EstimateGrades.find(item=>{
+  			 return item.highScore===max;
+  		})
+  	}else{
+  		estimateGrade = EstimateGrades.find(item=>{
+	  		  return item.lowScore<=score&&score<=item.highScore
+	  	})
+  	}
+  	estimateGrade.score = score;
+  	this.setState({estimateGrade,selectData:data})
+  }
+  saveEstimate=()=>{
+  	
+  	const {estimateGrade,selectData,estimateElderly}=this.state;  
+  	if(!estimateElderly.id){
+  		 const args = {
+              message: '提示',
+              description: '没有待评估人',
+              duration: 2,
+            };
+         notification.error(args);
+  		return;
+  	}
+  	if(!this.state.estimateGrade.score){
+  		 const args = {
+              message: '提示',
+              description: '请先评估再保存',
+              duration: 2,
+            };
+            notification.error(args);
+  		     return;
+  	}
+  	this.setState({subLoading:true})
+	  var values = {
+					  "curScore": estimateGrade.score,
+					  "elderlyId": estimateElderly.id,
+					  "estimate": "2019-02-18",
+					  "estimateGradeCode": estimateGrade.estimateGradeCode,
+					  "estimateGradeName": estimateGrade.estimateGradeName,
+					  "tbElderlyEstimateItem":selectData
+	  }
+	  const {id}= this.props.evaluateByElderly;
+	  if(id){
+	  	values.id = id;
+	  }
+	  const url = id?'updateEvaluateDetail':'saveEvaluateDetail';
+  
+	  let request = new Request('http://192.168.10.235:9751/'+url, {
+			        body: JSON.stringify(values),
+			        method: 'POST',
+			        headers: new Headers({
+			          'Content-Type': 'application/json;charset=utf-8'
+			        })
+			      });
+			      fetch(request).then(resp => resp.json()).then( res => {
+			      	this.setState({subLoading:false})
+			      	 const args = {
+									message:id?'修改成功':'新增成功',
+									duration: 2,
+								};
+								notification.success(args);
+								this.props.reback()
+			      })
+  }
+  render(){
+    const {modalFlag,dataSource_copy,infoFlag,estimateElderly,newData,score,estimateGrade,subLoading,elderlyEvaluate} = this.state;
+    const {name, sex, age} = this.state.dataList;
+    const formItemLayout = {
+      labelCol: {
+        xs: { span: 24 },
+        sm: { span: 5 },
+      },
+      wrapperCol: {
+        xs: { span: 24 },
+        sm: { span: 19 },
+      },
+    };
+    const tailFormItemLayout = {
+      wrapperCol: {
+        xs: {
+          span: 24,
+          offset: 0,
+        },
+        sm: {
+          span: 16,
+          offset: 8,
+        },
+      },
+    };
+    const columns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber',
+      width:'25%'
+    },{
+      title: '姓名',
+      dataIndex: 'name',
+      key: 'name',
+      width:'25%'
+    },{
+      title:'年龄',
+      dataIndex: 'age',
+      key: 'age',
+      width:'25%'
+    },{
+      title: '性别',
+      dataIndex: 'sex',
+      key: 'sex',
+      render:(text,record)=>{
+        return record.sex === 1?<Tag color="green">男</Tag>:<Tag color="red">女</Tag>
+      },
+    }];
+    return(
+      <Fragment>
+        <p style={{color:"#000",fontSize:"14px",fontWeight:"bold"}}>老人信息</p>
+        <Row gutter={16} style={{backgroundColor:"#f5f5f5",padding:"10px 20px"}}>
+          <div style={{marginBottom:"10px"}}>友情提示：点击搜索按钮后单击选中老人可自动填充老人信息(姓名,身份证,住址)</div>
+          <Col md={6}><Input placeholder="老人姓名:" disabled style={{textAlign:"center",backgroundColor:"#fff"}} /></Col>
+          <Col md={12}>
+            <Input style={{paddingLeft:"10px",backgroundColor:"#fff"}} disabled value={estimateElderly.name}/>
+          </Col>
+          <Button type="primary" onClick={this.handleSearch}>搜索</Button>
+        </Row>
+        <Row gutter={16} style={{backgroundColor:"#f5f5f5",padding:"10px 20px"}}>
+          <Col md={6}><Input placeholder="老人年龄:" disabled style={{textAlign:"center",backgroundColor:"#fff"}} /></Col>
+          <Col md={12}>
+            <Input style={{paddingLeft:"10px",backgroundColor:"#fff"}} disabled value={estimateElderly.age}/>
+          </Col>
+        </Row>
+        <Row gutter={16} style={{backgroundColor:"#f5f5f5",padding:"10px 20px"}}>
+          <Col md={6}><Input placeholder="老人性别:" disabled style={{textAlign:"center",backgroundColor:"#fff"}} /></Col>
+          <Col md={12}>
+            <Radio.Group value={estimateElderly.sex} disabled buttonStyle="solid">
+              <Radio.Button value={1}>男</Radio.Button>
+              <Radio.Button value={0}>女</Radio.Button>
+            </Radio.Group>
+          </Col>
+        </Row>
+        <Row style={{marginTop:"10px"}}>
+          <p style={{color:"#000",fontSize:"14px",fontWeight:"bold"}}>评估项</p>
+          <List
+            itemLayout="horizontal"
+            dataSource={newData}
+            renderItem={(item,index) => (
+              <List.Item>
+                <List.Item.Meta
+                  avatar={<Avatar icon="star" />}
+                  title={item.title}
+                  description={
+                    <Select style={{width:"80%"}} mode="multiple"  defaultValue={elderlyEvaluate[item.id]} onChange={(value)=>{this.handleSelectText(item,value)}}>
+                      {
+                        item.tbEstimateLibraryDetail.map((child,index)=>{
+                            return <Option key={child.id}>{child.content}</Option>
+                        })
+                      }
+                    </Select>
+                  }
+                />
+              </List.Item>
+            )}
+          />
+        </Row>
+        <Row><Col span={4}><p style={{color:"#000",fontSize:"14px",fontWeight:"bold"}}>评估等级:</p></Col><Col span={8}> <p>{estimateGrade.estimateGradeName||'未评估'} </p></Col><Col span={4}><p style={{color:"#000",fontSize:"14px",fontWeight:"bold"}}>评估得分:</p></Col><Col span={8}><Progress type="circle" percent={estimateGrade.score||0} format={percent => `${percent}分`} width={40} /></Col></Row>
+        <div><Button type="primary" onClick={this.props.reback}>返回</Button>&emsp;&emsp;<Button type="primary" onClick={this.startEvaluate}>开始评估</Button>&emsp;&emsp;<Button type="primary" onClick={this.saveEstimate} loading={subLoading}>保存</Button></div>
+        {
+          modalFlag?
+            <Modal
+              title="老人信息"
+              visible={true}
+              onCancel={this.handleCancel}
+              footer={null}
+              maskClosable={false}
+            >
+              <div style={{marginBottom:"20px"}}>
+                <Button type="primary" onClick={this.handleAdd}>新增</Button>
+                {
+                  infoFlag?
+                    <Form hideRequiredMark onSubmit={this.handleSubmit}>
+                      <Form.Item
+                        label='姓名'
+                        {...formItemLayout}
+                        style={{marginBottom:'4px'}}
+                      >
+                        <Input placeholder='必填项' value={name} onChange={(e) => this.handleIptText('name',e)} />
+                      </Form.Item>
+                      <Form.Item
+                        label='性别'
+                        {...formItemLayout}
+                        style={{marginBottom:'4px'}}
+                      >
+                        <RadioGroup value={sex} onChange={(e) => this.handleIptText('sex',e)}>
+                          <Radio value={"1"}>男</Radio>
+                          <Radio value={"0"}>女</Radio>
+                        </RadioGroup>
+                      </Form.Item>
+                      <Form.Item
+                        label='年龄'
+                        {...formItemLayout}
+                        style={{marginBottom:'4px'}}
+                      >
+                        <InputNumber min={1} max={200} value={age} onChange={(e) => this.handleIptText('age',e)}/>
+                      </Form.Item>
+                      <Form.Item {...tailFormItemLayout}>
+                        <Button type="primary" htmlType="submit">确认</Button>
+                        <Button type="primary" onClick={this.handleCancelClick}>取消</Button>
+                      </Form.Item>
+                    </Form>:null
+                }
+              </div>
+              <div style={{marginBottom:"20px"}}>
+                <Input 
+                  placeholder="按老人姓名搜索" 
+                  style={{width:'40%',marginRight:'10px'}}
+                  ref={ele => this.searchInput = ele}
+                  value={this.state.searchText}
+                  onChange={this.handleInputChange}
+                  onPressEnter={this.handleSearchElderly}
+                />
+                <Button type="primary" onClick={this.handleSearchElderly}>开始搜索</Button>
+                <Button type="primary" onClick={this.handleClickReset}>reset</Button>
+              </div>
+              <Table 
+                bordered
+                dataSource={dataSource_copy} 
+                columns={columns} 
+                pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                rowKey={record => record.id}
+                onRow={(record) => {
+                  return {
+                    onClick: () => {this.hangdleCheck(record);},       
+                  };
+                }}
+              />
+            </Modal>:null
+        }
+      </Fragment>
+    )
+  }
+}
+export default EvaluateInfo;

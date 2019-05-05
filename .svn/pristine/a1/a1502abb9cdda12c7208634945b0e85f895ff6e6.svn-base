@@ -1,0 +1,4 @@
+.tb-footer-text {
+  padding:0 5px;
+  margin-right: 60px;
+}

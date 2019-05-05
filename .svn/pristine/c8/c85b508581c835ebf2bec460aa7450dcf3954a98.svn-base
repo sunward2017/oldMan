@@ -1,0 +1,362 @@
+import React,{Fragment} from 'react';
+import { Card, Input, Col, Row, Tabs, Button, Form, Avatar, notification, Divider,Icon,Tag,Calendar,Popconfirm, LocaleProvider} from 'antd';
+import httpServer from '@/axios';
+import EditTable from './editTable';
+import EditForm from './editForm';
+import moment from 'moment';
+ 
+const TabPane = Tabs.TabPane;
+const { Meta } = Card;
+const {TextArea} = Input;
+
+class RecordEdit extends React.Component {
+    state={
+        elderlyNursingInfo:{},//护理记录
+        elderlyInfo:{},//老人信息
+        itemFlag:false,
+        nursingsByElderly:[],//护理详情
+        dates:[],
+        curDate:moment(),
+        nursingItems:[],
+    };
+    componentDidMount(){
+        this.fetchElderlyInfo();
+    }
+    fetchElderlyInfo(){
+        const { match } = this.props;
+        httpServer.getOneElderlyInfo({id:match.params.userId}).then(res => {
+            if(res.code ===200 ){
+            	const elderlyInfo = Object.assign({},{id:res.data.id,name:res.data.name,age:res.data.age,sex:res.data.sex===1?'男':'女',customerId:res.data.customerId})
+                this.setState({elderlyInfo},function(){
+                	this.fetchNursingByElderly()
+                });
+            } else {
+                this.setState({elderlyInfo:{}});
+                this.notice('error',res.msg);
+            }
+        })
+    }
+    fetchNursingByElderly=()=>{	
+    	 const { match } = this.props;
+    	 httpServer.listNursingRecoder({elderlyId:match.params.userId}).then(res=>{
+    	 	 if(res.code===200){
+    	 	 	if(res.data&&res.data.length>0){
+    	 	 		const dates = res.data.map(item=>(item.addtime.split(' ')[0]));
+    	 	 		const nursingsByElderly = res.data.map(item=>{item.addtime=item.addtime.split(' ')[0];return item})
+    	 	 		this.setState({nursingsByElderly,dates});	
+    	 	 	}
+    	 	 }else{
+    	 	 	this.setState({nursingsByElderly:[],dates:[]})	
+    	 	 	this.notice('error',res.msg)
+    	 	 }
+    	 })
+    }
+    fetchNursingItems=()=>{
+    	const {elderlyNursingInfo}=this.state;
+    	if(elderlyNursingInfo.id){
+    		httpServer.listNursingItemRecoder({pid:elderlyNursingInfo.id}).then(res=>{
+    			if(res.code===200){
+    				res.data?this.setState({nursingItems:res.data}):this.setState({nursingItems:[]});
+    			}else{
+    				this.notice('error',res.msg)
+    				this.setState({nursingItems:[]});
+    			}
+    		})
+    	}
+    }
+    onSelect=(v)=>{
+        const elderlyNursingInfo = this.state.nursingsByElderly.find(i=>(i.addtime===v.format('YYYY-MM-DD')));
+        if(elderlyNursingInfo){
+        	this.setState({elderlyNursingInfo},function(){
+        		this.fetchNursingItems();
+        	})
+        }else{
+        	this.setState({elderlyNursingInfo:{},nursingItems:[]})
+        }
+    }
+    handleDelete=()=>{
+       const {id} = this.state.elderlyNursingInfo;
+       httpServer.deleteNursingRecoder({id}).then(res=>{
+       	   if(res.code===200){
+       	   	 this.setState({elderlyNursingInfo:{},dates:[]},function(){
+       	   	 	this.props.form.resetFields();
+       	   	 	this.fetchNursingByElderly()
+       	   	 })
+       	   	 this.notice('success','删除成功')
+       	   }else{
+       	   	 this.notice('error',res.msg)
+       	   }
+       })
+    }
+    
+    dateCellRender=(date)=>{
+    	const {dates} = this.state;
+    	const value = date.format('YYYY-MM-DD')
+    	if(dates.includes(value)){
+    	    return(<Icon type="edit" theme="twoTone" twoToneColor="#52c41a"/>)
+    	}else{
+    		return null
+    	}
+    }
+    notice(status, msg) {
+        let text = status==='success' ? '成功' : (status === 'error'? '失败' : '');
+        notification[status]({
+            message: `${text}提示:`,
+            description:msg,
+            duration:2
+        })
+    }
+    handleSaveNursingRecord=()=>{
+    	this.props.form.validateFieldsAndScroll((err, fieldsValue) => {
+		    if(!err) {
+		    	let _this = this;
+				const elderlyInfo = this.state.elderlyInfo;	
+			    const { id }=this.state.elderlyNursingInfo
+				const url=id?'updateNursingRecoder':'saveNursingRecoder';
+				const values = {...fieldsValue,elderlyId:elderlyInfo.id,id};
+				httpServer[url](values).then(res=>{	
+					if(res.code===200){
+			       	   	 _this.setState({elderlyNursingInfo:{}},function(){
+			       	   	 	_this.props.form.resetFields();
+			       	   	 	_this.fetchNursingByElderly()
+			       	   	 })
+			       	   	 this.notice('success','保存成功')
+			       	}else{
+			       	   	 this.notice('error',res.msg)
+       	  		    } 
+				})
+		    }
+		})
+    }
+    listNursingItems=()=>{
+    	const nursingId = this.state.eldeylyNursingInfo.id;
+    	
+    }
+    handleNursingItem=()=>{ 
+    	this.setState({itemFlag:true});
+    }
+    closeModal=()=>{
+    	this.fetchNursingItems();
+    	this.setState({itemFlag:false});
+    }
+    render() {
+        const { elderlyNursingInfo,elderlyInfo,itemFlag,dates,nursingItems,curDate} = this.state;
+        const { getFieldDecorator } = this.props.form;
+        return ( 
+        	<Fragment>
+        	 
+        	<Row gutter={24}>
+        	   <Col span={6}>
+                <Card title="基础信息">
+				    <Meta
+				        avatar={<Avatar src="http://imgsrc.baidu.com/imgad/pic/item/09fa513d269759ee03b7bedab8fb43166d22df38.jpg" />}
+				        title={elderlyInfo.name}
+				        description={<span>性别:&emsp;<Tag color="#108ee9">{elderlyInfo.sex}</Tag>&emsp;年龄:&emsp;<Tag color="orange">{elderlyInfo.age}岁</Tag>&emsp;&emsp;房间:&emsp;{elderlyInfo.roomName}</span>}
+				    />
+				</Card>
+				<Divider orientation="left">记录日期</Divider>
+				<div style={{height:300}}>
+				     <Calendar fullscreen={false} dateCellRender={this.dateCellRender} style={{background:'#fff'}} onSelect={this.onSelect} value={curDate}/>
+				</div>   
+			    </Col>
+			    <Col span={18}>
+        	        <Form  className="ant-advanced-search-form">
+        	        <Divider orientation="left">护理记录</Divider> 
+        	        <Row gutter={24}>
+                        <Col span={6}>  
+                            <Form.Item
+                                label="思维能力"
+                            >
+                                {getFieldDecorator('a4',{
+                                    initialValue: elderlyNursingInfo.a4,
+                                    rules: [{ required: true, message: '不可为空' }],
+                                })(
+                                    <Input  />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}> 
+                            <Form.Item
+                                label="行动能力"                            
+                            >
+                                {getFieldDecorator('a5', {
+                                    initialValue: elderlyNursingInfo.a5,
+                                    rules: [{ required: true, message: '不可为空' }],
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}> 
+                            <Form.Item
+                                label="表达能力"
+                            >
+                                {getFieldDecorator('a6', {
+                                    initialValue: elderlyNursingInfo.a6,
+                                    rules: [{ required: true, message: '不可为空' }],
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}> 
+                            <Form.Item
+                                label="&emsp;&emsp;听力" 
+                            >
+                                {getFieldDecorator('a7', {
+                                    rules: [{ required: true, message: '不可为空' }],
+                                    initialValue: elderlyNursingInfo.a7
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}> 
+                            <Form.Item
+                                label="&emsp;现病史"
+                                
+                            >
+                                {getFieldDecorator('a8', {
+                                	rules: [{ required: true, message: '不可为空' }],
+                                    initialValue: elderlyNursingInfo.a8
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}> 
+                            <Form.Item
+                                label="以往病史"
+                            >
+                                {getFieldDecorator('a9', {
+                                	rules: [{ required: true, message: '不可为空' }],
+                                    initialValue:  elderlyNursingInfo.a9
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}> 
+                            <Form.Item
+                                label="护理需求"  
+                            >
+                                {getFieldDecorator('a10', {
+                                	rules: [{ required: true, message: '不可为空' }],
+                                    initialValue:  elderlyNursingInfo.a10
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Divider orientation="left">护理措施</Divider> 
+                    <Row gutter={24}>
+                        <Col span={12}>
+                            <Form.Item
+                                label="饮食情况"
+                            >
+                                {getFieldDecorator('a11',{
+                                	rules: [{ required: true, message: '不可为空' }],
+                                    initialValue:  elderlyNursingInfo.a11
+                                })(
+                                    <TextArea   rows={3} />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}> 
+                            <Form.Item
+                                label="睡眠情况"
+                            >
+                                {getFieldDecorator('a12',{
+                                	rules: [{ required: true, message: '不可为空' }],
+                                    initialValue:  elderlyNursingInfo.a12
+                                })(
+                                   <TextArea   rows={3} />  
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}> 
+                            <Form.Item
+                                label="如厕情况"
+                            >
+                                {getFieldDecorator('a13',{
+                                	rules: [{ required: true, message: '不可为空' }],
+                                    initialValue:  elderlyNursingInfo.a13 
+                                })(
+                                   <TextArea   rows={3} />  
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>  
+                            <Form.Item
+                                label="既往病史"   
+                            >
+                                {getFieldDecorator('a14',{
+                                	rules: [{ required: true, message: '不可为空' }],
+                                    initialValue:  elderlyNursingInfo.a14
+                                })(
+                                    <TextArea   rows={3} /> 
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}>  
+                            <Form.Item
+                                label="家属需求"
+                            >
+                                {getFieldDecorator('a15',{
+                                	rules: [{ required: true, message: '不可为空' }],
+                                    initialValue:  elderlyNursingInfo.a15
+                                })(
+                                    <TextArea   rows={3} />
+                                )}
+                            </Form.Item>
+                        </Col>
+                    </Row>  
+                    <div style={{textAlign:'right'}}>
+                    <Button type="primary" onClick={this.handleSaveNursingRecord}>{elderlyNursingInfo.id?"更新护理记录":"保存护理记录"}</Button>
+                    {elderlyNursingInfo.id?
+                    	<Fragment>
+	                    	<Popconfirm title="确定删除?" onConfirm={this.handleDelete}>
+			                  <Button style={{color:'#2ebc2e'}}>删除此条护理记录</Button>
+			                </Popconfirm>
+			                <Button onClick={this.handleNursingItem}>新增护理项目</Button>
+			            </Fragment>:null    
+			        }
+                     {elderlyNursingInfo.id?
+                     <div>
+                        
+                    	 <Divider orientation="left">护理项目</Divider>
+                         <EditTable key={elderlyNursingInfo.id} data={nursingItems} getItems={this.fetchNursingItems}/>
+                    	 
+                     </div>:null}
+                    </div>
+                    <style>
+                     {`
+                    	.ant-advanced-search-form {
+						  padding: 24px;
+						  background: #fbfbfb;
+						  border: 1px solid #d9d9d9;
+						  border-radius: 6px;
+						}
+						
+						.ant-advanced-search-form .ant-form-item {
+						  display: flex;
+						}
+						
+						.ant-advanced-search-form .ant-form-item-control-wrapper {
+						  flex: 1;
+						}
+                     `}
+                    </style>
+                   </Form>
+                </Col>
+              </Row>
+              {
+              	itemFlag?<EditForm pid={elderlyNursingInfo.id} date={elderlyNursingInfo.addtime} customerId={elderlyInfo.customerId}   auth = {this.props.auth} close={this.closeModal}/>:null
+              }
+            
+            </Fragment>    
+        )
+    }
+}
+export default Form.create()(RecordEdit)

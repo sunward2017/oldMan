@@ -1,0 +1,501 @@
+import React, {
+    Component,
+} from 'react';
+import { Table, Tag, Divider, Popconfirm, Button, Modal, Form, Input, DatePicker, Radio, Select,notification } from 'antd';
+import BreadcrumbCustom from '../BreadcrumbCustom';
+import moment from 'moment';
+import httpServer from '../../axios/index';
+
+const RadioGroup = Radio.Group;
+class CMT extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            dataSource: [],
+            modalFlag: false,
+            record: '',
+            customerId: '',
+            customers: []
+        }
+    }
+
+    componentDidMount() {
+        this.CustomerList()
+    }
+    componentWillUnmount(){
+        this.setState = (state,callback)=>{
+            return;
+        }
+    }
+    CustomerList() {
+        let _this = this;
+        httpServer.listCustomerInfo().then(res => {
+            if(res.data && res.data.length > 0) {
+                let customers = res.data.map(i => ({
+                    cId: i.customerId,
+                    cName: i.customerName
+                }))
+                this.setState({
+                    customers,
+                    customerId: customers[0].cId
+                }, () => {
+                    _this.List();
+                })
+            }
+        })
+    }
+    List() {
+        const customerId = this.state.customerId;
+        httpServer.listOperator({
+            customerId
+        }).then(res => {
+            if(res.code===200&&res.data) {
+                this.setState({
+                    dataSource: res.data
+                })
+            }else{
+                this.setState({
+                    dataSource:[]
+                })
+            }
+        })
+    }
+    handleChange = (v) => {
+        let _this = this;
+        this.setState({
+            customerId: v
+        }, () => {
+            _this.List();
+        })
+    }
+
+    /*修改操作*/
+    handleModify(record) {
+        this.setState({
+            modalFlag: true,
+            record
+        });
+    }
+    /*删除操作*/
+    handleRowDelete(id, record) {
+        const _this = this;
+        httpServer.deleteOperator({id}).then(res => {
+            if (res.code === 200) {
+                const args = {
+                    message: '通信成功',
+                    description: res.msg,
+                    duration: 2,
+                };
+                notification.success(args);
+                _this.List();
+            } else {
+                console.log(res.message);
+            }
+            this.setState({modalFlag:false,record:''});
+        }).catch(
+            err => { console.log(err) }
+        )
+    }
+    /*添加按钮*/
+    handleAdd() {
+        this.setState({
+            modalFlag: true,
+            record: ''
+        });
+    }
+
+    /*关闭弹框*/
+    handleCancel() {
+        this.setState({
+            modalFlag: false,
+            record: ''
+        });
+    }
+    /*提交完成添加客户信息*/
+    handleSubmit = (e) => {
+        e.preventDefault();
+        let _this = this;
+        this.props.form.validateFieldsAndScroll((err, fieldsValue) => {
+            if(!err) {
+                const values = {
+                    ...fieldsValue,
+                    'entryTime': fieldsValue['entryTime'].format('YYYY-MM-DD HH:mm:ss'),
+                    'brithday': fieldsValue['brithday'].format('YYYY-MM-DD HH:mm:ss'),
+                    'customerId': this.state.customerId
+                };
+                const { id }= this.state.record;
+
+                if(id){
+                    values.id = id;
+                    httpServer.updateOperator(values).then((res)=>{
+                        console.log(res);
+                        const args = {
+                            message: '修改成功',
+                            description: res.msg,
+                            duration: 2,
+                        };
+                        notification.success(args);
+                        this.setState({
+                            modalFlag: false,
+                            record: ''
+                        });
+                        _this.List()
+                    })
+                }else{
+                    httpServer.saveOperator(values).then((res) => {
+                        const args = {
+                            message: '添加成功',
+                            description: res.msg,
+                            duration: 2,
+                        };
+                        notification.success(args);
+                        this.setState({
+                            modalFlag: false,
+                            record: ''
+                        });
+                        _this.List()
+                    })
+
+                }
+
+            }
+        });
+    }
+
+    /*自定义手机号校验*/
+    validatePhoneNumber(rule, value, callback) {
+        if(value && !(/^[1][3,4,5,7,8][0-9]{9}$/.test(value))) {
+            callback('手机号码格式不正确');
+        } else {
+            callback();
+        }
+    }
+
+    render() {
+        const {
+            getFieldDecorator
+        } = this.props.form;
+        const {
+            dataSource,
+            modalFlag,
+            customers,
+            customerId
+        } = this.state;
+        const {
+            account,
+            phone,
+            jobNumber,
+            password,
+            level,
+            name,
+            faceUrl,
+            brithday,
+            entryTime,
+            status,
+            memo,
+            sex
+        } = this.state.record;
+        const formItemLayout = {
+            labelCol: {
+                xs: {
+                    span: 24
+                },
+                sm: {
+                    span: 4
+                },
+            },
+            wrapperCol: {
+                xs: {
+                    span: 24
+                },
+                sm: {
+                    span: 20
+                },
+            },
+        };
+
+        const tailFormItemLayout = {
+            wrapperCol: {
+                xs: {
+                    span: 24,
+                    offset: 0,
+                },
+                sm: {
+                    span: 16,
+                    offset: 8,
+                },
+            },
+        };
+
+        const columns = [{
+            title: '序号',
+            render: (text, record, index) => `${index+1}`,
+            width: '5%',
+            key:'index'
+        }, {
+            title: '头像',
+            dataIndex: 'faceUrl',
+            key: 'faceUrl',
+            width: '5%'
+        }, {
+            title: '帐号',
+            dataIndex: 'account',
+            key: 'account',
+            width: '5%'
+        }, {
+            title: '工号',
+            dataIndex: 'jobNumber',
+            key: 'jobNumber',
+            width: '15%'
+        }, {
+            title: '级别',
+            dataIndex: 'level',
+            key: 'level',
+            width: '5%',
+            render(text){
+                return text === 1 ? <Tag color = "orange">客户端</Tag>:<Tag color = "blue">管理端</Tag >
+            }
+        }, {
+            title: '联系方式',
+            dataIndex: 'phone',
+            key: 'phone',
+            width: '10%'
+        }, {
+            title: '性别',
+            dataIndex: 'sex',
+            key: 'sex',
+            width: '5%',
+            render: (text, record) => {
+                return text === 1 ? <Tag color = "green" >男 </Tag>:<Tag color = "red">女</Tag >
+            }
+        }, {
+            title: '状态',
+            dataIndex: 'status',
+            key: 'status',
+            render: (text, record) => {
+                return record.status === 1 ? <Tag color = "green" > 正常 </Tag>:<Tag color="red">注销</Tag >
+            },
+            width: '5%'
+        }, {
+            title: '备注',
+            dataIndex: 'memo',
+            key: 'memo',
+
+        }, {
+            title: '操作',
+            dataIndex: 'action',
+            key: 'action',
+            width: '12%',
+            render: (text, record) => {
+                return(
+					<span>
+            <span onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</span>
+              <Divider type="vertical" />
+              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+                <span style={{color:'#2ebc2e'}}>删除</span>
+              </Popconfirm>
+          </span>
+                )
+            },
+        }];
+        return(
+			<div>
+				<BreadcrumbCustom first="UI" second="操作员" />
+				<Select
+					placeholder="请选择机构"
+					value={customerId}
+					onChange={this.handleChange}
+					style={{ width: 200 }} >
+                    { customers.map(item => (<Select.Option key={item.cId} value={item.cId}>{item.cName}</Select.Option> ))}
+				</Select>
+				<Divider type="vertical" />
+				<Button type="primary" onClick={()=>{this.handleAdd()}}>点击添加</Button>
+				<Divider />
+				<Table
+					bordered
+					rowKey="id"
+					dataSource={dataSource}
+					columns={columns}
+					pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+				/>
+                {
+                    modalFlag?
+						<Modal
+							title="操作员信息输入"
+							// width='60%'
+							okText="提交"
+							visible={modalFlag}
+
+							onCancel={()=>{this.handleCancel()}}
+							maskClosable={false}
+							footer={null}
+						>
+							<Form hideRequiredMark onSubmit={this.handleSubmit}>
+								<Form.Item
+									label="账号"
+                                    {...formItemLayout}
+									style={{marginBottom:'4px'}}
+								>
+                                    {getFieldDecorator('account', {
+                                        rules: [{ required: true, message: "请输入客户名称!"}],
+                                        initialValue:account,
+                                    })(
+										<Input />
+                                    )}
+								</Form.Item>
+								<Form.Item
+									label="工号"
+                                    {...formItemLayout}
+									style={{marginBottom:'4px'}}
+								>
+                                    {getFieldDecorator('jobNumber', {
+                                        rules: [{ required: true, message: "请输入工号!"}],
+                                        initialValue:jobNumber
+                                    })(
+										<Input />
+                                    )}
+								</Form.Item>
+								<Form.Item
+									label="姓名"
+                                    {...formItemLayout}
+									style={{marginBottom:'4px'}}
+								>
+                                    {getFieldDecorator('name', {
+                                        rules: [{ required: false, message: "请输入地址信息!"}],
+                                        initialValue:name,
+                                    })(
+										<Input />
+                                    )}
+								</Form.Item>
+								<Form.Item
+									label="密码"
+                                    {...formItemLayout}
+									style={{marginBottom:'4px'}}
+								>
+                                    {getFieldDecorator('password', {
+                                        rules: [{ required: false, message: "密码" }],
+                                        initialValue:password,
+                                    })(
+										<Input type="password" />
+                                    )}
+								</Form.Item>
+								<Form.Item
+									label="电话号码"
+                                    {...formItemLayout}
+									style={{marginBottom:'4px'}}
+								>
+                                    {getFieldDecorator('phone', {
+                                        rules: [{ required: true, message: "请输入电话号码!"},{
+                                            validator:this.validatePhoneNumber,
+                                        }],
+                                        initialValue:phone,
+                                    })(
+										<Input />
+                                    )}
+								</Form.Item>
+								<Form.Item
+									label="级别"
+                                    {...formItemLayout}
+									style={{marginBottom:'4px'}}
+								>
+                                    {getFieldDecorator('level', {
+                                        rules: [{ required:true, message: "请输入联系人!"}],
+                                        initialValue:level,
+                                    })(
+										<RadioGroup>
+											<Radio value={1}>客户端</Radio>
+											<Radio value={2}>管理端</Radio>
+										</RadioGroup>
+                                    )}
+								</Form.Item>
+								<Form.Item
+									label="头像地址"
+                                    {...formItemLayout}
+									style={{marginBottom:'4px'}}
+								>
+                                    {getFieldDecorator('faceUrl', {
+                                        rules: [{ required: false, message: "请输入头像地址!"}],
+                                        initialValue:faceUrl,
+                                    })(
+										<Input />
+                                    )}
+								</Form.Item>
+								<Form.Item
+									label="入职时间"
+                                    {...formItemLayout}
+									style={{marginBottom:'4px'}}
+								>
+                                    {getFieldDecorator('entryTime', {
+                                        rules: [{ required: false, message: "请选择日期!" }],
+                                        initialValue:entryTime?moment(entryTime,'YYYY-MM-DD') : null,
+                                    })(
+										<DatePicker format="YYYY-MM-DD" />
+                                    )}
+								</Form.Item>
+
+								<Form.Item
+									label="生日"
+                                    {...formItemLayout}
+									style={{marginBottom:'4px'}}
+								>
+                                    {getFieldDecorator('brithday', {
+                                        rules: [{ required: false, message: '请选择日期!' }],
+                                        initialValue:brithday?moment(brithday,'YYYY-MM-DD') : null,
+                                    })(
+										<DatePicker format="YYYY-MM-DD" />
+                                    )}
+								</Form.Item>
+								<Form.Item
+									label="性别"
+                                    {...formItemLayout}
+									style={{marginBottom:'4px'}}
+								>
+                                    {getFieldDecorator('sex', {
+                                        rules: [{ required: true, message: "请选择性别!"}],
+                                        initialValue:sex,
+                                    })(
+										<RadioGroup>
+											<Radio value={1}>男</Radio>
+											<Radio value={0}>女</Radio>
+										</RadioGroup>
+                                    )}
+								</Form.Item>
+								<Form.Item
+									label="状态"
+                                    {...formItemLayout}
+									style={{marginBottom:'4px'}}
+								>
+                                    {getFieldDecorator('status', {
+                                        rules: [{ required: true, message: "请选择状态!" }],
+                                        initialValue:status,
+                                    })(
+										<RadioGroup>
+											<Radio value={1}>正常</Radio>
+											<Radio value={0}>注销</Radio>
+										</RadioGroup>
+                                    )}
+								</Form.Item>
+								<Form.Item
+									label="备注"
+                                    {...formItemLayout}
+									style={{marginBottom:'4px'}}
+								>
+                                    {getFieldDecorator('memo', {
+                                        rules: [{ required: false, message: "请输入备注信息!" }],
+                                        initialValue:memo,
+                                    })(
+										<Input />
+                                    )}
+								</Form.Item>
+								<Form.Item {...tailFormItemLayout}>
+									<Button type="primary" htmlType="submit">确认提交</Button>
+								</Form.Item>
+							</Form>
+						</Modal>:null
+                }
+			</div>
+        )
+    }
+}
+const Worker = Form.create()(CMT);
+export default Worker;

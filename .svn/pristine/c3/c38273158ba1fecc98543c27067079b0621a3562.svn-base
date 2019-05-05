@@ -1,0 +1,74 @@
+import React, {Component,Fragment} from 'react';
+import { Table, Popconfirm,Button,notification,Divider, Tag} from 'antd';
+import httpServer from '@/axios/index';
+
+
+export default class EditTable extends Component{
+	handleDeleteItem=(t)=>{
+		 httpServer.deleteNursingItemRecoder({id:t.id}).then(res=>{     
+		 	if(res.code===200){
+		 		const args = {
+			        message: '提示',
+			        description: res.msg,
+			        duration: 2,
+			    };
+			    notification.success(args);
+		 	}else{
+		 	    const args = {
+			        message: '提示',
+			        description: res.msg,
+			        duration: 2,
+			    };
+			    notification.error(args);	
+		 	}
+		 	this.props.getItems()        
+		 })
+	}
+	state={
+		data:[]
+	}
+	componentWillReceiveProps(nextProps) {
+		const {data} = nextProps;
+	      this.setState({
+	        data: data,
+	      })
+	    
+	}
+	render(){
+		const {data} = this.state;
+		const columns = [{
+			  title: '检查项',
+			  dataIndex: 'itemName',
+			  key: 'itemName',
+			}, {
+			  title: '护理次数',
+			  dataIndex: 'times',
+			  key: 'times',
+			}, {
+			  title: '护理人员',
+			  dataIndex: 'workerName',
+			  key: 'workerName',
+			},{
+			  title: '护理日期',
+			  dataIndex: 'nursingTime',
+			  key: 'nursingTime',
+			}, {
+			  title: '价格(元)',
+			  key: 'price',
+			  dataIndex: 'price',
+			}, {
+				title:'金额(元)',
+				key:'money',
+				dataIndex:'money'
+			},{
+			  title: '操作',
+			  key: 'action',
+			  render: (text, record) => (
+			    <Popconfirm title="确定删除?" onConfirm={()=>{this.handleDeleteItem(text)}}>
+				    <Button style={{color:'#2ebc2e'}}>删除</Button>
+				</Popconfirm>
+			  ),
+			}];
+		return(<Table rowKey='id' columns={columns} dataSource={data} />)
+	}
+}

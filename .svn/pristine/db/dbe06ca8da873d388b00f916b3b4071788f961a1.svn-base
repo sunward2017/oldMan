@@ -1,0 +1,18 @@
+export const clientMenus = [
+    { key: '/app/pension-agency/dashboard/index', title: '首页', icon: 'mobile', component: 'ClientDashboard' },
+    {
+        key: '/app/ui', title: '预约管理', icon: 'scan',
+        sub: [
+            { key: '/app/pension-agency/ui/buttons', title: '按钮', component: 'Buttons' },
+        ],
+    },
+    {
+        key: '/app/pension-agency/basicInfo', title: '基础信息', icon: 'tool',
+        sub: [
+            { key: '/app/pension-agency/basicInfo/workerInfo/WorkerInfo', title: '护工信息', component: 'WorkerInfo' },
+            { key: '/app/pension-agency/basicInfo/nurseInfo/NurseInfo', title: '护士信息', component: 'NurseInfo' },
+            { key: '/app/pension-agency/basicInfo/nursingGrade/NursingGrade', title: '护理等级', component: 'NursingGrade' },
+            { key: '/app/pension-agency/basicInfo/workProjects/WorkProjects', title: '工作项目', component: 'WorkProjects' },
+        ],
+    },
+];

@@ -1,0 +1,14 @@
+import React from 'react';
+import { Row, Col, Card, notification } from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+
+export default class LeaveAudit extends React.Component {
+    render() {
+        return (
+            <div>
+                <BreadcrumbCustom first="审核管理" second="出院审核" />
+
+            </div>
+        )
+    }
+}

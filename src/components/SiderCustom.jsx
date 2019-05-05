@@ -1,0 +1,129 @@
+/**
+ * Created by hao.cheng on 2017/4/13.
+ */
+import React, { Component } from 'react';
+import { Layout } from 'antd';
+import { withRouter } from 'react-router-dom';
+import { adminMenus } from '../routes/config.admin';
+import { clientMenus } from '../routes/config.client';
+import SiderMenu from './SiderMenu';
+import img from '../style/imgs/logo_icon.png'
+
+const { Sider } = Layout;
+
+class SiderCustom extends Component {
+    state = {
+        collapsed: false,
+        menus:[],
+        newMenus:[],
+        mode: 'inline',
+        openKey: '',
+        selectedKey: '',
+        firstHide: true,        // 点击收缩菜单，第一次隐藏展开子菜单，openMenu时恢复
+    };
+    componentWillMount(){
+        if(this.props.auth&&this.props.auth.level===2){
+            this.setState({newMenus:adminMenus});
+            return;
+        }else{
+            if(this.props.auth&&this.props.auth.perminsStrlist.length===0){
+              this.setState({newMenus:clientMenus}); 
+              return; 
+            }
+            const menus= JSON.parse(JSON.stringify(clientMenus));
+            this.setState({menus},function(){
+               const newMenus = this.getMenusArray(this.state.menus);
+                for(let i= 0;i<newMenus.length;i++){
+                    if(newMenus[i].sub && newMenus[i].sub.length>0){
+                        const a = this.getMenusArray(newMenus[i].sub);
+                        newMenus[i].sub = a;
+                    }
+                } 
+                this.setState({newMenus});
+                this.setMenuOpen(this.props);
+            })
+        }
+    }
+
+    getMenusArray(menus){
+        const newMenus =[];
+        if(this.props.auth && this.props.auth.perminsStrlist.length>0){
+            for(let i =0 ;i<this.props.auth.perminsStrlist.length;i++){
+                menus && menus.map((item,index)=>{
+                    if(item.id === this.props.auth.perminsStrlist[i]){
+                        newMenus.push(item);
+                    }
+                })  
+            }     
+        }
+        return newMenus;
+    }
+    componentWillReceiveProps(nextProps) {
+        this.onCollapse(nextProps.collapsed);
+        this.setMenuOpen(nextProps)
+    }
+    setMenuOpen = props => {
+        const { pathname } = props.location;
+        this.setState({
+            openKey: pathname.split('/').filter((r,i) => {
+                if(i===0) return '/';
+                if(i<=3) return r;
+                return null;
+            }).join('/'),
+            selectedKey: pathname
+        });
+    };
+    onCollapse = (collapsed) => {
+        this.setState({
+            collapsed,
+            firstHide: collapsed,
+            mode: collapsed ? 'vertical' : 'inline',
+        });
+    };
+    menuClick = e => {
+        this.setState({
+            selectedKey: e.key
+        });
+        const { popoverHide } = this.props;     // 响应式布局控制小屏幕点击菜单时隐藏菜单操作
+        popoverHide && popoverHide();
+    };
+    openMenu = v => {
+        this.setState({
+            openKey: v[v.length - 1],
+            firstHide: false,
+        })
+    };
+    render() {
+        return (
+            <Sider
+                trigger={null}
+                breakpoint="lg"
+                collapsed={this.props.collapsed}
+                style={{ overflowY: 'auto' }}
+            >
+                <div className="logo">
+                  <img src={img} alt="" />&emsp;<span>{this.props.collapsed ? '' : '护理管家'}</span>
+                </div>
+                <SiderMenu
+                    menus={this.state.newMenus}
+                    onClick={this.menuClick}
+                    theme="dark"
+                    mode="inline"
+                    selectedKeys={[this.state.selectedKey]}
+                    openKeys={this.state.firstHide ? null : [this.state.openKey]}
+                    onOpenChange={this.openMenu}
+                />
+                <style>
+                    {`
+                    #nprogress .spinner{
+                        left: ${this.state.collapsed ? '70px' : '206px'};
+                        right: 0 !important;
+                    }
+                    `}
+                </style>
+            </Sider>
+        )
+    }
+}
+
+export default withRouter(SiderCustom);

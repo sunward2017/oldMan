@@ -1,0 +1,459 @@
+import React, {
+	Component,
+	Fragment
+} from 'react';
+import { Table, Tag, Divider, Popconfirm, Button, Modal, Form, Input, DatePicker, Radio, Select, notification } from 'antd';
+import BreadcrumbCustom from '../BreadcrumbCustom';
+import moment from 'moment';
+ 
+import httpServer from '../../axios/index';
+import EditableTable from './components/editTable'
+
+const RadioGroup = Radio.Group;
+class EstimateLib extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			dataSource: [],
+			modalFlag: false,
+			record: '',
+			customerId: '',
+			customers: [],
+			editFlag: false,
+			uuid:'',
+		}
+	}
+	
+	componentDidMount() {
+	    this.CustomerList()
+	}
+	
+	componentWillUnmount(){
+		this.setState = (state,callback)=>{
+          return;
+       }
+	}
+	
+	CustomerList() {
+		let _this = this;
+		httpServer.listCustomerInfo().then(res => {
+			if(res.data && res.data.length > 0) {
+				let customers = res.data.map(i => ({
+					cId: i.customerId,
+					cName: i.customerName
+				}))
+				this.setState({
+					customers,
+					customerId: customers[0].cId
+				}, () => {
+					_this.List();
+				})
+			}
+		})
+	}
+	List() {
+		const customerId = this.state.customerId;
+		httpServer.listEstimateLib({
+			customerId
+		}).then(res => {
+			if(res.data) {
+				this.setState({
+					dataSource: res.data
+				})
+			}
+		})
+	}
+	handleChange = (v) => {
+		let _this = this;
+		this.setState({
+			customerId: v
+		}, () => {
+			_this.List();
+		})
+	}
+
+	/*修改操作*/
+	handleModify(record) {
+		this.setState({
+			modalFlag: true,
+			record,
+			uuid:record.uuid,
+			editFlag:true,
+		});
+	}
+	/*删除操作*/
+	handleRowDelete(id, record) {
+		const _this = this;
+		httpServer.deleteEstimateLib({
+			id
+		}).then(res => {
+			if(res.code === 200) {
+				const args = {
+					message: '通信成功',
+					description: res.msg,
+					duration: 2,
+				};
+				notification.success(args);
+				_this.List();
+			} else {
+				console.log(res.message);
+			}
+			this.setState({
+				modalFlag: false,
+				record: ''
+			});
+		}).catch(
+			err => {
+				console.log(err)
+			}
+		)
+	}
+	/*添加按钮*/
+	handleAdd() {
+		this.setState({
+			record:{
+				title:'',
+				type:1,
+				mode:1,
+				content:'',
+				status:1,
+			},
+			modalFlag: true,
+			editFlag:true,
+			uuid:'',
+		});
+	}
+    
+    
+	/*关闭弹框*/
+	handleCancel=()=>{
+		this.setState({
+			modalFlag: false,
+			record: ''
+		});
+	}
+	/*提交完成添加客户信息*/
+	handleSubmit = (e) => {
+		
+		const form = this.props.form;
+		const _this = this;
+        form.validateFields((err, fieldsValue) => {
+			if(!err) {
+				const values = {
+					...fieldsValue,
+					'customerId': this.state.customerId
+				};
+				const {id} = this.state.record;
+				if(id){
+              	    values.id = id;
+					httpServer.updateEstimateLib(values).then((res)=>{
+			   	    	 
+			   	    	const args = {
+							message: '保存成功',
+							description: res.msg,
+							duration: 2,
+						};
+						notification.success(args);
+						this.setState({
+							modalFlag: false,
+							record: ''
+						});
+						_this.List()
+			   	    })
+			    }else{
+			    	notification.error({
+			    		message: '提示',
+						description: '没有配置选项',
+						duration: 2,
+			    	})
+			    }
+			}
+		});
+	}
+	getUuid=()=>{
+		const _this = this;
+		this.props.form.validateFields((err, fieldsValue) => {
+			if(!err) {
+				const values = {
+					...fieldsValue,
+					'customerId': this.state.customerId
+				};
+				httpServer.saveEstimateLib(values).then((res) => {
+					const record = this.state.record;
+					      record.id = res.data.id;
+					this.setState({record,uuid:res.data.uuid})
+					_this.List()
+				})
+			}
+		})	
+	}
+    checkTitle(rule,value,cb){
+       if(!value){
+       	    cb('不可为空')
+       }else{
+       	    const id = this.state.record.id;
+       	    if(!id){
+	       	    httpServer.checkEestimateLib({title:value}).then(res=>{
+				    if(res.code!==200){
+					    cb('评估项目已存在')
+						this.setState({editFlag:false})	
+					}else{
+					  	cb()
+					  	this.onBlur()
+					}
+			    })
+       	    }else{
+       	    	cb()
+       	    }
+       }
+    }
+	onBlur=()=>{
+		this.props.form.validateFields((err,value)=>{
+			if(!err){
+				this.setState({editFlag:true})	
+			}else{ 
+				this.setState({editFlag:false})
+			}
+		})	
+	}
+	render() {
+		const {
+			getFieldDecorator
+		} = this.props.form;
+		const {
+			dataSource,
+			modalFlag,
+			customers,
+			customerId,
+			editFlag,
+			uuid,
+		} = this.state;
+		const {
+			id,
+			type,
+			title,
+			content,
+			status,
+			mode,
+		} = this.state.record;
+		const formItemLayout = {
+			labelCol: {
+				xs: {
+					span: 24
+				},
+				sm: {
+					span: 4
+				},
+			},
+			wrapperCol: {
+				xs: {
+					span: 24
+				},
+				sm: {
+					span: 20
+				},
+			},
+		};
+
+		const tailFormItemLayout = {
+			wrapperCol: {
+				xs: {
+					span: 24,
+					offset: 0,
+				},
+				sm: {
+					span: 4,
+					offset: 20,
+				},
+			},
+		};
+
+		const columns = [{
+			title: '序号',
+			render: (text, record, index) => `${index+1}`,
+			width: '5%',
+			key: 'index',
+		}, {
+			title: '标题',
+			dataIndex: 'title',
+			key: 'title',
+			width: '15%'
+		}, {
+			title: '题干',
+			dataIndex: 'content',
+			key: 'content',
+		 
+		}, {
+			title: '类型',
+			dataIndex: 'type',
+			key: 'type',
+			width: '5%',
+			render:(text,record)=>{
+				switch(text){
+					case 1: return '文字题';break;
+					case 2: return '视频题'; break;
+					case 3:  return '音频题'; break;
+					default: return '图片题';
+				}
+			}
+		}, {
+			title: '答题方式',
+			dataIndex: 'mode',
+			key: 'mode',
+			width: '8%',
+			render: (text, record) => {
+			    return text ==='1'?'选择题':'问答题'
+			}
+		}, {
+			title: '标志集合',
+			dataIndex: 'status',
+			key: 'status',
+			render: (text, record) => {
+				return record.status === 1 ? < Tag color = "green" >启用< /Tag>:<Tag color="red">禁用</Tag >
+			},
+			width: '5%'
+		},  {
+			title: '操作',
+			dataIndex: 'action',
+			key: 'action',
+			width: '12%',
+			render: (text, record) => {
+				return(
+					<span>
+			            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+			            <Divider type="vertical" />
+			            <Divider type="vertical" />
+			            <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+			               <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+			            </Popconfirm>
+			          </span>
+				)
+			},
+		}];
+		return(
+			<div>
+        <BreadcrumbCustom first="UI" second='评估库' />
+        <Select
+	        placeholder="请选择机构"
+	        value={customerId}
+	        onChange={this.handleChange}
+	        style={{ width: 200 }}
+	      >
+	        {customers.map(item => (
+	          <Select.Option key={item.cId} value={item.cId}>
+	            {item.cName}
+	          </Select.Option>
+	        ))}
+	    </Select>
+	    <Divider type="vertical"/>
+        <Button type='primary' onClick={()=>{this.handleAdd()}}>点击添加</Button>
+        <Divider />
+          <Table 
+            rowKey="id"
+            bordered
+            dataSource={dataSource} 
+            columns={columns} 
+            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+          />
+        
+        {
+          modalFlag?
+          <Modal 
+            title="评估信息输入"
+            width='40%'
+            onCancel={this.handleCancel}
+            visible={modalFlag}
+            footer={null}
+          >
+            <Form hideRequiredMark>
+              <Form.Item
+                label='题目简介'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                {getFieldDecorator('title', {
+                  rules: [{ required: true, message: '请输入标题' },{
+                  	 validator:this.checkTitle.bind(this)
+                  }],
+                  initialValue:title,
+                })(
+                  <Input/>
+                )}
+              </Form.Item>
+              <Form.Item
+                label='题干'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                {getFieldDecorator('content', {
+                  rules: [{ required: true, message: '请输入题干' }],
+                  initialValue:content,
+                })(
+                  <Input onChange={()=>this.onBlur(2)}/>
+                )}
+              </Form.Item>
+              <Form.Item
+                label='类型'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                {getFieldDecorator('type', {
+                  rules: [{ required: true, message: '请选择状态!' }],
+                  initialValue:type,
+                })(
+                    <Radio.Group  buttonStyle="solid">
+				        <Radio.Button value={1}>文字题</Radio.Button>
+				        <Radio.Button value={2}>视频题</Radio.Button>
+				        <Radio.Button value={3}>音频题</Radio.Button>
+				        <Radio.Button value={4}>图片题</Radio.Button>
+				    </Radio.Group>
+                )}
+              </Form.Item>
+              <Form.Item
+                label='答题方式'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                {getFieldDecorator('mode', {
+                  rules: [{ required: true, message: '请选择状态!' }],
+                  initialValue:mode,
+                })(
+                  <Radio.Group buttonStyle="solid">
+                    <Radio.Button value={1}>选择</Radio.Button>
+                    <Radio.Button value={2}>问答</Radio.Button>
+                  </Radio.Group>
+                )}
+              </Form.Item>
+              <Form.Item
+                label="答案选项"
+                {...formItemLayout}
+              >
+                 <EditableTable  customerId={customerId} uuid={uuid} sendEstimate={this.getUuid}  editFlag={editFlag}/>
+              </Form.Item>
+              <Form.Item
+                label='标志集合'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                {getFieldDecorator('status', {
+                  rules: [{ required: true, message: '请选择状态!' }],
+                  initialValue:status,
+                })(
+                  <Radio.Group buttonStyle="solid"> 
+                    <Radio.Button value={1}>启用</Radio.Button>
+                    <Radio.Button value={2}>禁用</Radio.Button>
+                  </Radio.Group>
+                )}
+              </Form.Item>
+              <Form.Item {...tailFormItemLayout}>
+                <Button type="primary" onClick={this.handleSubmit}>保存</Button>
+              </Form.Item>
+            </Form>
+          </Modal>:null
+        } 
+      </div>
+      )
+	}
+}
+const Lib = Form.create()(EstimateLib);
+export default Lib;

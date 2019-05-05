@@ -1,0 +1,284 @@
+import React,{Fragment} from 'react';
+import { Card, Input, Col, Row, Tabs, Button, Form, Avatar, notification, Divider } from 'antd';
+import httpServer from '@/axios';
+import EditTable from './editTable'
+
+const TabPane = Tabs.TabPane;
+const { Meta } = Card;
+const {TextArea} = Input;
+
+class RecordEdit extends React.Component {
+    state={
+        elderlyInfo:{}
+    };
+    componentDidMount(){
+        // console.log('record edit:',this.props);
+        this.fetchElderlyInfo();
+    }
+    fetchElderlyInfo(){
+        const { match, location } = this.props;
+        httpServer.getOneElderlyInfo({id:match.params.userId, customerId:location.state}).then(res => {
+            console.log('one info :',res);
+            if(res.code ===200 ){
+                this.setState({elderlyInfo:res.data});
+            } else {
+                this.setState({elderlyInfo:{}});
+                this.notice('error',res.msg);
+            }
+        })
+    }
+    saveRecord(data){
+        const { location, match, history } = this.props;
+        const { elderlyInfo } = this.state;
+        const url = elderlyInfo.tbHealthRecords ? 'updateHealthInfo' : 'saveHealthInfo';
+        httpServer[url]({...data, customerId:location.state, elderlyId:match.params.userId, id:elderlyInfo.tbHealthRecords ? elderlyInfo.tbHealthRecords.id :undefined}).then(res => {
+            console.log('save record:',res);
+            if(res.code ===200) {
+                history.goBack();
+                this.notice('success',res.msg)
+            } else {
+                this.notice('error',res.msg)
+            }
+        })
+    }
+    notice(status, msg) {
+        let text = status==='success' ? '成功' : (status === 'error'? '失败' : '');
+        notification[status]({
+            message: `${text}提示:`,
+            description:msg,
+            duration:2
+        })
+    }
+    onRecordSaveHandler = (e) => {
+        e.preventDefault();
+        this.props.form.validateFieldsAndScroll((err, values) => {
+            if (!err) {
+                console.log('Received values of form: ', values);
+                this.saveRecord(values);
+            }
+        });
+    };
+    render() {
+        const { elderlyInfo } = this.state;
+        const tbHealthRecords = elderlyInfo.tbHealthRecords;
+        const { getFieldDecorator } = this.props.form;
+        return (    
+        	    <Form onSubmit={this.onRecordSaveHandler} className="ant-advanced-search-form">
+        	        
+        	        <Card title="老人状况" bordered={false}>
+        	        <Row gutter={24}>  
+                        <Col span={6}>
+                            <Form.Item
+                                label="&emsp;&emsp;姓名"
+                            >
+                                {getFieldDecorator('careerExperience',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.careerExperience,
+                                })(
+                                    <Input  />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}> 
+                            <Form.Item
+                                label="&emsp;&emsp;性别"
+                                
+                            >
+                                {getFieldDecorator('habits',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.habits,
+                                })(
+                                    <Input  />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}> 
+                            <Form.Item
+                                label="&emsp;&emsp;年龄"
+                                
+                            >
+                                {getFieldDecorator('eatingHabits',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.eatingHabits,
+                                })(
+                                    <Input  />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}>  
+                            <Form.Item
+                                label="紧急联络人"
+                                
+                            >
+                                {getFieldDecorator('familyHistory',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.familyHistory,
+                                })(
+                                    <Input  />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}>  
+                            <Form.Item
+                                label="思维能力"
+                                
+                            >
+                                {getFieldDecorator('previousHistory',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.previousHistory,
+                                })(
+                                    <Input  />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}> 
+                            <Form.Item
+                                label="行动能力"
+                                
+                            >
+                                {getFieldDecorator('presentIllness', {
+                                    initialValue: tbHealthRecords && tbHealthRecords.presentIllness,
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}> 
+                            <Form.Item
+                                label="表达能力"
+                            >
+                                {getFieldDecorator('assistanceRecord', {
+                                    initialValue: tbHealthRecords && tbHealthRecords.assistanceRecord,
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={6}> 
+                            <Form.Item
+                                label="&emsp;&emsp;听力"
+                                
+                            >
+                                {getFieldDecorator('assistanceRecord', {
+                                    initialValue: tbHealthRecords && tbHealthRecords.assistanceRecord,
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}> 
+                            <Form.Item
+                                label="&emsp;现病史"
+                                
+                            >
+                                {getFieldDecorator('assistanceRecord', {
+                                    initialValue: tbHealthRecords && tbHealthRecords.assistanceRecord,
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}> 
+                            <Form.Item
+                                label="以往病史"
+                            >
+                                {getFieldDecorator('assistanceRecord', {
+                                    initialValue: tbHealthRecords && tbHealthRecords.assistanceRecord,
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}> 
+                            <Form.Item
+                                label="护理需求"  
+                            >
+                                {getFieldDecorator('assistanceRecord', {
+                                    initialValue: tbHealthRecords && tbHealthRecords.assistanceRecord,
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        </Row>
+                    </Card>
+                    <Card title="护理措施" bordered={false}>
+                        <Row gutter={24}>
+                        <Col span={12}>
+                            <Form.Item
+                                label="饮食情况"
+                            >
+                                {getFieldDecorator('careerExperience',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.careerExperience,
+                                })(
+                                    <TextArea   rows={3} />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}> 
+                            <Form.Item
+                                label="睡眠情况"
+                            >
+                                {getFieldDecorator('habits',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.habits,
+                                })(
+                                   <TextArea   rows={3} />  
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}> 
+                            <Form.Item
+                                label="如厕情况"
+                            >
+                                {getFieldDecorator('eatingHabits',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.eatingHabits,
+                                })(
+                                   <TextArea   rows={3} />  
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>  
+                            <Form.Item
+                                label="既往病史"   
+                            >
+                                {getFieldDecorator('familyHistory',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.familyHistory,
+                                })(
+                                    <TextArea   rows={3} /> 
+                                )}
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}>  
+                            <Form.Item
+                                label="家属需求"
+                            >
+                                {getFieldDecorator('previousHistory',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.previousHistory,
+                                })(
+                                    <TextArea   rows={3} />
+                                )}
+                            </Form.Item>
+                        </Col>
+                        </Row>
+                    </Card>
+                    <Card title="护理措施" bordered={false}>
+                       <EditTable/>
+                    </Card>
+                    <style>
+                     {`
+                    	.ant-advanced-search-form {
+						  padding: 24px;
+						  background: #fbfbfb;
+						  border: 1px solid #d9d9d9;
+						  border-radius: 6px;
+						}
+						
+						.ant-advanced-search-form .ant-form-item {
+						  display: flex;
+						}
+						
+						.ant-advanced-search-form .ant-form-item-control-wrapper {
+						  flex: 1;
+						}
+                     `}
+                    </style>
+                </Form>
+        )
+    }
+}
+export default Form.create()(RecordEdit)

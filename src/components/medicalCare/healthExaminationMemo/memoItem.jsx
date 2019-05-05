@@ -1,0 +1,17 @@
+import React from 'react';
+import { Card, Avatar,Tag } from 'antd';
+import img from '@/style/imgs/smile.jpg'
+const { Meta } = Card;
+
+
+export default ({data, onClick}) => {
+    return(
+        <Card style={{ width: 260, marginTop: 16 }} hoverable="true" onClick={onClick}>
+            <Meta
+                avatar={<Avatar src={img} />}
+                title={`${data.name} -- ${data.age}岁`}
+                description={<span>房间:<Tag color="#87d068">{data.roomName}</Tag>_<Tag color="#108ee9">{data.bedNumber}</Tag></span>}
+            />
+        </Card>
+    )
+}

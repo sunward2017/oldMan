@@ -1,0 +1,13 @@
+import React from 'react';
+import { Row } from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+
+export default class HealthRecord extends React.Component {
+    render() {
+        return (
+            <div>
+                <BreadcrumbCustom first="医护管理" second="健康档案" />
+            </div>
+        )
+    }
+}

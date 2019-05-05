@@ -1,0 +1,256 @@
+import React,{Fragment} from 'react';
+import { Table, Tabs, Icon, notification, Button, Divider, Popconfirm,Row, Col,Card,Tree, Spin } from 'antd'
+import httpServer from '../../../axios/index';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import RoleForm from './editRoleForm';
+import urls from '@/axios/config'
+
+const TabPane = Tabs.TabPane;
+const TreeNode = Tree.TreeNode;
+
+export default class RoleInfo extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      activeKey: '1',
+      listData:[],
+      treeData:[],
+      fields: {},
+      checkedKeys: [],
+      expandedKeys:['1'],
+      autoExpandParent:true,
+      lastOnRow:{},
+      isLoading:false,
+      addFlag:false
+    };
+  };
+  
+  componentDidMount() {
+    this.getRoleList();
+    this.getMenuTree(0);
+  }
+  
+  httpPost = (url,option={}) => {
+    return new Promise(resolve => {
+      httpServer[url](option)
+        .then(res => {
+          if(res.code===200){
+            resolve(res);
+          }else{
+            notification.error({
+              message: '通信失败',
+              description: res.msg,
+              duration: 2,
+            });
+          }
+          this.setState({isLoading: false})
+        }).catch(err => { console.log(err) });
+    })
+  }
+  
+  getMenuTree = (rid) => {
+    const {customerId} = this.props.auth;
+    this.httpPost('getSysMemuTree',{ rid,customerId}).then(res=> {
+      res.data ? this.setState({treeData: [res.data]}) : this.setState({treeData: []});
+      this.setState({checkedKeys:[]});
+      res.data && this.filterCheckedKeys([res.data]);
+    })
+  };
+  
+  getRoleList = () =>{
+    const {customerId} = this.props.auth;
+    this.httpPost('getSysRoleList',{customerId}).then(res=> {
+    
+      res.data ? this.setState({listData: res.data}) : this.setState({listData: []});
+    })
+  };
+  
+  filterCheckedKeys = (nodes) => {
+    nodes.forEach(node => {
+      node.checked && this.setState({ checkedKeys:[...this.state.checkedKeys,node.id.toString()] });
+      if(node.children) this.filterCheckedKeys(node.children);
+    });
+  }
+  
+  onExpand = (expandedKeys) => {
+    this.setState({
+      expandedKeys,
+      autoExpandParent: false,
+    });
+  }
+  
+  onCheck = (checkedKeys, info) => {
+    
+    this.setState({ checkedKeys });
+  };
+  
+  handleTabChange = (activeKey) => {
+    this.setState({ activeKey });
+  }
+  
+  handleAdd = () =>{
+    this.setState({ activeKey: '2', fields: {} ,addFlag:true});
+  };
+  
+  handleModifyRow = (r) => {
+    this.setState({ activeKey: '2', fields: r ,addFlag:true})
+  }
+  
+  handleDeleteRow = (row) => {
+    this.httpPost('delSysRoleList',{id:row.id}).then(res => {
+      notification.success({
+        message: '成功提示',
+        description: res.msg,
+      });
+      this.setState({ activeKey: '1' });
+      this.getRoleList();
+    })
+  }
+  
+  renderTreeNodes = (data) => {
+    return data.map((item) => {
+      if (item.children) {
+        return (
+          <TreeNode title={item.name} key={item.id} dataRef={item}>
+            {this.renderTreeNodes(item.children)}
+          </TreeNode>
+        );
+      }
+      return <TreeNode title={item.name} key={item.id} dataRef={item}/>;
+    });
+  }
+  
+  handleSubmitEdit = (options) => {
+    options.customerId = this.props.auth.customerId;
+    let url = 'addSysRoleList';
+    options.id && (url='modifySysRoleList');
+    this.httpPost(url,options).then(res => {
+      notification.success({
+        message: '成功提示',
+        description: res.msg,
+      });
+      this.setState({ activeKey: '1' ,addFlag:false});
+      this.getRoleList();
+    })
+  }
+  
+  handleSaveRowSetting = (record) => {
+    const roles =this.state.checkedKeys.checked?this.state.checkedKeys.checked.map(key => ({pid:key})):this.state.checkedKeys.map(key => ({pid:key}));
+    let request = new Request(urls.saveSysMemuTree, {
+      body: JSON.stringify({customerId:record.customerId, rid:record.id, roles}),
+      method: 'POST',
+      headers: new Headers({
+        'Content-Type': 'application/json;charset=utf-8'
+      })
+    });
+    fetch(request).then(resp => resp.json()).then( res => {
+     
+      if (res.code === 200) {
+        notification.success({
+          message: '通信成功',
+          description: res.msg,
+        });
+      } else {
+        notification.error({
+          message: '通信失败',
+          description: res.msg,
+        });
+      }
+    }).catch(err => { console.log(err) });
+  }
+  
+  handleOnRow = (record) => {
+    return {
+      onClick: () => {
+       
+        let lastOnRow = this.state.lastOnRow;
+        if(lastOnRow.id === record.id) return;
+        if(lastOnRow.isOnRow){
+          lastOnRow.isOnRow = false;
+          this.setState({lastOnRow});
+        }
+        record.isOnRow = true;
+        this.setState({
+          lastOnRow:record,
+          isLoading: true
+        });
+
+        this.getMenuTree(record.id);
+      }
+    }
+  }
+
+   handleCloseModle = () => {
+        this.setState({addFlag: false})
+    }
+  
+  render() {
+    const { treeData, listData, fields, activeKey, checkedKeys, autoExpandParent, expandedKeys, isLoading,addFlag } = this.state;
+    const columns = [{
+      title: "角色名称",
+      dataIndex: 'roleName',
+      width:'20%',
+       align:'center'
+    }, {
+      title: '描述',
+      dataIndex: 'roleDescription',
+    }, {
+      title: 'Action',
+      dataIndex: 'action',
+      width:'25%',
+      render: (text, record) => (
+        <span>
+          {
+            record.isOnRow ?
+              <React.Fragment>
+                <a href="javascript:;" onClick={() => { this.handleSaveRowSetting(record) }}>保存权限</a>
+                <Divider type="vertical" />
+              </React.Fragment> : null
+          }
+          <a href="javascript:;" onClick={() => { this.handleModifyRow(record) }}>修改</a>
+          <Divider type="vertical" />
+          <Popconfirm title="确定删除?" onConfirm={() => this.handleDeleteRow(record)}>
+            <a href="javascript:;">删除</a>
+          </Popconfirm>
+        </span>
+      )
+    }];
+    return (
+      <Fragment>
+        <BreadcrumbCustom first="系统设置" second="角色信息" />
+        <Button type='primary' onClick={this.handleAdd}  style={{marginBottom:20}}>新增角色</Button>
+        <Row gutter={16} >
+          <Col   md={8} lg={6}>
+            <Card title="功能项" >
+              <Tree
+                checkable
+                onExpand={this.onExpand}
+                expandedKeys={expandedKeys}
+                autoExpandParent={autoExpandParent}
+                onCheck={this.onCheck}
+                checkedKeys={checkedKeys}
+                defaultExpandAll={true}
+                checkStrictly
+              >
+                {
+                  this.renderTreeNodes(treeData)
+                }
+              </Tree>
+            </Card>
+          </Col>
+          <Col  md={16} lg={18}>
+            
+            <Table dataSource={listData} columns={columns} rowKey={record => record.id} onRow={(record) => this.handleOnRow(record)} />
+          </Col>
+          
+          {
+            addFlag ? <RoleForm modify={this.handleSubmitEdit} data={fields} onClose={this.handleCloseModle} /> : null
+          }
+          {
+          isLoading ? <Spin size="large" tip="功能项配置加载中..." indicator={<Icon type="loading" spin />} style={{ position:'absolute', top:'40%',right:'50%'}} /> : null
+          }
+        </Row>
+      </Fragment>
+    )
+  }
+}

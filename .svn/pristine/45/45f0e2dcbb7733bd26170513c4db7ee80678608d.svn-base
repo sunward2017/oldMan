@@ -1,0 +1,132 @@
+import React from 'react';
+import $ from 'jquery';
+import zTree from 'ztree';
+import 'ztree/css/zTreeStyle/zTreeStyle.css';
+
+/**
+ * 组件配置:
+ * id               组件树的id，全局唯一
+ * zNodes           组件节点数据,Array。
+ * checkbox         是否是checkbox
+ * editableTree     是否是可编辑树
+ * levelMax         树的最大层级结构。根节点level为0;默认为3层结构，levelMax=2
+ * onEdit           编辑节点的事件回调函数，需返回false/true，表示取消/确认编辑。
+ * onDelete         删除节点的事件回调函数，需返回false/true，表示取消/确认删除.
+ * onAddNew         新增一个默认节点的回调函数，需返回false/true,表示取消/确认新增,接收默认节点数据和父节点数据两个参数:fn(newNode,parentNode)
+ * onNodeCheck      勾选或取消勾选的事件回调函数,接收两个参数:fn(currentNode,checkedNodes)
+ * onNodeClick      在单击节点时接收一个参数为该节点数据
+ */
+let _zTreeObj = {};
+export default class ReactZtree extends React.Component{
+    state = {
+        levelMax: this.props.levelMax || 2
+    };
+    componentDidMount(){
+        _zTreeObj[this.props.id] = this;
+        this.initTree();
+    }
+    componentDidUpdate(prevProps, prevState){
+        console.log('tree did updata zNodes:',this.props.zNodes);
+        this.initTree();
+    }
+    componentWillUnmount(){
+        this.ztreeObj && this.ztreeObj.destroy();
+    }
+    initTree() {
+        const { id, zNodes } = this.props;
+        this.ztreeObj = $.fn.zTree.init($('#'+id), this.getTreeSetting(), zNodes);
+        // console.log('this.ztreeObj init:',this.ztreeObj)
+    }
+    getTreeSetting() {
+        const { props } = this;
+        return {
+            view: {
+                showIcon:false,
+                showLine:true,
+                fontCss : {color:"#666"},
+                addHoverDom: props.editableTree && this.addHoverDom,
+                removeHoverDom: props.editableTree && this.removeHoverDom,
+                selectedMulti: false
+            },
+            check: {
+                chkStyle: "checkbox",
+                enable:props.checkbox
+            },
+            edit: {
+                enable:props.editableTree,
+                showRenameBtn: this.showRemoveBtn,
+                showRemoveBtn:this.showRemoveBtn
+            },
+            data: {
+                simpleData: {
+                    enable: false //true/false 表示使用/不使用简单数据模式(Array)
+                }
+            },
+            callback: {
+                beforeRemove: this.beforeRemove,
+                beforeRename: this.beforeRename,
+                onRename: this.onRename,
+                onCheck: this.onCheck,
+                onClick: this.onClick
+            }
+        }
+    }
+    showRemoveBtn(treeId, treeNode) {
+        return treeNode.pid !== 0;
+    }
+    addHoverDom(treeId, treeNode) {
+        if(treeNode.level >= _zTreeObj[treeId].state.levelMax) return;
+        let sObj = $("#" + treeNode.tId + "_span");
+        if (treeNode.editNameFlag || $("#addBtn_"+treeNode.tId).length>0) return;
+        let addStr = "<span class='button add' id='addBtn_" + treeNode.tId
+            + "' title='add node' onfocus='this.blur();'></span>";
+        sObj.after(addStr);
+        let btn = $("#addBtn_"+treeNode.tId);
+        if (btn) btn.bind("click", function(){
+            _zTreeObj[treeId].props.onAddNew({id:null, pId:treeNode.id, name:"new"},treeNode) &&
+            $.fn.zTree.getZTreeObj(treeId).addNodes(treeNode, {id:null, pId:treeNode.id, name:"new"});
+            return false;
+        });
+    }
+    removeHoverDom(treeId, treeNode) {
+        $("#addBtn_"+treeNode.tId).unbind().remove();
+    }
+    beforeRemove(treeId, treeNode) {
+        $.fn.zTree.getZTreeObj(treeId).selectNode(treeNode);
+        const confirm = window.confirm("确认删除节点" + treeNode.name + " 吗？");
+        return confirm ? _zTreeObj[treeId].props.onDelete(treeNode) : false;
+    }
+    beforeRename(treeId, treeNode, newName, isCancel) {
+        console.log('rename treeNode:',treeNode, 'newName:',newName,'isCancel:',isCancel);
+        return isCancel ? true : _zTreeObj[treeId].props.onEdit({...treeNode, name:newName});
+    }
+    onRename(e, treeId, treeNode, isCancel) {
+        console.log('on rename isCancel:',isCancel);
+    }
+    onCheck(e, treeId, treeNode) {
+        let checkedNodes = $.fn.zTree.getZTreeObj(treeId).getCheckedNodes();
+        _zTreeObj[treeId].props.onNodeCheck(treeNode, checkedNodes);
+    }
+    onClick(e, treeId, treeNode) {
+        let handler = _zTreeObj[treeId].props.onNodeClick;
+        handler && handler(treeNode);
+    }
+
+    render() {
+        const { id } = this.props;
+        return (
+            <React.Fragment>
+                <ul id={id} className="ztree"></ul>
+                <style>{`
+                    .ztree li span.button.add {
+                        margin-left:2px;
+                        margin-right: -1px;
+                        background-position:-144px 0;
+                        vertical-align:top;
+                        *vertical-align:middle
+                    }
+                `}</style>
+            </React.Fragment>
+        )
+    }
+}

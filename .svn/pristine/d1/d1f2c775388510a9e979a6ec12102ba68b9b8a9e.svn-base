@@ -1,0 +1,13 @@
+import React,{Component,Fragment} from 'react';
+
+class OldManAdmission extends Component{
+  render(){
+    return(
+      <Fragment>
+        123
+      </Fragment>
+    )
+  }
+}
+
+export default OldManAdmission;

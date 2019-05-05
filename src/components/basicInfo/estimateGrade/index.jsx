@@ -1,0 +1,415 @@
+import React from 'react';
+import { Row, Col, Card, Button, notification, Icon,Table,Tag,Divider,Popconfirm,Form,Radio,InputNumber,Input,Modal,message} from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import Tree from '../../../common/tree';
+import httpServer from '../../../axios/index';
+ 
+    const RadioGroup = Radio.Group;
+
+    const formItemLayout = {
+      labelCol: {
+        xs: {
+          span: 24
+        },
+        sm: {
+          span: 6
+        },
+      },
+      wrapperCol: {
+        xs: {
+          span: 24
+        },
+        sm: {
+          span: 18
+        },
+      },
+    };
+
+    const tailFormItemLayout = {
+      wrapperCol: {
+        xs: {
+          span: 24,
+          offset: 0,
+        },
+        sm: {
+          span: 16,
+          offset: 8,
+        },
+      },
+    };
+class estimateGrade extends React.Component {
+    state = {
+        zNodes :[],
+        selectedNode:null,
+        dataSource:[],
+        modalFlag:false,
+        record:{},
+    };
+    componentDidMount() {
+        this.fetchTreeData();
+    }
+    fetchTreeData() {
+        httpServer.listEstimateType({}).then(res => {
+            if(res.code === 200 ) {
+               const zNodes = {typeName:'根目录',id:"0",open:true};
+               zNodes.children = res.data?res.data:[];
+               this.setState({zNodes:zNodes})
+            }
+        })
+    }
+    
+    nodeEditHandler = (nodeData, cb) => {
+        const {id,typeName } = nodeData;
+        httpServer.updateEstimateType({id,typeName }).then(res => {
+            if(res.code ===200) {
+                cb(true);
+                this.fetchTreeData();
+                this.notice('success',res.msg);
+                this.setState({selectedNode:nodeData});
+            }else{
+                cb(false);
+                this.notice('error',res.msg);
+            }
+        });
+    };
+    nodeDeleteHandler = (nodeData, cb) => {
+        const {  id } = nodeData;
+        if(id==='0'||!id) return;
+        const {selectedNode} = this.state;
+        httpServer.deleteEstimateType({id}).then(res => {
+            if(res.code === 200) {
+                cb(true,nodeData);
+                this.fetchTreeData();
+                this.notice('success', res.msg);
+                if(selectedNode && selectedNode.id === nodeData.id){
+                    this.setState({selectedNode:null});
+                }
+            }else {
+                this.notice('error', res.msg);
+            }
+        });
+    };
+    nodeAddHandler = (pNode, cb) => {
+       
+        httpServer.saveEstimateType({typeName:'新增'}).then(res => {
+            if(res.code ===200) {
+                cb(true,res.data);
+                this.fetchTreeData();
+                this.notice('success', res.msg);
+            }else {
+                this.notice('error', res.msg);
+            }
+        }).catch(err => {});
+    };
+    nodeClickHandler = (nodeData) => {
+        if(nodeData.typeName==='根目录') return;
+         
+        const _this = this;
+        this.setState({selectedNode:nodeData},()=>{
+            _this.getEstimateItemList();
+        });
+    };
+   
+    notice(status, msg) {
+        let text = status==='success' ? '成功' : (status === 'error'? '失败' : '');
+        notification[status]({
+            message: `${text}提示:`,
+            description:msg,
+            duration:2
+        })
+    }
+
+    getEstimateItemList=()=>{
+        const {selectedNode} = this.state;
+	    httpServer.listEstimateGrade({ classId:selectedNode.id}).then(res => {
+	      if(res.code===200&&res.data) {
+	        this.setState({
+	          dataSource: res.data
+	        })
+	      }else{
+	          this.setState({
+	          dataSource:[]
+	        })
+	      }
+	    })    
+    }
+
+      
+  componentWillUnmount(){
+    this.setState = (state,callback)=>{
+          return;
+       }
+  }
+   
+  /*修改操作*/
+  handleModify(record) {
+    this.setState({
+      modalFlag: true,
+      record
+    });
+  }
+  /*删除操作*/
+  handleRowDelete(id, record) {
+      const _this = this;
+      httpServer.deleteEstimateGrade({id}).then(res => {
+        if (res.code === 200) {
+          const args = {
+            message: "删除成功",
+            description: res.msg,
+            duration: 2,
+          };
+          notification.success(args);
+          _this.getEstimateItemList();
+        } else {
+          console.log(res.message);
+        }
+        this.setState({modalFlag:false,record:""});
+      }).catch(
+        err => { console.log(err) }
+      )
+  }
+  /*添加按钮*/
+  handleAdd() {
+   
+  		this.setState({
+	      modalFlag: true,
+	      record: ""
+	    });
+   
+  }
+
+  /*关闭弹框*/
+  handleCancel() {
+    this.setState({
+      modalFlag: false,
+      record: ""
+    });
+  }
+  
+  /*提交完成添加客户信息*/
+  handleSubmit = (e) => {
+    e.preventDefault();
+    let _this = this;
+    this.props.form.validateFieldsAndScroll((err, fieldsValue) => {
+        this.setState({ iconLoading: true });
+      if(!err) {
+        const values = {
+          ...fieldsValue,
+          classId:this.state.selectedNode.id,
+        };
+        const { id }= this.state.record;
+              if(id){
+                    values.id = id;
+          httpServer.updateEstimateGrade(values).then((res)=>{
+            const args = {
+              message: "通信成功",
+              description: res.msg,
+              duration: 2,
+            };
+            notification.success(args);
+            this.setState({
+              modalFlag: false,
+              record: "",
+              iconLoading:false,
+            });
+            _this.getEstimateItemList()
+              })
+         }else{
+           httpServer.saveEstimateGrade(values).then((res) => {
+            const args = {
+              message: "通信成功",
+              description: res.msg,
+              duration: 2,
+            };
+            notification.success(args);
+            this.setState({
+              modalFlag: false,
+              record: "",
+              iconLoading:false,
+            });
+            _this.getEstimateItemList()
+          })
+              
+         }
+
+      }else{
+        this.setState({ iconLoading: false });
+      }
+    })
+  }
+
+    render() {
+        const { zNodes,selectedNode,dataSource,modalFlag} = this.state;
+        const {  getFieldDecorator } = this.props.form;
+	    const {
+	      estimateGradeName,
+	      lowScore,
+	      highScore,
+	      status,
+	    } = this.state.record;
+    const columns = [{
+      title: "序号",
+      render: (text, record, index) => `${index+1}`,
+      width: "10%",
+      key:"index"
+    }, {
+      title: "等级名称",
+      dataIndex: "estimateGradeName",
+      key: "estimateGradeName",
+    },{
+      title: "评估上限",
+      dataIndex: "highScore",
+      key: "highScore",
+      width: "20%",
+      render:(text,r)=>{
+      	 return text+'分'
+      }
+    }, {
+      title: "评估下限",
+      dataIndex: "lowScore",
+      key: "lowScore",
+      width: "20%",
+       render:(text,r)=>{
+      	 return text+'分'
+      }
+    },{
+      title: "操作",
+      dataIndex: "action",
+      key: "action",
+      width: "15%",
+      render: (text, record) => {
+        return(
+          <span>
+              <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:"#2ebc2e"}} >修改</a>
+              <Divider type="vertical" />
+              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+                <a href="javascript:;" style={{color:"#2ebc2e"}}>删除</a>
+              </Popconfirm>
+          </span>
+        )
+      },
+    }];
+        return (
+            <div>
+                <BreadcrumbCustom first="基本信息" second="部门信息" />
+                <Row gutter={16}>
+                    <Col className="gutter-row"  lg={6} xl={6}>
+                        <div className="gutter-box">
+                            <Card bordered={false} size="small" title="评估等级类别:">
+                                <Tree id={'payItemTree'} zNodes={zNodes}
+                                      onEdit={this.nodeEditHandler}
+                                      onDelete={this.nodeDeleteHandler}
+                                      onAddNew={this.nodeAddHandler}
+                                      onNodeClick={this.nodeClickHandler}
+                                      editableTree="true"
+                                      levelMax={1}
+                                      nodeName='typeName'
+                                />
+                            </Card>
+                        </div>
+                    </Col>
+                    <Col className="gutter-row"  lg={18} xl={18}>
+                      <Card 
+				            title="评估等级"
+				            bordered={false} 
+				            extra={<Button type="primary" onClick={()=>{this.handleAdd()}} disabled={!selectedNode||selectedNode.id==='0'}>新增</Button>}
+				        >
+				            <Table 
+				                bordered
+				                rowKey="id" 
+				                dataSource={dataSource} 
+				                columns={columns} 
+				                pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:["10","20","30","40","50","100","200"]}}
+				            />
+				        </Card>      
+                    </Col>
+                    <Modal 
+			            title="信息输入"
+			            okText="提交"
+			            visible={modalFlag}
+			            onCancel={()=>{this.handleCancel()}}
+			            maskClosable={false}
+			            footer={null}
+			            key={modalFlag}
+			          >
+			            <Form hideRequiredMark onSubmit={this.handleSubmit}>
+			              <Form.Item
+			                label="评估等级"
+			                {...formItemLayout}
+			                style={{marginBottom:"4px"}}
+			              >
+			                {getFieldDecorator("EstimateGradeName", {
+			                  rules: [{ required: true, message: "请输入评估等级名称"}],
+			                  initialValue:estimateGradeName
+			                })(
+			                  <Input />
+			                )}
+			              </Form.Item>
+			              <Form.Item
+			                label="评估上限"
+			                {...formItemLayout}
+			                style={{marginBottom:"4px"}}
+			              >
+			                {getFieldDecorator("highScore", {
+			                  rules: [{ required: false, message: "请输入分值高范围" }],
+			                  initialValue:highScore,
+			                })(
+			                  <InputNumber min={0} />
+			                )}
+			              </Form.Item> 
+			              <Form.Item
+			                label="评估下限"
+			                {...formItemLayout}
+			                style={{marginBottom:"4px"}}
+			              >
+			                {getFieldDecorator("lowScore", {
+			                  rules: [{ required: true, message: "请输入分值低范围" }],
+			                  initialValue:lowScore,
+			                })(
+			                  <InputNumber min={0} />
+			                )}
+			              </Form.Item>
+			              
+			              <Form.Item
+			                label="使用状态"
+			                {...formItemLayout}
+			                style={{marginBottom:"4px"}}
+			              >
+			                {getFieldDecorator("status", {
+			                  rules: [{ required: true, message: "请选择状态!" }],
+			                  initialValue: status===0?0:1,
+			                })(
+			                  <RadioGroup buttonStyle="solid">
+			                    <Radio.Button value={1}>使用</Radio.Button>
+			                    <Radio.Button value={0}>禁用</Radio.Button>
+			                  </RadioGroup>
+			                )}
+			              </Form.Item>
+			              <Form.Item {...tailFormItemLayout}>
+			                <Button type="primary" htmlType="submit" loading={this.state.iconLoading} >确认提交</Button>
+			              </Form.Item>
+			            </Form>
+			          </Modal>
+                </Row>
+                <style>{`
+                    .sliderNameIpt{
+                        border:none;
+                        border-bottom:1px solid #d9d9d9;
+                        position: relative;
+                        z-index:50;
+                        width:100%;
+                        background-color:transparent;
+                    }
+                    .sliderNameIpt:focus{
+                        outline:none;
+                    }
+                    .payItemAddBtn{
+                        position:absolute;
+                    }
+                `}</style>
+            </div>
+        )
+    }
+}
+
+export default Form.create()(estimateGrade);

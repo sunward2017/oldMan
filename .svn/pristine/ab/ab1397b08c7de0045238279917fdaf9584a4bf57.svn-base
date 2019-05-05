@@ -1,0 +1,77 @@
+import React from 'react';
+import { Row, Col, Card, Icon } from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import Tree from '../../../common/tree';
+import PriceSlider from './priceSlider';
+import httpServer from '../../../axios/index';
+
+export default class PayItem extends React.Component {
+    state = {
+        zNodes :[]
+    };
+    componentDidMount() {
+        console.log('payitem auth:',this.props);
+        this.fetchTreeData();
+    }
+    fetchTreeData() {
+        httpServer.getPayItemTree({customerId:this.props.auth.customerId}).then(res => {
+            console.log('pay item res:',res);
+            if(res.code === 200 ) {
+                res.data ? this.setState({ zNodes : [{...res.data, open:true}]}) : this.setState({ zNodes : []})
+            }
+        })
+    }
+    nodeEditHandler = (nodeData) => {
+        console.log('edit nodeData:', nodeData);
+        return false;
+    };
+    nodeDeleteHandler = (nodeData) => {
+        console.log('delete nodeData:', nodeData);
+        return true;
+    };
+    nodeAddHandler = (newData, pNode) => {
+        const { pid, id, customerId } = pNode;
+        const url = pid === 0 ? 'savePayItem' : 'savePayItemChild';
+        const data = pid ===0 ? {name:newData.name, customerId} : {name:newData.name, pid: id, price: 0, unit: 4};
+        console.log('add nodeData:', pNode);
+        httpServer[url](data).then(res => {
+            console.log('add res:',res);
+            return res.code === 200;
+        });
+
+    };
+    nodeCheckHandler = (nodeData, checkedNodes) => {
+        console.log('check nodes:', checkedNodes);
+    };
+    render() {
+        const { zNodes } = this.state;
+        return (
+            <div>
+                <BreadcrumbCustom first="财务管理" second="收费项目" />
+                <Row gutter={16}>
+                    <Col className="gutter-row" md={6}>
+                        <div className="gutter-box">
+                            <Card bordered={false}>
+                                <Tree id={'tree1'} zNodes={zNodes}
+                                      onEdit={this.nodeEditHandler}
+                                      onDelete={this.nodeDeleteHandler}
+                                      onAddNew={this.nodeAddHandler}
+                                      onNodeCheck={this.nodeCheckHandler}
+                                      checkbox="true"
+                                      editableTree="true"
+                                />
+                            </Card>
+                        </div>
+                    </Col>
+                    <Col className="gutter-row" md={18}>
+                        <div className="gutter-box">
+                            <Card bordered={false}>
+                                <PriceSlider/>
+                            </Card>
+                        </div>
+                    </Col>
+                </Row>
+            </div>
+        )
+    }
+}

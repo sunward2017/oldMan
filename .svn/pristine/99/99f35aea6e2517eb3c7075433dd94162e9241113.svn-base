@@ -1,0 +1,115 @@
+import React from 'react';
+import { Row, Col, Card, Button, Statistic, Icon, Divider, Table, Radio, InputNumber, Select, Tag, notification } from 'antd';
+import httpServer from '../../../axios/index';
+const Option = Select.Option;
+
+export class BillInfo extends React.Component{
+    state = {
+        isPreFee:false,
+        subData:{},
+        moneyLeft:'',
+    };
+    componentDidUpdate(prevProps){
+        if(prevProps.data.list && prevProps.data.list.money && this.props.data.list && !this.props.data.list.money){
+            // console.log('did update....');
+            this.fetchMyMoney();
+        }
+    }
+    fetchMyMoney(){
+        const {type, elderly, param} = this.props.data;
+        if(!elderly) return;
+        httpServer.getMyMoney({type,customerId:param.customerId, elderlyId:elderly.key}).then(res => {
+            res.code === 200 && this.setState({moneyLeft:res.data ? res.data[`je${type}`] : ''});
+        })
+    }
+
+    onRadioChangeHandler = (e) => {
+        const val = e.target.value;
+        this.setState({isPreFee: val === '5', subData:{...this.state.subData, settlementMethod:val} });
+        val === '5' && this.fetchMyMoney();
+    };
+    onBillSubmitHandler = () => {
+        const { data } = this.props;
+        const {subData} = this.state;
+        if(data.list.money !== subData.sumMoney) {
+            notification.info({message: '提示:', description:'付款金额与应缴金额不符，请重新核对后输入',});
+            return;
+        }
+        this.props.onBillSubmit({type:'2',...subData, lsIds:data.list.data.map(l => l.id).join(','), payee:data.param.account});
+    };
+    onFeeChangeHandler = (val) => {
+        this.setState({subData:{...this.state.subData,sumMoney:val}});
+    };
+    onCreditChangeHandler = (val) => {
+        this.setState({subData:{...this.state.subData,creditedAccount:val}});
+    };
+    render() {
+        const {data, columns} = this.props;
+        // console.log('data:',data);
+        const { isPreFee, subData, moneyLeft } = this.state;
+        return (
+            <React.Fragment>
+                <Row>
+                    <Col>{data.elderly ?
+                        <h3>
+                            <Tag color="#108ee9">{data.elderly.label[0]}</Tag>-- <Tag color="#108ee9">{data.elderly.label[6] || '暂无'}</Tag>房间
+                        </h3>
+                        : '暂无费用信息'}
+                    </Col>
+                </Row>
+                <Table columns={columns} dataSource={data.list ? data.list.data: []} rowKey={record => record.id}
+                       footer={() => <span className="pull-right tb-footer-text">总计 : {data.list && data.list.money}</span>}
+                />
+                <Divider dashed="true" orientation="left">合计</Divider>
+                <Row>
+                    <Col md={12} xxl={10} offset={2}>
+                        <p> 应收费用 : <span className="ml-m">{data.list && data.list.money }</span></p>
+                        <p> 收 款 人 : <span className="ml-m">{data.param && data.param.account}</span></p>
+                        <div className="mb-s"> 收款方式 :
+                            <Radio.Group defaultValue="2" buttonStyle="solid" className="ml-m"
+                                         onChange={this.onRadioChangeHandler}>
+                                <Radio.Button value="1">现金</Radio.Button>
+                                <Radio.Button value="2">支付宝</Radio.Button>
+                                <Radio.Button value="3">微信</Radio.Button>
+                                <Radio.Button value="4">刷卡</Radio.Button>
+                                <Radio.Button value="5" disabled={!data.elderly}>预交扣款</Radio.Button>
+                                <Radio.Button value="6">其它</Radio.Button>
+                            </Radio.Group>
+                        </div>
+                        <div className="mb-s"> 收款账号 :
+                            <Select className="ml-m w60p" onChange={this.onCreditChangeHandler}>
+                                {data.param ?
+                                    data.param.creditList.map(o => <Option value={o.value} key={o.id}>{o.value}</Option>) : null
+                                }
+                            </Select>
+                        </div>
+                        <div className="mb-s"> 确认收款 :
+                            <InputNumber min={0} className="ml-m" style={{width:'120px'}}
+                                         formatter={value => `￥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                         onChange={this.onFeeChangeHandler}
+                            />
+                        </div>
+                    </Col>
+                    <Col md={5} xl={4} xxl={3}>
+                        <Card style={{display: isPreFee ? 'block' :'none' }}>
+                            <Statistic
+                                title="当前预存金额:"
+                                value={moneyLeft}
+                                precision={2}
+                                valueStyle={{color: '#3f8600'}}
+                                prefix={<Icon type="property-safety" />}
+                            />
+                        </Card>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col offset={6}>
+                        <Button type="primary" disabled={!(data.elderly && subData.sumMoney >=0 && subData.creditedAccount && data.list.money)}
+                                onClick={this.onBillSubmitHandler}
+                        >提交</Button>
+                    </Col>
+                </Row>
+            </React.Fragment>
+        )
+    }
+}

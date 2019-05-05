@@ -1,0 +1,338 @@
+import React, {Component,Fragment} from 'react';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import httpServer from '../../../axios';
+import {Row,Popconfirm,notification,Col,Input,Button,Table,Divider,Card} from 'antd';
+import FeeList from './feeList';
+
+class OldManOutHome extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      pageFlag:true,
+      customerId:'',
+      oldManList:[],//老人列表数据
+      oldManList_copy:[],//老人列表数据拷贝
+      searchText:'',
+      f1:0,//检查护理费：
+      f2:0,//餐费
+      f3:0,//水电费
+      f4:0,//住宿费
+      f5:0,//药费
+      feeList1:[],
+      feeList2:[],
+      feeList3:[],
+      feeList4:[],
+      feeList5:[],
+      record:'',
+    }
+    this.handleInputChange = this.handleInputChange.bind(this);//老人信息搜索框发生变化
+    this.handleSearchElderly = this.handleSearchElderly.bind(this);//搜索老人信息
+    this.handleClickReset = this.handleClickReset.bind(this);//清楚搜索条件
+    this.handleGoback = this.handleGoback.bind(this);//返回
+  }
+  componentDidMount(){
+    //获取入院老人信息列表
+    this.getListElderlyInfo();
+  }
+  //获取入院老人信息列表
+  getListElderlyInfo(){
+    const {customerId} = this.props.auth;
+    this.setState({customerId});
+    httpServer.listElderlyInfo({listStatus:"3",customerId,launchFlag:1}).then((res) => {
+      if (res.code === 200) {
+        res.data?this.setState({oldManList:res.data,oldManList_copy:res.data}):this.setState({oldManList:[],oldManList_copy:[]});
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+             const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  handleOutHomeCancel(record){//取消出院申请
+    const {id} = record;
+    httpServer.cancelOutHomeInfo({id}).then((res) => {
+      if (res.code === 200) {
+        const args = {
+            message: '通信成功',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.success(args);
+          this.getListElderlyInfo();
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+             const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+  //搜索老人信息相关操作
+  handleInputChange(e){ //搜索框数据发生变化
+    this.setState({searchText:e.target.value});
+  }
+  handleSearchElderly(){//搜索老人信息
+    const { searchText } = this.state;
+    if(searchText){
+      const reg = new RegExp(searchText, 'gi');
+      this.setState({
+        oldManList_copy: this.state.oldManList.map((record) => {
+          const match = record.name && record.name.match(reg);
+          if (!match) {
+            return null;
+          }
+          return record;
+        }).filter(record => !!record),
+      });
+    }else{
+      const args = {
+        message: '友情提示',
+        description: "请先输入老人姓名",
+        duration: 2,
+      };
+      notification.info(args);
+    }
+  }
+  handleClickReset(){//清楚搜索条件
+    this.setState({
+      oldManList_copy:this.state.oldManList,
+      searchText:'',
+    });
+  }
+
+  //返回
+  handleGoback(){
+    this.setState({pageFlag:true});
+  }
+
+  //获取检查护理费
+  getListNursingAndCheckItem(elderlyId){
+    const {customerId} = this.state;
+    httpServer.listNursingAndCheckItem({customerId,elderlyId}).then((res)=>{
+      if(res.code === 200){
+        res.data?this.setState({f1:res.data.money,feeList1:res.data.data}):this.setState({f1:0,feeList1:[]});
+      }else{
+        const args = {
+          message: '通信失败',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.error(args); 
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  //获取餐费
+  getListMealFeeList(elderlyId){
+    const {customerId} = this.state;
+    httpServer.listMealFeeList({customerId,elderlyId}).then((res)=>{
+      if(res.code === 200){
+        res.data?this.setState({f2:res.data.money,feeList2:res.data.data}):this.setState({f2:0,feeList2:[]});
+      }else{
+        const args = {
+          message: '通信失败',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.error(args); 
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  //水电费
+  getListWaterRecoder(elderlyId){
+    const {customerId} = this.state;
+    httpServer.listWaterRecoder({customerId,elderlyId}).then((res)=>{
+      if(res.code === 200){
+        res.data?this.setState({f3:res.data.money,feeList3:res.data.data}):this.setState({f3:0,feeList3:[]});
+      }else{
+        const args = {
+          message: '通信失败',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.error(args); 
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  //住宿费
+  getListRoomFeeList(elderlyId){
+    const {customerId} = this.state;
+    httpServer.listRoomFeeList({customerId,elderlyId}).then((res)=>{
+      if(res.code === 200){
+        res.data?this.setState({f4:res.data.money,feeList4:res.data.data}):this.setState({f4:0,feeList4:[]});
+      }else{
+        const args = {
+          message: '通信失败',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.error(args); 
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  //药费
+  getListDrugFeeList(elderlyId){
+    const {customerId} = this.state;
+    httpServer.listDrugFeeList({customerId,elderlyId}).then((res)=>{
+      if(res.code === 200){
+        res.data?this.setState({f5:res.data.money,feeList5:res.data.data}):this.setState({f5:0,feeList5:[]});
+      }else{
+        const args = {
+          message: '通信失败',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.error(args); 
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  //查看、取消出院申请相关操作
+  handleClickRead(record){
+    this.setState({record});
+    const {id} = record;
+    this.getListNursingAndCheckItem(id);
+    this.getListMealFeeList(id);
+    this.getListWaterRecoder(id);
+    this.getListRoomFeeList(id);
+    // this.getListDrugFeeList(id);
+    this.setState({pageFlag:false});
+  }
+
+  render(){
+    const {pageFlag,oldManList_copy,customerId,f1,f2,f3,f4,f5,feeList1,feeList2,feeList3,feeList4,feeList5,record} = this.state;
+    const columns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber',
+      width:'10%'
+    },{
+      title:'入院编号',
+      dataIndex: 'elderlyNo',
+      key: 'elderlyNo',
+      width:'12%'
+    },{
+      title: '老人姓名',
+      dataIndex: 'name',
+      key: 'name',
+      width:'12%'
+    },{
+      title:'身份证号',
+      dataIndex: 'idNumber',
+      key: 'idNumber',
+      width:'20%'
+    },{
+      title: '房间名称',
+      dataIndex: 'roomName',
+      key: 'roomName',
+      width:'12%'
+    },{
+      title:'入院时间',
+      dataIndex: 'checkInDate',
+      key: 'checkInDate',
+      render:(text,record)=>{
+        return record.checkInDate && record.checkInDate.substr(0,10)
+      },
+      width:'20%'
+    },{
+      title: '操作',
+      dataIndex: 'action',
+      key: 'action',
+      render:(text,record)=>{
+        return(
+          <span>
+            <a href="javascript:;" onClick={() => { this.handleClickRead(record) }} style={{color:'#2ebc2e'}}>费用信息</a>
+            <Divider type="vertical" />
+            <Popconfirm title="是否发起出院申请?" onConfirm={() => this.handleOutHomeCancel(record)}>
+              <a href="javascript:;" style={{color:'#2ebc2e'}}>取消出院申请</a>
+            </Popconfirm>
+          </span>
+        )
+      }
+    }];
+    return(
+      <Fragment>
+        <BreadcrumbCustom first="老人管理" second="出院管理" />
+        {
+          pageFlag?
+          <Row>
+            <Card bordered={false} style={{marginBottom:10}}>
+              <Row gutter={16}>
+                <Col md={4}>
+                  <Input 
+                    placeholder="按老人姓名搜索"  
+                    value={this.state.searchText}
+                    onChange={this.handleInputChange}
+                    onPressEnter={this.handleSearchElderly}
+                  />
+                </Col>
+                <Col md={4}>
+                  <Button onClick={this.handleSearchElderly} type="primary">搜索</Button>
+                  <Button onClick={this.handleClickReset} type="primary">刷新</Button>
+                </Col>
+              </Row>
+            </Card>
+              <Card bordered={false} title="老人列表">
+                <Table 
+                  bordered
+                  dataSource={oldManList_copy} 
+                  columns={columns} 
+                  pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                  rowKey={record => record.id}
+                />
+              </Card>
+          </Row>:
+          <FeeList 
+            f1={f1}
+            f2={f2}
+            f3={f3}
+            f4={f4}
+            f5={f5}
+            feeList1={feeList1}
+            feeList2={feeList2}
+            feeList3={feeList3}
+            feeList4={feeList4}
+            feeList5={feeList5}
+            handleGoback={this.handleGoback}
+            record={record}
+          />
+          
+        }
+      </Fragment>
+    )
+  }
+}
+
+export default OldManOutHome;
+/*{
+      title: '操作员',
+      dataIndex: 'opetator',
+      key: 'opetator',
+      width:'10%',
+    },*/

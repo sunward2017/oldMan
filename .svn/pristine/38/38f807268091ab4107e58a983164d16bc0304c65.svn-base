@@ -1,0 +1,228 @@
+import React, {Component,Fragment} from 'react';
+import httpServer from '../../../axios';
+import {Row,Col,Input,Button,Table,Modal,Tabs,Card,List,Avatar} from 'antd';
+
+const TabPane = Tabs.TabPane;
+class FeeList extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      modalFlag:false,
+      activeKey:'',
+    }
+    this.handleCancel = this.handleCancel.bind(this);
+    this.handleGoback = this.handleGoback.bind(this);
+  }
+
+  handleGoback(){
+    this.props.handleGoback();
+  }
+  handleCancel(){//关闭弹出框
+    this.setState({modalFlag:false});
+  }
+  handleClickViewDetails(param){
+    this.setState({modalFlag:true,activeKey:param})
+  }
+  render(){
+    const {f1,f2,f3,f4,f5,feeList1,feeList2,feeList3,feeList4,feeList5} = this.props;
+    const {modalFlag,activeKey} = this.state;
+    const columns1=[{
+        title: '月份',
+        dataIndex: 'month',
+    },{
+        title:'项目名称',
+        dataIndex:'itemName'
+    },{
+        title:'日期',
+        dataIndex:'nursingTime'
+    },{
+        title:'单价',
+        dataIndex:'price'
+    },{
+        title:'次数',
+        dataIndex:'times'
+    },{
+        title:'金额',
+        dataIndex: 'momey',
+    },{
+        title:'护理员',
+        dataIndex:'workerName'
+    },{
+        title:'说明',
+        dataIndex:'meno',
+    }];
+    const columns2 =[{
+        title: '月份',
+        dataIndex: 'month',
+    },{
+        title:'项目名称',
+        dataIndex:'itemName'
+    },{
+        title:'费用',
+        dataIndex:'mealFee'
+    },{
+        title:'外出天数',
+        dataIndex:'outDays'
+    },{
+        title:'减免金额',
+        dataIndex:'returnMoney'
+    },{
+        title:'应收金额',
+        dataIndex:'money',
+        width:'12%'
+    }];
+    const columns3 = [{
+        title: '月份',
+        dataIndex: 'month',
+    },{
+        title:'房间',
+        dataIndex:'roomName'
+    },{
+        title:'上次度数',
+        dataIndex:'lastValue'
+    },{
+        title:'本次度数',
+        dataIndex:'curValue'
+    },{
+        title:'抄表日期',
+        dataIndex:'addtime'
+    },{
+        title:'使用度数',
+        dataIndex:'diffValue'
+    },{
+        title:'单价',
+        dataIndex:'price'
+    },{
+        title:'金额',
+        dataIndex:'sumMoney'
+    },{
+        title:'分担比例',
+        dataIndex:'percentage'
+    },{
+        title:'应收金额',
+        dataIndex:'money',
+        width:'12%'
+    }];
+    const columns4 = [{
+        title: '月份',
+        dataIndex: 'month',
+    },{
+        title:'房间',
+        dataIndex:'roomName'
+    },{
+        title:'入住天数',
+        dataIndex:'days'
+    },{
+        title:'床位费/月',
+        dataIndex:'price'
+    },{
+        title:'金额',
+        dataIndex:'money',
+        width:'12%'
+    }];
+    const columns5 = [{
+        title: '月份',
+        dataIndex: 'month',
+    },{
+        title:'发生日期',
+        dataIndex:'finishtime'
+    },{
+        title:'药品名称',
+        dataIndex:'drugName'
+    },{
+        title:'单价',
+        dataIndex:'price'
+    },{
+        title:'金额',
+        dataIndex:'money',
+        width:'12%'
+    }];
+    return(
+      <div>
+        <Card 
+          title="未结算费用信息"
+        >
+          <List
+            itemLayout="horizontal"
+          >
+            <List.Item actions={[<Button type="primary" onClick={()=>{this.handleClickViewDetails('nursingFee')}}>查看详情</Button>]}>
+              <List.Item.Meta
+                avatar={<Avatar icon="star" />}
+                title={<span>检查护理费：</span>}
+                description={<Input disabled value={f1} />}
+              />
+            </List.Item>
+            <List.Item actions={[<Button type="primary" onClick={()=>{this.handleClickViewDetails('mealFee')}}>查看详情</Button>]}>
+              <List.Item.Meta
+                avatar={<Avatar icon="star" />}
+                title={<span>餐费：</span>}
+                description={<Input disabled value={f2}/>}
+              />
+            </List.Item>
+            <List.Item actions={[<Button type="primary" onClick={()=>{this.handleClickViewDetails('waterFee')}}>查看详情</Button>]}>
+              <List.Item.Meta
+                avatar={<Avatar icon="star" />}
+                title={<span>水电费：</span>}
+                description={<Input disabled value={f3}/>}
+              />
+            </List.Item>
+            <List.Item actions={[<Button type="primary" onClick={()=>{this.handleClickViewDetails('roomFee')}}>查看详情</Button>]}>
+              <List.Item.Meta
+                avatar={<Avatar icon="star" />}
+                title={<span>住宿费：</span>}
+                description={<Input disabled value={f4}/>}
+              />
+            </List.Item>
+            <List.Item actions={[<Button type="primary" onClick={()=>{this.handleClickViewDetails('drugFee')}}>查看详情</Button>]}>
+              <List.Item.Meta
+                avatar={<Avatar icon="star" />}
+                title={<span>药费：</span>}
+                description={<Input disabled value={f5}/>}
+              />
+            </List.Item>
+            <List.Item>
+              <List.Item.Meta
+                avatar={<Avatar icon="star" />}
+                title={<span>未结算金额合计：</span>}
+                description={<Input disabled value={`${f1+f2+f3+f4+f5}`}/>}
+              />
+            </List.Item>
+            <List.Item>
+              <Button type="primary" onClick={this.handleGoback} style={{position:'relative',left:'50%'}}>返回</Button>
+            </List.Item>
+          </List>
+        </Card>
+        {
+          modalFlag?
+            <Modal  
+              title="未结算费用明细"
+              visible={true}
+              footer = {null}
+              onCancel={this.handleCancel}
+              width="80%"
+            >
+              <Tabs activeKey={activeKey}>
+                <TabPane tab="检查护理费明细" key="nursingFee" disabled>
+                  <Table columns={columns1} dataSource={feeList1} rowKey={record => record.id}/>  
+                </TabPane>
+                <TabPane tab="餐费明细" key="mealFee" disabled >
+                  <Table columns={columns2} dataSource={feeList2} rowKey={record => record.id}/> 
+                </TabPane>
+                <TabPane tab="水电费明细" key="waterFee" disabled >
+                  <Table columns={columns3} dataSource={feeList3} rowKey={record => record.id}/> 
+                </TabPane>
+                <TabPane tab="房费明细" key="roomFee" disabled >
+                  <Table columns={columns4} dataSource={feeList5} rowKey={record => record.id}/> 
+                </TabPane>
+                <TabPane tab="药费明细" key="drugFee" disabled >
+                    <Table columns={columns5} dataSource={feeList5} rowKey={record => record.id}/> 
+                </TabPane>
+              </Tabs>
+            </Modal>:null
+        }
+      </div>
+    )
+  }
+}
+
+export default FeeList;

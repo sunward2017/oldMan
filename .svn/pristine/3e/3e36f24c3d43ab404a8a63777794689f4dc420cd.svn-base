@@ -1,0 +1,33 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Card, Icon, Avatar, Popconfirm } from 'antd';
+const { Meta } = Card;
+
+export default class RecordItem extends React.Component {
+    componentDidMount(){
+        //console.log('item record:',this.props);
+    }
+    recordDeleteHandler = () => {
+        this.props.onDel();
+    };
+    render() {
+        const { data,baseUrl } = this.props;
+        return (
+            <Card
+                style={{ width: 250, marginTop: 16 }}
+                actions={[<Link to={{ pathname: `${baseUrl}/${data.id}/edit`,state:data.customerId}}>
+                    <Icon type="edit" /></Link>,
+                    <Popconfirm title="确认清空该老人的健康档案?" onConfirm={this.recordDeleteHandler}>
+                        <Icon type="delete" />
+                    </Popconfirm>
+                ]}
+            >
+                <Meta
+                    avatar={<Avatar src={data.faceUrl} />}
+                    title={data.name}
+                    description="This is the description"
+                />
+            </Card>
+        )
+    }
+}

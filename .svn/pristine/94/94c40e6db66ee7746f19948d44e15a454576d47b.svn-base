@@ -1,0 +1,9 @@
+export const clientMenus = [
+    { key: '/app/pension-agency/dashboard/index', title: '首页', icon: 'mobile', component: 'ClientDashboard' },
+    {
+        key: '/app/ui', title: '预约管理', icon: 'scan',
+        sub: [
+            { key: '/app/ui/buttons', title: '按钮', component: 'Buttons' },
+        ],
+    }
+];

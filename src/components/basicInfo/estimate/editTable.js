@@ -1,0 +1,270 @@
+import React, {
+  Component,
+  Fragment
+} from 'react';
+import {
+  Table, Input, InputNumber, Popconfirm, Form,Button,notification
+} from 'antd';
+import httpServer from '@/axios/index';
+
+const FormItem = Form.Item;
+const EditableContext = React.createContext();
+
+const EditableRow = ({ form, index, ...props }) => (
+  <EditableContext.Provider value={form}>
+    <tr {...props} />
+  </EditableContext.Provider>
+);
+
+const EditableFormRow = Form.create()(EditableRow);
+
+class EditableCell extends React.Component {
+  getInput = () => {
+    if (this.props.inputType === 'number') {
+      return <InputNumber min={0} max={100}/>;
+    }
+    return <Input />;
+  };
+
+  render() {
+    const {
+      editing,
+      dataIndex,
+      title,
+      inputType,
+      record,
+      index,
+      ...restProps
+    } = this.props;
+    return (
+      <EditableContext.Consumer>
+        {(form) => {
+          const { getFieldDecorator } = form;
+          return (
+            <td {...restProps}>
+              {editing ? (
+                <FormItem style={{ margin: 0 }}>
+                  {getFieldDecorator(dataIndex, {
+                    rules: [{
+                      required: true,
+                      message: `请输入 ${title}!`,
+                    }],
+                    initialValue: record[dataIndex],
+                  })(this.getInput())}
+                </FormItem>
+              ) : restProps.children}
+            </td>
+          );
+        }}
+      </EditableContext.Consumer>
+    );
+  }
+}
+
+class EditableTable extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { data:[], editingKey: '', addFlag:false,puuid:'' };
+    this.columns = [
+      {
+        title: '选项名',
+        dataIndex: 'name',
+        width: '25%',
+        editable: true,
+        key:'name'
+      },
+       {
+        title: '选项内容',
+        dataIndex: 'content',
+        width: '40%',
+        editable: true,
+        key:'content'
+      },
+      {
+        title: '选项分值',
+        dataIndex: 'score',
+        width: '15%',
+        editable: true,
+        key:'score'
+      },
+     
+      {
+        title: '操作',
+        dataIndex: 'operation',
+        key:'operation',
+        render: (text, record) => {
+          const editable = this.isEditing(record);
+          return (
+            <div>
+              {editable ? (
+                <span>
+                  <EditableContext.Consumer>
+                    {form => (
+                      <a
+                        href="javascript:;"
+                        onClick={() => this.save(form, record)}
+                        style={{ marginRight: 8,color:'green' }}
+                      >
+                        保存
+                      </a>
+                    )}
+                  </EditableContext.Consumer>
+                  <Popconfirm
+                    title="确定要删除吗?"
+                    onConfirm={() => this.cancel(record.id)}
+                  >
+                    <a style={{color:'red' }}>删除</a>
+                  </Popconfirm>
+                </span>
+              ) : (
+                <a style={{color:'green' }} onClick={() => this.edit(record.id)}>编辑</a>
+              )}
+            </div>
+          );
+        },
+      },
+    ];
+  }
+
+  isEditing = record => record.id === this.state.editingKey||!record.id;
+
+  cancel = (id) => {
+    if(id){
+       httpServer.deleteEestimateLibDetail({id}).then(res=>{
+      if (res.code === 200) {
+              const args = {
+                message: '通信成功',
+                description: res.msg,
+                duration: 2,
+              };
+              notification.success(args);
+              this.listDetail();
+      } 
+      })  
+    }else{
+       this.listDetail();
+    }
+  };
+  
+  listDetail(){
+    const puuid =this.state.puuid;
+    httpServer.listEestimateLibDetail({puuid}).then(res=>{
+      this.setState({data:res.data,editingKey:''})
+    })
+  }
+  save(form, record) {
+    const {puuid} =this.state;
+   
+    form.validateFields((error, row) => {
+      if (error) {
+        return;
+      }
+      
+      if(record.id){
+        const data = {...record,...row}
+        httpServer.updateEestimateLibDetail(data).then(res=>{
+            if (res.code === 200) {
+            const args = {
+              message: '通信成功',
+              description: res.msg,
+              duration: 2,
+            };
+            notification.success(args);
+            this.listDetail();
+        } 
+        })
+      }else{
+         const data = {...row,puuid}
+         httpServer.saveEestimateLibDetail(data).then(res=>{
+          if (res.code === 200) {
+            const args = {
+              message: '通信成功',
+              description: res.msg,
+              duration: 2,
+            };
+            notification.success(args);
+            this.listDetail();
+        }
+         })
+      }  
+    });
+  }
+  add=()=>{
+    const data = [...this.state.data];
+    const puuid = this.state.puuid;
+    if(!puuid){
+      const flag = this.props.sendEstimate();
+      if(flag) return;
+    }
+    if(this.state.editingKey) return;
+    if(data.find(i=>(!i.id))) return;
+    data.push({
+      name:'',
+      content:'',
+      score:1,
+    })
+    this.setState({data})
+  }
+  edit(key) {
+    this.setState({ editingKey: key });
+  }
+  componentDidMount(){
+    const {editFlag,uuid} = this.props;
+    this.setState({data:[],addFlag:editFlag,puuid:uuid},function(){
+       if(uuid){
+       this.listDetail()
+       }
+    })
+  }
+  componentWillUnmount(){
+    this.setState = (state,callback)=>{
+          return;
+       }
+  }
+  componentWillReceiveProps(nextProps){
+    const {editFlag,uuid}= nextProps;
+    this.setState({addFlag:editFlag,puuid:uuid})
+  }
+  render() {
+    const components = {
+      body: {
+        row: EditableFormRow,
+        cell: EditableCell,
+      },
+    };
+    const columns = this.columns.map((col) => {
+      if (!col.editable) {
+        return col;
+      }
+      return {
+        ...col,
+        onCell: record => ({
+          record,
+          inputType: col.dataIndex === 'age' ? 'number' : 'text',
+          dataIndex: col.dataIndex,
+          title: col.title,
+          editing: this.isEditing(record),
+        }),
+      };
+    });
+
+    return (
+    <Fragment>
+      <Table
+        rowKey= {record => record.name} 
+        components={components}
+        bordered
+        dataSource={this.state.data}
+        columns={columns}
+        pagination={false}
+        rowClassName="editable-row"
+      />
+      <div>
+        { this.state.addFlag?<Button icon="plus" onClick={this.add}></Button>:null }
+      </div>
+    </Fragment>  
+    );
+  }
+}
+
+export default EditableTable;

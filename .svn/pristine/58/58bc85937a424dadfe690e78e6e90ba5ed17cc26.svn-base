@@ -1,0 +1,88 @@
+export const clientMenus = [
+    { key: '/app/pension-agency/dashboard/index', title: '首页', icon: 'home', component: 'ClientDashboard' },
+    {
+        key: '/app/pension-agency/ui', title: '预约管理', icon: 'tag',
+        sub: [
+            { key: '/app/pension-agency/appointments', title: '入院预约', component: 'Appointments' },
+        ],
+    },
+    {
+        key: '/app/pension-agency/elderlyManage', title: '老人管理', icon: 'team',
+        sub: [
+            { key: '/app/pension-agency/elderlyManage/oldManEvaluate', title: '入院评估', component: 'OldManEvaluate' },
+            { key: '/app/pension-agency/elderlyManage/entryContract', title: '入院合同', component: 'EntryContract' },
+            { key: '/app/pension-agency/elderlyManage/nursingScheduled', title: '护理计划', component: 'CarePlan' },
+            { key: '/app/pension-agency/elderlyManage/nursingRecord', title: '护理记录', component: 'NursingRecord' },
+            { key: '/app/pension-agency/elderlyManage/leave', title: '外出管理', component: 'Leave' },
+            { key: '/app/pension-agency/elderlyManage/oldManAdmission', title: '在院管理', component: 'OldManAdmission' },
+            { key: '/app/pension-agency/elderlyManage/oldManOutHome', title: '出院管理', component: 'OldManOutHome' },
+        ],
+    },
+    {
+        key: '/app/pension-agency/medicalCare', title: '医护管理', icon: 'hdd',
+        sub: [
+            { key: '/app/pension-agency/medicalCare/healthRecord', title: '健康档案', component: 'HealthRecord'},
+            { key: '/app/pension-agency/medicalCare/healthExaminationMemo', title: '体检记录', component: 'HealthExMemo'},
+           /* { key: '/app/pension-agency/medicalCare/drugPlan', title: '用药计划'},
+            { key: '/app/pension-agency/medicalCare/healthReport', title: '检查单'},
+            { key: '/app/pension-agency/medicalCare/bloodPressure', title: '血压波动表'},
+            { key: '/app/pension-agency/medicalCare/drugHistory', title: '服药记录'},*/
+        ],
+    },
+    {
+        key: '/app/pension-agency/drugManage', title: '药品管理', icon: 'medicine-box',
+        sub: [
+            { key: '/app/pension-agency/drugManage/drugUseTemplate', title: '用药模板', component: 'DrugUseTemplate'},
+            { key: '/app/pension-agency/drugManage/drugUsePlan', title: '用药计划', component: 'DrugUseTemplate'},
+           
+        ],
+    },
+    {
+        key: '/app/pension-agency/alarm', title: '告警信息', icon: 'alert',
+        sub: [
+            { key: '/app/pension-agency/arrearageAlarm' ,title:'欠费提醒', component: 'ArrearageAlarm' }
+        ]
+    },
+    {
+        key: '/app/pension-agency/processAudit', title: '审核管理', icon: 'audit',
+        sub: [
+            { key: '/app/pension-agency/processAudit/leaveAudit', title: '出院审核', component: 'LeaveAudit' },
+        ]
+    },
+    {
+        key: '/app/pension-agency/financial', title: '财务管理', icon: 'money-collect',
+        sub: [
+            { key: '/app/pension-agency/financial/payItem', title: '收费项目', component: 'PayItem' },
+            { key: '/app/pension-agency/financial/feeInOut', title: '费用收支' , component: 'FeeInOut'},
+            // { key: '/app/pension-agency/financial/payItem', title: '费用预交' },
+            { key: '/app/pension-agency/financial/settleAccounts', title: '在院结算' , component: 'SettleAccounts'},
+            { key: '/app/pension-agency/financial/leaveSettle', title: '出院结算' , component: 'SettleAccounts'},
+            // { key: '/app/pension-agency/financial/payItem', title: '水电费结算' },
+            // { key: '/app/pension-agency/financial/payItem', title: '药费清单' },
+            // { key: '/app/pension-agency/financial/payItem', title: '出院审核' },
+        ],
+    },
+    {
+        key: '/app/pension-agency/basicInfo', title: '基础信息', icon: 'info-circle',
+        sub: [
+            { key: '/app/pension-agency/basicInfo/workerInfo', title: '护工信息', component: 'WorkerInfo' },
+            { key: '/app/pension-agency/basicInfo/nurseInfo', title: '护士信息', component: 'NurseInfo' },
+            { key: '/app/pension-agency/basicInfo/examine', title: '检查项', component:'Examine'},
+            { key: '/app/pension-agency/basicInfo/nursingGrade', title: '护理等级', component: 'NursingGrade' },
+            { key: '/app/pension-agency/basicInfo/workProjects', title: '工作项目', component: 'WorkProjects' },
+            { key: '/app/pension-agency/basicInfo/room', title: '房间管理', component:'Room'},
+            { key: '/app/pension-agency/basicInfo/reductionMonth', title: '水费减免月', component: 'ReductionMonth' },
+            { key: '/app/pension-agency/basicInfo/diseaseLibrary', title: '病症库', component: 'DiseaseLibrary' },
+            { key: '/app/pension-agency/basicInfo/estimate', title: '评估库', component: 'EstimateLib' },
+            { key: '/app/pension-agency/basicSetting/EstimateGrade', title: '评估等级', component: 'EstimateGrade' },
+            { key: '/app/pension-agency/elderlyManage/waterKwh', title: '水电记录', component: 'WaterKwh' },
+        ],
+    },
+    {
+        key: '/app/pension-agency/systemManage', title: '系统管理', icon: 'tool',
+        sub: [
+            { key: '/app/pension-agency/systemManage/deptInfo', title: '部门信息', component: 'DeptInfo' },
+            { key: '/app/pension-agency/systemManage/leaveAuditSet', title: '出院审核部门设置', component: 'LeaveAuditSet' },
+        ]
+    }
+];

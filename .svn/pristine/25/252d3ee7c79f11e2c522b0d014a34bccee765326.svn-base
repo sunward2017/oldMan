@@ -1,0 +1,75 @@
+import React from 'react';
+import BasicForm from '../components/forms/BasicForm';
+import Echarts from '../components/charts/Echarts';
+import Recharts from '../components/charts/Recharts';
+import Banners from '../components/ui/banners';
+import Drags from '../components/ui/Draggable';
+import Dashboard from '../components/dashboard/Dashboard';
+import ClientDashboard from '../components/dashboard/Dashboard';
+import AuthBasic from '../components/auth/Basic';
+import RouterEnter from '../components/auth/RouterEnter';
+import Wysiwyg from 'bundle-loader?lazy!../components/ui/Wysiwyg';  // 按需加载富文本配置
+import Bundle from '../components/widget/Bundle';
+import MapUi from '../components/ui/map';
+import CustomerInfo from '../components/auth/CustomerInfo';
+import Worker from '../components/user/worker';
+import SysParams from '../components/basicSetting/Systemparameters';
+import DrugInfo from '../components/basicSetting/DrugInfo';
+import Estimate from '../components/basicSetting/Estimate';
+import EstimateGrade from '../components/basicSetting/EstimateGrade';
+import AuthManage from '../components/auth/AuthManage';
+import WorkerInfo from '../components/basicInfo/workerInfo';
+import PayItem from '../components/financial/payItem';
+import HealthRecord from '../components/medicalCare/healthRecord';
+import NurseInfo from '../components/basicInfo/nurseInfo';
+import NursingGrade from '../components/basicInfo/nursingGrade';
+import WorkProjects from '../components/basicInfo/workProjects';
+import Room from '../components/basicInfo/room';
+import ReductionMonth from '../components/basicInfo/reductionMonth';
+import DiseaseLibrary from '../components/basicInfo/diseaseLibrary';
+import Examine  from '../components/basicInfo/examine';
+import DeptInfo from '../components/basicInfo/deptInfo';
+import LeaveAuditSet from '../components/basicInfo/leaveAuditSet';
+import Appointments from '../components/appointments';
+import OldManEvaluate from '../components/elderlyManage/oldManEvaluate';
+
+const WysiwygBundle = (props) => (
+    <Bundle load={Wysiwyg}>
+        {(Component) => <Component {...props} />}
+    </Bundle>
+);
+
+export default {
+    BasicForm,
+    Echarts,
+    Recharts,
+    Banners,
+    Drags,
+    Dashboard,
+    ClientDashboard,
+    AuthBasic,
+    RouterEnter,
+    WysiwygBundle,
+    MapUi,
+    CustomerInfo,
+    Worker,
+    SysParams,
+    DrugInfo,
+    Estimate,
+    EstimateGrade, 
+    AuthManage,
+    WorkerInfo,
+    PayItem,
+    HealthRecord,
+    NurseInfo,
+    NursingGrade,
+    WorkProjects,
+    Room,
+    ReductionMonth,
+    DiseaseLibrary,
+    Examine,
+    DeptInfo,
+    LeaveAuditSet,
+    Appointments,
+    OldManEvaluate,
+}

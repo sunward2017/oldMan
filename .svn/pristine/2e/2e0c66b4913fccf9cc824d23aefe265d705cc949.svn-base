@@ -1,0 +1,122 @@
+import React ,{Component,Fragment} from 'react';
+import {Table,Tag} from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import 'bootstrap/dist/css/bootstrap.css';
+
+class CustomerInfo extends Component{
+  render(){
+    const dataSource = [{
+      id:  '1',
+      customer_id:'1',
+      customer_name:'赵晓华',
+      phone:15758585858,
+      email:'123456789@qq.com',
+      postcode:310000,
+      contact:'赵明灯',
+      face_url:'wwww.woosiyuan.com',
+      addtime:'2019-01-15',
+      status:1,
+      memo:'一级护理评定',
+    },];
+
+    const columns = [{
+      title: '序号',
+      dataIndex: 'id',
+      key: 'id',
+      width:'5%'
+    },{
+      title: '客户编号',
+      dataIndex: 'customer_id',
+      key: 'customer_id',
+      width:'10%'
+    },{
+      title: '客户名称',
+      dataIndex: 'customer_name',
+      key: 'customer_name',
+      width:'10%'
+    },{
+      title: '电话号码',
+      dataIndex: 'phone',
+      key: 'phone',
+      width:'10%'
+    },{
+      title: '邮箱',
+      dataIndex: 'email',
+      key: 'email',
+      width:'10%'
+    },{
+      title: '邮编',
+      dataIndex: 'postcode',
+      key: 'postcode',
+      width:'10%'
+    },{
+      title: '联系人',
+      dataIndex: 'contact',
+      key: 'contact',
+      width:'10%'
+    },{
+      title: '头像',
+      dataIndex: 'face_url',
+      key: 'face_url',
+      width:'10%'
+    },{
+      title: '添加日期',
+      dataIndex: 'addtime',
+      key: 'addtime',
+      width:'10%'
+    },{
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      render:(record)=>{
+        return record === 1?<Tag color="green">正常</Tag>:<Tag color="red">注销</Tag>
+      },
+      width:'5%'
+    },{
+      title: '备注',
+      dataIndex: 'memo',
+      key: 'memo',
+      width:'10%'
+    },];
+    return(
+      <div>
+        <BreadcrumbCustom first="UI" second="客户信息" />
+       <Table dataSource={dataSource} columns={columns} pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}/>
+        <div className = 'table-responsive'>
+          <table className='table'>
+            <caption>客户信息</caption>
+            <thead>
+              <th>序号</th>
+              <th>客户编号</th>
+              <th>客户名称</th>
+              <th>电话号码</th>
+              <th>邮箱</th>
+              <th>邮编</th>
+              <th>联系人</th>
+              <th>头像</th>
+              <th>添加日期</th>
+              <th>状态</th>
+              <th>备注</th>
+            </thead>
+            <tbody>
+            {
+              dataSource.map((row,index)=>{
+                return (<tr key={row.id}>
+                  {
+                     Object.values(row).map((cell,index)=>{
+                     return <td >{cell}</td>
+                     })
+                  }
+                 </tr>
+                  )
+              })
+            }
+          </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+}
+
+export default CustomerInfo;

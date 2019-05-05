@@ -1,0 +1,179 @@
+import React from 'react';
+import { Card, Input, Col, Row, Tabs, Button, Form, Avatar, notification, Divider } from 'antd';
+import httpServer from '../../../axios/index';
+const TabPane = Tabs.TabPane;
+const { Meta } = Card;
+const { TextArea } = Input;
+
+class RecordEdit extends React.Component {
+    state={
+        elderlyInfo:{}
+    };
+    componentDidMount(){
+        // console.log('record edit:',this.props);
+        this.fetchElderlyInfo();
+    }
+    fetchElderlyInfo(){
+        const { match, location } = this.props;
+        httpServer.getOneElderlyInfo({id:match.params.userId, customerId:location.state}).then(res => {
+            console.log('one info :',res);
+            if(res.code ===200 ){
+                this.setState({elderlyInfo:res.data});
+            } else {
+                this.setState({elderlyInfo:{}});
+                this.notice('error',res.msg);
+            }
+        })
+    }
+    saveRecord(data){
+        const { location, match, history } = this.props;
+        const { elderlyInfo } = this.state;
+        const url = elderlyInfo.tbHealthRecords ? 'updateHealthInfo' : 'saveHealthInfo';
+        httpServer[url]({...data, customerId:location.state, elderlyId:match.params.userId, id:elderlyInfo.tbHealthRecords ? elderlyInfo.tbHealthRecords.id :undefined}).then(res => {
+            console.log('save record:',res);
+            if(res.code ===200) {
+                history.goBack();
+                this.notice('success',res.msg)
+            } else {
+                this.notice('error',res.msg)
+            }
+        })
+    }
+    notice(status, msg) {
+        let text = status==='success' ? '成功' : (status === 'error'? '失败' : '');
+        notification[status]({
+            message: `${text}提示:`,
+            description:msg,
+            duration:2
+        })
+    }
+    onRecordSaveHandler = (e) => {
+        e.preventDefault();
+        this.props.form.validateFieldsAndScroll((err, values) => {
+            if (!err) {
+                console.log('Received values of form: ', values);
+                this.saveRecord(values);
+            }
+        });
+    };
+    render() {
+        const { elderlyInfo } = this.state;
+        const tbHealthRecords = elderlyInfo.tbHealthRecords;
+        const { getFieldDecorator } = this.props.form;
+        const formItemLayout = {
+            labelCol:{ span: 5 },
+            wrapperCol:{ span: 12 }
+        };
+        return (
+            <Card>
+                <Form onSubmit={this.onRecordSaveHandler}>
+                    <Tabs tabBarExtraContent={<Button type="primary" htmlType="submit">保存</Button>}>
+                        <TabPane tab="基本信息" key="1">
+                            <Row>
+                                <Col md={12}>
+                                    <Card>
+                                        <Meta
+                                            avatar={<Avatar src={elderlyInfo.faceUrl} />}
+                                            title={`${elderlyInfo.name} - ${elderlyInfo.age}岁 - ${elderlyInfo.sex ? '男' :'女'}`}
+                                            description={elderlyInfo.bedNumber}
+                                        />
+                                        <Divider />
+                                        <p>出生日期 ：{elderlyInfo.birthday}</p>
+                                        <p>籍 贯 ：{elderlyInfo.nativePlace}</p>
+                                    </Card>
+                                </Col>
+                            </Row>
+                            <Divider orientation="left">一般信息</Divider>
+                            <Form.Item
+                                label="职业经历"
+                                {...formItemLayout}
+                            >
+                                {getFieldDecorator('careerExperience',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.careerExperience,
+                                })(
+                                    <TextArea autosize />
+                                )}
+                            </Form.Item>
+                            <Form.Item
+                                label="生活习惯"
+                                {...formItemLayout}
+                            >
+                                {getFieldDecorator('habits',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.habits,
+                                })(
+                                    <TextArea autosize />
+                                )}
+                            </Form.Item>
+                            <Form.Item
+                                label="饮食习惯"
+                                {...formItemLayout}
+                            >
+                                {getFieldDecorator('eatingHabits',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.eatingHabits,
+                                })(
+                                    <TextArea autosize />
+                                )}
+                            </Form.Item>
+                            <Divider orientation="left">病史</Divider>
+                            <Form.Item
+                                label="家族病史"
+                                {...formItemLayout}
+                            >
+                                {getFieldDecorator('familyHistory',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.familyHistory,
+                                })(
+                                    <TextArea autosize />
+                                )}
+                            </Form.Item>
+                            <Form.Item
+                                label="既往病史"
+                                {...formItemLayout}
+                            >
+                                {getFieldDecorator('previousHistory',{
+                                    initialValue: tbHealthRecords && tbHealthRecords.previousHistory,
+                                })(
+                                    <TextArea autosize />
+                                )}
+                            </Form.Item>
+                            <Form.Item
+                                label="现病况"
+                                {...formItemLayout}
+                            >
+                                {getFieldDecorator('presentIllness', {
+                                    initialValue: tbHealthRecords && tbHealthRecords.presentIllness,
+                                })(
+                                    <TextArea autosize />
+                                )}
+                            </Form.Item>
+                        </TabPane>
+                        <TabPane tab="治疗记录" key="2">
+                            <Form.Item
+                                label="治疗记录"
+                                {...formItemLayout}
+                            >
+                                {getFieldDecorator('assistanceRecord', {
+                                    initialValue: tbHealthRecords && tbHealthRecords.assistanceRecord,
+                                })(
+                                    <TextArea autosize={{ minRows: 5}} />
+                                )}
+                            </Form.Item>
+                        </TabPane>
+                        <TabPane tab="体检记录" key="3">
+                            <Form.Item
+                                label="体检记录"
+                                {...formItemLayout}
+                            >
+                                {getFieldDecorator('examinationRecord', {
+                                    initialValue: tbHealthRecords && tbHealthRecords.examinationRecord,
+                                })(
+                                    <TextArea autosize={{ minRows: 5 }} />
+                                )}
+                            </Form.Item>
+                        </TabPane>
+                    </Tabs>
+                </Form>
+            </Card>
+        )
+    }
+}
+export default Form.create()(RecordEdit)

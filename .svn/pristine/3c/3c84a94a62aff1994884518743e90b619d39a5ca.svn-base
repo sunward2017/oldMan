@@ -1,0 +1,128 @@
+import React ,{ Component } from 'react';
+import {Modal , Table ,Form ,InputNumber,DatePicker,Radio ,Input,Button,notification} from 'antd';
+import httpServer from '@/axios';
+import DrugListByStock from '@/common/drugListByStock'
+import moment from 'moment'
+ 
+const RadioGroup = Radio.Group;
+
+class drugForm extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      drugInfo:{},
+      max:0,
+    }
+  }
+  handleDrug=()=>{
+  	let that = this;
+  	this.props.form.validateFieldsAndScroll((err, fieldsValue) => {
+  		if(!err){
+  			let values = {...fieldsValue,drugCode:fieldsValue['drugCode'].drugCode}
+  			if(this.state.drugInfo.id)values.id= this.state.drugInfo.id;
+  			that.props.handleDrug(values);
+  		}
+  	})
+  }
+  cancle=()=>{
+  	 this.props.cancel(); 
+  }
+  componentDidMount(){
+  	 const drugInfo = this.props.drugInfo;
+     this.setState({drugInfo}) 	
+  }
+  drugChange=(v)=>{
+  	 this.setState({max:v.quantity});
+  	 this.props.form.setFieldsValue({
+  	 	minUbit:v.minUnit
+  	 })
+  }
+  render(){
+    const {
+		  getFieldDecorator
+		} = this.props.form;
+	const {units} = this.props;
+	const {drugCode,quantity,minUbit,validityDate,max} = this.state.drugInfo;
+	
+    const formItemLayout = {
+      labelCol: {
+        xs: { span: 24 },
+        sm: { span: 5 },
+      },
+      wrapperCol: {
+        xs: { span: 24 },
+        sm: { span: 19 },
+      },
+    };
+    const tailFormItemLayout = {
+      wrapperCol: {
+        xs: {
+          span: 24,
+          offset: 0,
+        },
+        sm: {
+          span: 16,
+          offset: 8,
+        },
+      },
+    };
+   
+    return (
+	       	<Modal
+		        title="入库单信息"
+		        okText='确认'
+		        width="40%"
+		        visible={true}
+		        onOk={this.handleDrug}
+		        onCancel={this.cancle}
+		        maskClosable={false}
+		      >
+	       	<Form>
+	       	  <Form.Item
+                label='药品名称'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                 {getFieldDecorator('drugCode', {
+                  rules: [{ required: false, message: '请选择老人'}],
+                  initialValue:drugCode
+                })(
+                   <DrugListByStock elderlyId={this.props.elderlyId} onChange={this.drugChange}/>
+                )}
+              </Form.Item>
+              <Form.Item
+                label='数量'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                {getFieldDecorator('quantity', {
+                  rules: [{ required: true, message: '请输入数量'}],
+                  initialValue:quantity
+                })(
+                    <InputNumber placeHolder="请输入入库数量" min={0} max={max}/>
+                )}
+              </Form.Item>
+               <Form.Item
+                label='最小单位'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                {getFieldDecorator('minUbit', {
+                  rules: [{ required: true, message: '请选择最小单位'}],
+                  initialValue:minUbit
+                })(
+                  <RadioGroup buttonStyle="solid" disabled>
+					    {units.map(i=>{
+                		    return <Radio.Button value={i.value} key={i.id}>{i.value}</Radio.Button>
+                	    })}
+                  </RadioGroup>    
+                )}
+              </Form.Item>
+                
+            </Form>
+          </Modal>
+    )
+  }
+}
+
+export default Form.create()(drugForm)

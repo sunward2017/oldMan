@@ -1,0 +1,240 @@
+import React , {Component,Fragment} from 'react';
+import { Card ,Row, Col ,Tree, notification, Table, Popconfirm,Select,Divider} from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import httpServer from '../../../axios/index';
+
+const  Option = Select.Option
+const { TreeNode } = Tree;
+class LeaveAuditSet extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      treeData:[],
+      dataSource:[],
+      type:'leave',
+      operators:[],
+    }
+    this.onSelect = this.onSelect.bind(this);
+  }
+
+  componentDidMount(){
+    this.getDeptInfoTree();
+    this.getListLeaveAuditSet();
+  }
+  //获取部门列表数据
+  getDeptInfoTree(){
+    const {customerId} = this.props.auth;
+    httpServer.getDeptInfoTree({customerId}).then((res) => {
+      if (res.code === 200) {
+        res.data?this.setState({treeData:[res.data]}):this.setState({treeData:[]});
+      }else{
+        if(res.message ==='Request failed with status code 500'){
+          console.log(res.message);
+        }else{
+          const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+        }
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+
+  //获取审核部门列表
+  getListLeaveAuditSet(){
+    const {customerId} = this.props.auth;
+    const {type} = this.state;
+    const url = type==='leave'?'listLeaveAuditSet':'listCNGAuditSet';
+    httpServer[url]({customerId}).then(res=>{
+      if (res.code === 200) {
+        res.data?this.setState({dataSource:res.data}):this.setState({dataSource:[]});
+      }else{
+        if(res.message ==='Request failed with status code 500'){
+          console.log(res.message);
+        }else{
+          const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+        }
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+
+  //选中树节点
+  onSelect(selectedKeys,info){
+   if(!info.selected) return;//取消选中树节点就直接返回了
+   if(info.selectedNodes[0].props.dataRef.id === 1){
+    const args = {
+      message: '友情提示',
+      description: '根目录不能设置为审核部门',
+      duration: 2,
+    };
+     notification.info(args);
+     return false;
+   }
+   const {id,customerId} = this.props.auth;
+   const optId = id;
+   const deptId = info.selectedNodes[0].props.dataRef.id;
+   const deptName = info.selectedNodes[0].props.dataRef.departmentName;
+   httpServer.saveLeaveAuditSet({customerId,optId,deptId,deptName})
+   .then((res) => {
+      if (res.code === 200) {
+        const args = {
+          message: '通信成功',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.success(args);
+        this.getListLeaveAuditSet();
+      }else{
+        if(res.message ==='Request failed with status code 500'){
+          console.log(res.message);
+        }else{
+          const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+        }
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+
+  //树形节点渲染
+  renderTreeNodes = data => data.map((item) => {
+    if (item.children) {
+      return (
+        <TreeNode title={item.departmentName} key={item.id} dataRef={item}>
+          {this.renderTreeNodes(item.children)}
+        </TreeNode>
+      );
+    }
+    return <TreeNode {...item} />;
+  })
+
+  //删除
+  handleRowDelete(id){
+    const {type} = this.state;
+    const Url = type==='leave'?'deleteLeaveAuditSet':'deleteCNGAuditSet';
+    httpServer[Url]({id}).then((res)=>{
+       if (res.code === 200) {
+          const args = {
+            message: '通信成功',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.success(args);
+          this.getListLeaveAuditSet();
+        } else {
+          if(res.message ==='Request failed with status code 500'){
+              console.log(res.message);
+           }else{
+               const args = {
+              message: '通信失败',
+              description: res.msg,
+              duration: 2,
+            };
+            notification.error(args);
+           }
+        }
+    }).catch((err)=>{
+      console.log(err);
+    });
+  }
+  changeType=(type)=>{
+  	 this.setState({type},()=>{
+  	 	 this.getListLeaveAuditSet()
+  	 })
+  }
+  render(){
+    const {treeData,dataSource,type} = this.state;
+    const columns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber',
+      width:'5%'
+    },{
+      title: '审核部门',
+      dataIndex: 'deptName',
+      key: 'deptName',
+      width:'25%'
+    },{
+      title: '审核人员',
+      dataIndex: 'deptName',
+      key: 'deptName',
+      width:'25%'
+    },{
+      title:'添加日期',
+      dataIndex: 'addtime',
+      key: 'addtime',
+      width:'25%'
+    },{
+      title:'操作',
+      dataIndex:'action',
+      key:'action',
+      render:(text,record)=>{
+        return(
+          <span>
+              <a href="javascript:;" style={{color:'#2ebc2e'}} onClick={this.edit} >编辑</a>
+              <Divider type="vertical" />
+              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id)}>
+                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+              </Popconfirm>
+          </span>
+        )
+      },
+    }];
+    return(
+      <Fragment>
+        <BreadcrumbCustom first="基础信息" second="审核部门" />
+        <Row gutter={16}>
+          <Col md={10} lg={8} xl={6}>
+            <Card title="部门列表"  bordered={false} >
+               <Tree
+                defaultExpandAll={true}
+                onSelect={this.onSelect}
+              >
+                {this.renderTreeNodes(treeData)}
+              </Tree>
+            </Card>
+          </Col>
+          <Col md={14} lg={16} xl={18}>
+            <Card 
+               title="审核部门列表" 
+               bordered={false} 
+               extra={
+	              	<Select value={type} onChange={this.changeType} style={{width:160}}>
+							      <Option value="leave">老人离院审核</Option>
+							      <Option value="nursing">护理等级变更审核</Option>
+							    </Select>
+	              }
+            >
+              <Table 
+                bordered
+                dataSource={dataSource} 
+                columns={columns} 
+                pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                rowKey={record => record.id}
+              />
+            </Card>
+            
+          </Col>
+        </Row>
+      </Fragment>
+    )
+  }
+}
+
+export default LeaveAuditSet;

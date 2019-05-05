@@ -1,0 +1,15 @@
+import React from 'react';
+import { Card, Avatar } from 'antd';
+const { Meta } = Card;
+
+export default ({data, onClick}) => {
+    return(
+        <Card style={{ width: 250, marginTop: 16 }} hoverable="true" onClick={onClick}>
+            <Meta
+                avatar={<Avatar src={data.faceUrl} />}
+                title={`${data.name} -- ${data.age}岁`}
+                description="This is the description"
+            />
+        </Card>
+    )
+}

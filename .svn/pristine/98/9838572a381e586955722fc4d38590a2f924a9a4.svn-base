@@ -1,0 +1,33 @@
+/**
+ * 接口地址配置文件
+ */
+export const host = (() => {
+    switch (process.env.NODE_ENV) {
+        case "development": return { api: 'http://192.168.10.235:9751' };
+        default: return { api: '' };
+    }
+
+})();
+/*params
+ * fn:url
+ * 接口
+*/
+export default {
+    login: host.api + '/Login',
+    //客户信息
+    listCustomerInfo: host.api + '/listCustomerInfo',//客户信息列表
+    saveCustomer: host.api + '/saveCustomer',        //增加客户信息
+    updateCustomer: host.api + '/updateCustomer',    //修改客户信息
+    deleteCustomer: host.api + '/deleteCustomer' ,   //删除用户信息
+    //基础信息--系统参数
+    listParam: host.api + '/listParam',              //系统基本参数列表
+    deleteParam:host.api+ '/deleteParam',            //系统基本参数删除
+    saveParam:host.api+'/saveParam',                 //系统基本参数增加
+    updateParam:host.api+'/updateParam'              //系统基本参数修改
+
+
+
+
+
+
+}

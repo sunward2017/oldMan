@@ -1,0 +1,274 @@
+import React,{Fragment,Component} from 'react';
+import { Modal, Button,Divider,Select,notification,InputNumber,TimePicker,Form,Input } from 'antd';
+import httpServer from '@/axios';
+import moment from 'moment'
+
+const Option = Select.Option;
+class editForm extends Component {
+  constructor(props) {
+		super(props);
+		this.state = {
+	  
+	    ModalText: 'Content of the modal',
+	    visible: true,
+	    nursingItems:[],
+	    workers:[],
+	    flag:'add',
+	    record1:{},
+	    record2:{},
+	  }
+  }	
+  handleCancel=()=>{
+  	  this.props.close()
+  }
+
+  handleOk = () => {
+     this.props.form.validateFieldsAndScroll((err, fieldsValue) => {
+     	  const worker= fieldsValue.worker.split('&');
+     	  if(!err){
+     	  	const date = this.props.date;
+     	  	var values = {
+     	  		...fieldsValue,
+     	  		pid:this.props.pid,
+     	  		'nursingTime':date+' '+fieldsValue['nursingTime'].format('HH:mm:ss'),
+     	  		workerName:worker[1],
+     	  		workerId:worker[0],
+     	  		optId: this.props.auth
+     	  	}
+     	  	if(this.state.flag==="item"){
+     	  		 const nursingItem = fieldsValue['item'].split('_');
+     	  		 values={
+     	  		 	 ...values,
+     	  		 	 itemName:nursingItem[1],
+     	  		 	 itemCode:nursingItem[0],
+     	  		 	 price:nursingItem[2]
+     	  		 }
+     	  	}
+     	  	values.money = values.times*values.price;
+     	  	values.elderlyId = this.props.elderlyInfo.id;
+	     	  httpServer.saveNursingItemRecoder(values).then(res=>{
+	     	  	 if(res.code===200){
+		     	  	 	 const args = {
+			            message: '成功',
+			            description: '添加成功',
+			            duration: 2,
+			          };
+			          notification.success(args);
+		     	  	 }else{
+	     	  	 	  const args = {
+			            message: '失败',
+			            description: '添加检查项发生错误',
+			            duration: 2,
+			          };
+			          notification.error(args);
+	     	  	 }
+		     	   this.props.close()
+	     	  })
+     	  }
+     	  
+     })
+
+  }
+  
+  fetchNursingItems=()=>{
+  	  const {customerId} = this.props.elderlyInfo;
+      httpServer.listCheckItemAll({customerId}).then((res)=>{
+        if (res.code === 200) {
+            res.data?this.setState({nursingItems:res.data,flag:'item'}):this.setState({nursingItems:[],flag:'item'});
+        }else {
+           const args = {
+            message: '通信失败',
+            description: '获取检查项错误',
+            duration: 2,
+          };
+          notification.error(args);
+        }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  fetchWorkers=()=>{
+  	 
+  	const {customerId} = this.props.elderlyInfo;
+  	httpServer.listWorkerInfo({customerId}).then((res)=>{
+  		 if (res.code === 200) {
+            res.data?this.setState({workers:res.data}):this.setState({workers:[]});
+        }else {
+           const args = {
+            message: '通信失败',
+            description: '获取护工错误',
+            duration: 2,
+          };
+          notification.error(args);
+        }
+  	})
+  }
+  handleChange=(v)=>{
+  	 if(v==='add'){
+    	this.setState({flag:'add'}) 		
+  	 }else{
+  	 	  if(this.state.nursingItems.length===0){
+  	      this.fetchNursingItems()
+  	    }
+  	 }
+  }
+  componentDidMount(){
+  	console.log(this.props.date)
+  	this.fetchWorkers();
+  }
+  render() {
+    const { visible,nursingItems,flag,record1,record2,workers} = this.state;
+    const { getFieldDecorator } = this.props.form;
+    return(
+        <Modal
+          title="护理项目"
+          visible={visible}
+          onOk={this.handleOk}
+          onCancel={this.handleCancel}
+        >  
+           <div>
+           <Select
+			          placeholder="请选择护理类型"
+			          style={{ width: 200 }}
+			          value={flag}
+			          onChange={this.handleChange}
+			        >
+			            <Option  value="add">护理项</Option>
+			            <Option  value="item">检查项</Option>
+			      </Select>
+			      <Divider/>
+		    {
+		      flag==='item'?
+		      <Form className="ant-advanced-search-form">
+			      <Form.Item label="检查项">
+			         {getFieldDecorator('item', {
+	                  rules: [{ required: true, message: '检查项不可为空' }],
+	                  initialValue:record1.item,
+	             })(
+							    <Select
+							      laceholder="请选择检查项"
+							      style={{ width: 200 }}
+						        >
+							        {
+							        	nursingItems.map(item=>(
+							        	    <Option key={item.id} value={`${item.itemCode}_${item.name}_${item.price}`}>
+								              {`${item.name}_${item.price}元/次`}
+								            </Option>
+							            ))
+							        }
+							    </Select>
+							  )}    
+				    </Form.Item>
+            <Form.Item label="检查次数">
+                {getFieldDecorator('times', {
+	              	rules: [{ required: true, message: '检查次数不可为空' }],
+	              	initialValue:record1.times,
+	              })( 
+		               <InputNumber  min={1} max={10} />
+		            )} &emsp;次
+		        </Form.Item>  
+		        <Form.Item label="护理时间">
+		          {getFieldDecorator('nursingTime', {
+	              rules: [{ required: true, message: '日期不可为空' }],
+	            })(
+		             <TimePicker minuteStep={5} secondStep={10} />
+	            )}	        
+		        </Form.Item>
+				    <Form.Item label="护理护工">
+			         {getFieldDecorator('worker', {
+	                  rules: [{ required: true, message: '护工不可为空' }],
+	                  initialValue:record1.worker,
+	             })(
+							    <Select
+							      laceholder="请选择护工"
+							      style={{ width: 200 }}
+						        >
+							        {
+							        	workers.map(item=>(
+							        	    <Option key={item.id} value={`${item.workerId}&${item.workerName}`}>
+								               {item.workerName}
+								            </Option>
+							            ))
+							        }
+							    </Select>
+							  )}    
+				    </Form.Item>
+				    <Form.Item label="&emsp;&emsp;备注">
+                {getFieldDecorator('meno', {
+	              	rules: [{ required: false, message: '检查次数不可为空' }],
+	              	initialValue:record1.meno,
+	              })(
+		               <Input/>
+		            )}
+		        </Form.Item>  
+		      </Form>
+		      :<Form className="ant-advanced-search-form">
+            <Form.Item label="项目名称">                 
+		          {getFieldDecorator('itemName', {
+	              rules: [{ required: true, message: '项目名称不可为空' }],
+	              initialValue:record2.itemName,
+	              })(  
+		            <Input/>
+		          )}  
+		        </Form.Item>  
+		        <Form.Item label="收费价格">
+		          {getFieldDecorator('price', {
+	              rules: [{ required: true, message: '价格不可为空' }],
+	              initialValue:record2.price,
+	            })(
+		            <InputNumber min={1}/> 
+		          )}&emsp;元         
+		        </Form.Item>
+		         
+            <Form.Item label="护理次数">
+              { getFieldDecorator('times', {
+              	rules: [{ required: true, message: '护理次数不可为空' }],
+	              initialValue:record2.times,
+	            })(
+		             <InputNumber  min={1} max={100}/>
+		          )}&emsp;次 
+		        </Form.Item>
+		        <Form.Item label="护理时间">
+		          { getFieldDecorator('nursingTime', {
+	              rules: [{ required: true, message: '日期不可为空' }],
+	            })(
+		             <TimePicker minuteStep={5} secondStep={10}/>
+	             )}	        
+		        </Form.Item>
+		        <Form.Item label="护理护工">
+			         {getFieldDecorator('worker', {
+	                  rules: [{ required: true, message: '护工不可为空' }],
+	                  initialValue:record1.worker,
+	             })(
+							    <Select
+							      laceholder="请选择护工"
+							      style={{ width: 200 }}
+						        >
+							        {
+							        	workers.map(worker=>(
+							        	    <Option key={worker.id} value={`${worker.workerId}&${worker.workerName}`}>
+								              {worker.workerName}
+								            </Option>
+							            ))
+							        }
+							    </Select>
+							  )}    
+				    </Form.Item>
+				    <Form.Item label="&nbsp;&emsp;&emsp;备注">
+                {getFieldDecorator('meno', {
+	              	rules: [{ required: false, message: '检查次数不可为空' }],
+	              	initialValue:record2.meno,
+	              })(
+		               <Input/>
+		            )}
+		        </Form.Item>  
+		      </Form>
+		    }
+		   </div>
+		    
+      </Modal> 
+    )
+  }
+}  
+
+export default  Form.create()(editForm);

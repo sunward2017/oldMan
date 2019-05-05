@@ -1,0 +1,333 @@
+import React , {Component , Fragment } from 'react';
+import {
+  Card,
+  Input,
+  Row,
+  Col,
+  Form,
+  Button,
+  notification,
+  Table,
+  Divider,
+  Popconfirm,
+  Modal,
+  } from 'antd';
+import httpServer from '../../../axios';
+
+class HealthCarePlan extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      checkItemList:[],
+      modalFlag:false,
+      itemList:[],
+      units:[],
+      recordId:'',
+      edit:true,
+      itemCheckFlag:true,
+    };
+    this.handleAdd = this.handleAdd.bind(this);
+    this.handleModalCancel = this.handleModalCancel.bind(this);
+  }
+
+  componentDidMount(){
+    this.getCheckItem();
+    this.getListParam();
+  }
+  getCheckItem(){//获取检查项
+    const {customerId} = this.props;
+    httpServer.listCheckItemAll({customerId}).then((res)=>{
+      if (res.code === 200) {
+        res.data?this.setState({itemList:res.data}):this.setState({itemList:[]});
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+             const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  getListParam=()=>{ //获取单位
+    const {customerId} = this.props;
+    httpServer.listParam({type:'1',customerId}).then((res)=>{
+      if (res.code === 200) {
+         res.data ? this.setState({ units: res.data }) : this.setState({ units: [], });
+      } else {
+        const args = {
+          message: '单位获取失败',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.error(args);
+      }
+    }).catch((err)=>{
+      console.log(err);
+    });
+  }
+
+  handleAdd(){//打开Modal
+    this.setState({modalFlag:true});
+  }
+  handleModalCancel(){//关闭modal
+    this.setState({modalFlag:false});
+  }
+  hangdleCheck(record){//单击选中检查项
+    const {pname,pid,name,id,unit} = record;
+    const {elderlyId,nursingScheduledId} = this.props;
+    const {checkItemList,itemCheckFlag} = this.state;
+    const flag = checkItemList.filter(item => item.checkItemId === id);
+    if(itemCheckFlag){
+      if(flag.length>0){
+        const args = {
+          message: '友情提示',
+          description: "这个检查项已选择，返回列表查看",
+          duration: 2,
+        };
+        notification.info(args);
+      }else{
+        const checkItemList_copy = checkItemList;
+        checkItemList_copy.push({elderlyId,nursingScheduledId,checkTypeId:pid,checkTypeName:pname,checkItemId:id,checkItemName:name,unit,times:1,serviceContent:''});
+        this.setState({checkItemList:checkItemList_copy,modalFlag:false,recordId:id,itemCheckFlag:false,edit:true});
+      }
+    }else{
+      const args = {
+        message: '友情提示',
+        description: "先保存列表中的检查项，才可以继续选择其余检查项",
+        duration: 2,
+      };
+      notification.info(args);
+    }
+    
+  }
+  timesChangeHandler(record,e){//改变次数
+    const recordNow ={...record,"times":e.target.value};
+    this.setState({checkItemList:this.state.checkItemList.map(item => {
+            return item.checkItemId === record.checkItemId ? recordNow : item;
+        })});
+  }
+  serviceContentChangeHandler(record,e){//改变描述
+    const recordNow ={...record,"serviceContent":e.target.value};
+    this.setState({checkItemList:this.state.checkItemList.map(item => {
+            return item.checkItemId === record.checkItemId ? recordNow : item;
+        })});
+  }
+  handleSave(record){
+    const {nursingScheduledId,elderlyId} = this.props;
+    const value =record;
+    value.nursingScheduledId = nursingScheduledId;
+    value.elderlyId = elderlyId;
+    const reg = /^\+?[1-9][0-9]*$/;
+    if(!reg.test(value.times)){
+      const args = {
+        message: '友情提示',
+        description: "次数只能是正整数",
+        duration: 2,
+      };
+      notification.info(args);
+      return false
+    }
+    httpServer.saveNursingScheduledSheet3(value,{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then((res) => {
+      if (res.code === 200) {
+        const args = {
+          message: '通信成功',
+          description: res.msg,
+          duration: 2,
+        };
+      notification.success(args);
+      this.setState({checkItemList:this.state.checkItemList.map(item => {
+            return item.checkItemId === res.data.checkItemId ? res.data : item;
+      }),edit:false,itemCheckFlag:true});
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+            const args = {
+              message: '通信失败',
+              description: res.msg,
+              duration: 2,
+            };
+          notification.error(args);
+         }
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  handleRowDelete(record){
+    const {checkItemList} = this.state;
+    const {nursingScheduledId,elderlyId} = this.props;
+    const {id,checkItemId} = record;
+    httpServer.delNursingScheduledSheet3({id,nursingScheduledId,elderlyId}).then((res)=>{
+      if(res.code === 200){
+        const args = {
+          message: '通信成功',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.success(args);
+        const checkItemListNow = checkItemList.filter(item => item.checkItemId !== checkItemId);
+        this.setState({checkItemList:checkItemListNow});
+      }else{
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+            const args = {
+              message: '通信失败',
+              description: res.msg,
+              duration: 2,
+            };
+          notification.error(args);
+         }
+      }
+      
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  render(){
+    const {checkItemList,modalFlag,itemList,units,edit,recordId} = this.state;
+    const columnsItem = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber',
+      width:'15%'
+    },{
+      title: '检查项类别',
+      dataIndex: 'pname',
+      key: 'pname',
+      width:'30%'
+    },{
+      title:'子类名称',
+      dataIndex: 'name',
+      key: 'name',
+      width:'30%'
+    },{
+      title:'价格',
+      dataIndex: 'price',
+      key: 'price',
+      width:'15%'
+    },{
+      title:'单位',
+      dataIndex: 'unit',
+      key: 'unit',
+      render:(text,record)=>{
+        const t=units.find(i=>(i.id==text));
+        return t?t.value:text
+      }
+    }];
+    const columns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber',
+      dataIndex: 'serialNumber',
+      width:'5%'
+    },{
+      title: '检查项类别',
+      dataIndex: 'checkTypeName',
+      key: 'checkTypeName',
+      width:'10%'
+    },{
+      title:'子类名称',
+      dataIndex: 'checkItemName',
+      key: 'checkItemName',
+      width:'10%'
+    },{
+      title:'单位',
+      dataIndex: 'unit',
+      key: 'unit',
+      width:'5%',
+      render:(text,record)=>{
+        const t=units.find(i=>(i.id==text));
+        return t?t.value:text
+      }
+    },{
+      title: '次数',
+      dataIndex: 'times',
+      key: 'times',
+      render:(text,record)=>{
+        return (
+          edit && recordId === record.checkItemId?
+          <Input 
+            value={record.times} 
+            onChange={(e) => this.timesChangeHandler(record, e)} 
+          />:record.times
+          )
+      },
+      width:'10%'
+    },{
+      title:'描述',
+      dataIndex: 'serviceContent',
+      key: 'serviceContent',
+      render:(text,record)=>{
+        return(
+          edit && recordId === record.checkItemId?
+          <Input 
+            value={record.serviceContent} 
+            onChange={(e) => this.serviceContentChangeHandler(record, e)}
+          />:record.serviceContent
+        ) 
+      },
+      width:'20%'
+    },{
+      title:'添加日期',
+      dataIndex: 'addtime',
+      key: 'addtime',
+      width:'15%',
+    },{
+      title:'操作',
+      dataIndex: 'action',
+      key: 'action',
+      render:(text,record)=>{
+        return(
+          edit && recordId === record.checkItemId?
+            <a href="javascript:;" onClick={() => { this.handleSave(record) }} style={{color:'#2ebc2e'}}>保存</a>:
+              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record)}>
+                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+              </Popconfirm>
+
+        )
+      },
+      width:'15%',
+    }];
+    return(
+      <Fragment>
+        <Button onClick={this.handleAdd}>选择检查项</Button>
+        <Table 
+          bordered
+          dataSource={checkItemList} 
+          columns={columns} 
+          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+          rowKey={record => record.checkItemId}
+        />
+        {
+          modalFlag?
+            <Modal footer={null} visible={true}  title="选择检查项" onCancel={this.handleModalCancel} width='500px' maskClosable={false}>
+              <Table 
+                bordered
+                dataSource={itemList} 
+                columns={columnsItem} 
+                pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                rowKey={record => record.id}
+                onRow={(record) => {
+                  return {
+                    onClick: () => {this.hangdleCheck(record);},       // 点击行
+                  };
+                }}
+              />
+            </Modal>:null
+        }
+      </Fragment>
+    )
+  }
+}
+
+export default HealthCarePlan;

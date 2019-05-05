@@ -1,0 +1,338 @@
+import React,{Component , Fragment} from 'react';
+import {Row,Col,Input,Button,Modal,Divider,Popconfirm,Table,Form,Radio,notification,Tag,InputNumber,Card,List,Avatar,Select} from 'antd';
+import httpServer from '../../../axios';
+
+const RadioGroup = Radio.Group;
+const Option = Select.Option;
+class EvaluateInfo extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      modalFlag:false,
+      infoFlag:false,
+      dataSource:[],//老人信息列表
+      dataSource_copy:[],//老人信息列表复制
+      dataList:{},//老人信息（age，name，sex）
+      searchText:'',//搜索框内容
+      oldmanName:'',
+      oldmanAge:'',
+      oldmanSex:'',
+    }
+    this.handleCancel = this.handleCancel.bind(this);//关闭弹出框
+    this.handleSearch = this.handleSearch.bind(this);//搜索获取老人列表
+    this.handleAdd = this.handleAdd.bind(this);//添加老人信息
+    this.handleCancelClick = this.handleCancelClick.bind(this);//取消添加/修改老人信息
+    this.handleSubmit = this.handleSubmit.bind(this);//提交新增老人信息
+    this.handleInputChange = this.handleInputChange.bind(this); //老人搜索框发生变化
+    this.handleSearchElderly = this.handleSearchElderly.bind(this);//按老人姓名搜索
+    this.handleClickReset = this.handleClickReset.bind(this);//重新获取老人列表，清楚查询条件
+  }
+
+  componentDidMount(){ // 组件加载完成之后调用
+    this.getListElderlyInfo();
+  }
+
+  //获取老人信息列表
+  getListElderlyInfo(){
+    const {customerId} = this.props;
+    console.log('11111',customerId);
+    httpServer.listElderlyInfo({listStatus:"1,2",customerId}).then((res) => {
+      if (res.code === 200) {
+        res.data?this.setState({dataSource:res.data,dataSource_copy:res.data}):this.setState({dataSource:[],dataSource_copy:[]});
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+             const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  handleAdd(){  //新增老人
+    this.setState({infoFlag:true,dataList:{}});
+  }
+
+  handleIptText(target,e) { //老人信息各字段发生变化
+    let dataList = Object.assign({},this.state.dataList);
+    dataList[target] = e.target ? e.target.value : e;
+    this.setState({dataList});
+  }
+
+  handleSubmit(){ //提交新增老人信息
+    const _this = this;
+    const {customerId} = this.props;
+    const {name, sex, age} = _this.state.dataList;
+    if( !(name && sex && age )) {
+      notification.warning({
+        message: '提示：',
+        description: '单据存在数据未填的情况，请仔细核对！',
+      });
+      return false
+    }
+    const data = _this.state.dataList;
+    data.customerId = customerId;
+    data.status = 2;
+    httpServer.saveElderlyInfo(data,{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then((res)=>{
+        if (res.code === 200) {
+          const args = {
+            message: '通信成功',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.success(args);
+          _this.getListElderlyInfo();
+          _this.handleCancelClick();
+        } else {
+          if(res.message ==='Request failed with status code 500'){
+              console.log(res.message);
+           }else{
+               const args = {
+              message: '通信失败',
+              description: res.msg,
+              duration: 2,
+            };
+            notification.error(args);
+           }
+        }
+    }).catch((err)=>{
+      console.log(err);
+    });
+  }
+  handleCancelClick(){//取消添加/修改老人信息
+    this.setState({infoFlag:false,dataList:{}});
+  }
+
+  handleInputChange(e) { //老人姓名搜索框发生变化
+    this.setState({ searchText: e.target.value });
+  }
+
+  handleSearchElderly() {
+    const { searchText } = this.state;
+    if(searchText){
+      const reg = new RegExp(searchText, 'gi');
+      this.setState({
+        dataSource_copy: this.state.dataSource.map((record) => {
+          const match = record.name && record.name.match(reg);
+          if (!match) {
+            return null;
+          }
+          return record;
+        }).filter(record => !!record),
+      });
+    }else{
+      const args = {
+        message: '友情提示',
+        description: "请先输入老人姓名",
+        duration: 2,
+      };
+      notification.info(args);
+    }
+  }
+
+  handleClickReset(){//清楚搜索条件
+    this.setState({
+      dataSource_copy:this.state.dataSource,
+      searchText:'',
+    });
+  }
+
+  handleSearch(){ //搜索货物老人列表
+    this.setState({modalFlag:true});
+  }
+
+  handleCancel(){ //取消弹框
+    this.setState({modalFlag:false});
+  }
+
+  hangdleCheck(record){//单击选中老人
+    const {name, age, sex} = record;
+    this.setState({oldmanName:name,oldmanAge:age,oldmanSex:sex.toString(),modalFlag:false});
+  }
+
+  handleSelectText(){
+
+  }
+
+  render(){
+    const {modalFlag,dataSource_copy,infoFlag,oldmanName, oldmanAge, oldmanSex} = this.state;
+    const {name, sex, age} = this.state.dataList;
+    const {data} = this.props;
+    const newData = data;
+    const formItemLayout = {
+      labelCol: {
+        xs: { span: 24 },
+        sm: { span: 5 },
+      },
+      wrapperCol: {
+        xs: { span: 24 },
+        sm: { span: 19 },
+      },
+    };
+    const tailFormItemLayout = {
+      wrapperCol: {
+        xs: {
+          span: 24,
+          offset: 0,
+        },
+        sm: {
+          span: 16,
+          offset: 8,
+        },
+      },
+    };
+    const columns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber',
+      width:'25%'
+    },{
+      title: '姓名',
+      dataIndex: 'name',
+      key: 'name',
+      width:'25%'
+    },{
+      title:'年龄',
+      dataIndex: 'age',
+      key: 'age',
+      width:'25%'
+    },{
+      title: '性别',
+      dataIndex: 'sex',
+      key: 'sex',
+      render:(text,record)=>{
+        return record.sex === 1?<Tag color="green">男</Tag>:<Tag color="red">女</Tag>
+      },
+    }];
+    return(
+      <Fragment>
+        <Row gutter={16} style={{backgroundColor:"#f5f5f5",padding:"10px 20px"}}>
+          <div style={{marginBottom:"10px"}}>友情提示：点击搜索按钮后单击选中老人可自动填充老人信息(姓名,身份证,住址)</div>
+          <Col md={6}><Input placeholder="老人姓名:" disabled style={{textAlign:"center",backgroundColor:"#fff"}} /></Col>
+          <Col md={12}>
+            <Input style={{paddingLeft:"10px",backgroundColor:"#fff"}} disabled value={oldmanName}/>
+          </Col>
+          <Button type="primary" onClick={this.handleSearch}>搜索</Button>
+        </Row>
+        <Row gutter={16} style={{backgroundColor:"#f5f5f5",padding:"10px 20px"}}>
+          <Col md={6}><Input placeholder="老人年龄:" disabled style={{textAlign:"center",backgroundColor:"#fff"}} /></Col>
+          <Col md={12}>
+            <Input style={{paddingLeft:"10px",backgroundColor:"#fff"}} disabled value={oldmanAge}/>
+          </Col>
+        </Row>
+        <Row gutter={16} style={{backgroundColor:"#f5f5f5",padding:"10px 20px"}}>
+          <Col md={6}><Input placeholder="老人性别:" disabled style={{textAlign:"center",backgroundColor:"#fff"}} /></Col>
+          <Col md={12}>
+            <Radio.Group value={oldmanSex} disabled buttonStyle="solid">
+              <Radio.Button value="1">男</Radio.Button>
+              <Radio.Button value="0">女</Radio.Button>
+            </Radio.Group>
+          </Col>
+        </Row>
+        <Row style={{marginTop:"10px"}}>
+          <p style={{color:"#000",fontSize:"18px",fontWeight:"bold"}}>评估项</p>
+          <List
+            itemLayout="horizontal"
+            dataSource={newData}
+            renderItem={(item,index) => (
+              <List.Item>
+                <List.Item.Meta
+                  avatar={<Avatar icon="star" />}
+                  title={item.title}
+                  description={
+                    <Select value={`${item.id}`} style={{width:"80%"}} mode="multiple" onChange={(e)=>{this.handleSelectText(`${item.id}`,e)}}>
+                      {
+                         item.tbEstimateLibraryDetail.map((child,index)=>{
+                          return <Option key={child.content}>{child.content}</Option>
+                         })
+                      }
+                    </Select>
+                  }
+                />
+              </List.Item>
+            )}
+          />
+        </Row>
+        {
+          modalFlag?
+            <Modal
+              title="老人信息"
+              visible={true}
+              onCancel={this.handleCancel}
+              footer={null}
+              maskClosable={false}
+            >
+              <div style={{marginBottom:"20px"}}>
+                <Button type="primary" onClick={this.handleAdd}>新增</Button>
+                {
+                  infoFlag?
+                    <Form hideRequiredMark onSubmit={this.handleSubmit}>
+                      <Form.Item
+                        label='姓名'
+                        {...formItemLayout}
+                        style={{marginBottom:'4px'}}
+                      >
+                        <Input placeholder='必填项' value={name} onChange={(e) => this.handleIptText('name',e)} />
+                      </Form.Item>
+                      <Form.Item
+                        label='性别'
+                        {...formItemLayout}
+                        style={{marginBottom:'4px'}}
+                      >
+                        <RadioGroup value={sex} onChange={(e) => this.handleIptText('sex',e)}>
+                          <Radio value={"1"}>男</Radio>
+                          <Radio value={"0"}>女</Radio>
+                        </RadioGroup>
+                      </Form.Item>
+                      <Form.Item
+                        label='年龄'
+                        {...formItemLayout}
+                        style={{marginBottom:'4px'}}
+                      >
+                        <InputNumber min={1} max={200} value={age} onChange={(e) => this.handleIptText('age',e)}/>
+                      </Form.Item>
+                      <Form.Item {...tailFormItemLayout}>
+                        <Button type="primary" htmlType="submit">确认</Button>
+                        <Button type="primary" onClick={this.handleCancelClick}>取消</Button>
+                      </Form.Item>
+                    </Form>:null
+                }
+              </div>
+              <div style={{marginBottom:"20px"}}>
+                <Input 
+                  placeholder="按老人姓名搜索" 
+                  style={{width:'40%',marginRight:'10px'}}
+                  ref={ele => this.searchInput = ele}
+                  value={this.state.searchText}
+                  onChange={this.handleInputChange}
+                  onPressEnter={this.handleSearchElderly}
+                />
+                <Button type="primary" onClick={this.handleSearchElderly}>开始搜索</Button>
+                <Button type="primary" onClick={this.handleClickReset}>reset</Button>
+              </div>
+              <Table 
+                bordered
+                dataSource={dataSource_copy} 
+                columns={columns} 
+                pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                rowKey={record => record.id}
+                onRow={(record) => {
+                  return {
+                    onClick: () => {this.hangdleCheck(record);},       // 点击行
+                  };
+                }}
+              />
+            </Modal>:null
+        }
+      </Fragment>
+    )
+  }
+}
+export default EvaluateInfo;

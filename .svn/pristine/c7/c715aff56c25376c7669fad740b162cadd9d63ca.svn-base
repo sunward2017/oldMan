@@ -1,0 +1,611 @@
+import React,{Component,Fragment} from 'react';
+import {Tabs,Button,Form,Input,Radio,DatePicker,notification,Cascader,Select,InputNumber,Modal,Tree,Icon} from 'antd';
+import moment from 'moment';
+import httpServer from '../../../axios';
+import FamilyMember from './familyMember';
+
+const TabPane = Tabs.TabPane;
+const Option = Select.Option;
+const { TreeNode } = Tree;
+class OldManInfo1 extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      oldManInfoList:props.oldManInfoList,
+      listAreaInfo:[],
+      chargeItemList:[],
+      waterFlag:false,
+      kwhFlag:false,
+      mealFlag:false,
+      modalFlag:false,
+      optionsList:[],//选中楼层后获取到的房间集合
+      roomName:'',
+      optionsListBed:[],
+      tab2Flag:props.tab2Flag,
+      elderlyId:props.elderlyId,
+      roomDisflag:props.roomDisflag,
+      editFlag:props.editFlag,
+      btnSubmitFlag:props.btnSubmitFlag,
+      activeTabKey:'1',
+    }
+    this.handleConfirmIdNumber = this.handleConfirmIdNumber.bind(this);
+    this.handleConfirmShareProportionWater = this.handleConfirmShareProportionWater.bind(this);
+    this.handleConfirmShareProportionPower = this.handleConfirmShareProportionPower.bind(this);
+    this.handleWaterFeeLink = this.handleWaterFeeLink.bind(this);//水费添加关联
+    this.handleKwhFeeLink = this.handleKwhFeeLink.bind(this);//电费添加关联
+    this.handleMealFeeLink = this.handleMealFeeLink.bind(this);//餐费添加关联
+    this.handleModalVisiable = this.handleModalVisiable.bind(this);//单击使modal可见
+    this.handleModalCancel = this.handleModalCancel.bind(this);//单击使modal不可见
+    this.onSelect = this.onSelect.bind(this);//单击选中树节点中的楼层
+    this.handleSelectChange = this.handleSelectChange.bind(this);
+    this.elderlyListFlagToTrue = this.elderlyListFlagToTrue.bind(this);//返回
+    this.handleTabChange = this.handleTabChange.bind(this);//切换tab面板
+  }
+
+  componentDidMount(){
+    this.getListAreaTree();
+    this.getPayItemChild();
+  }
+
+  handleTabChange(key){
+    // console.log('key===',key);
+    this.setState({activeTabKey:key});
+  }
+  elderlyListFlagToTrue(){//返回
+    this.props.elderlyListFlagToTrue();
+  }
+  handleSubmit = (e) => {
+    e.preventDefault();
+    const {roomName} = this.state;
+    this.props.form.validateFields((err, fieldsValue) => {
+      if(!err){
+        const values = {
+          ...fieldsValue,
+          'birthday': fieldsValue['birthday'].format('YYYY-MM-DD HH:mm:ss'),
+          'customerId': this.props.customerId,
+          'status':3
+        };
+        const { id ,roomCode}= this.state.oldManInfoList;
+        if(id){
+          values.id = id;
+          values.roomName = this.state.oldManInfoList.roomName;
+          values.roomCode = roomCode;
+          httpServer.updateElderlyInfo(values).then((res)=>{
+            if(res.code === 200){
+              const args = {
+                message: '通信成功',
+                description: res.msg,
+                duration: 2,
+              };
+              notification.success(args);
+            }else{
+              const args = {
+                message: '通信失败',
+                description: res.msg,
+                duration: 2,
+              };
+              notification.error(args);
+            }
+          }).catch((error)=>{
+            console.log(error);
+          });
+        }else{
+          values.roomName = roomName;
+          httpServer.saveElderlyInfo(values).then((res)=>{
+            if(res.code === 200){
+              const args = {
+                message: '通信成功',
+                description: res.msg,
+                duration: 2,
+              };
+              notification.success(args);
+              const {id} = res.data;
+              this.setState({elderlyId:id,tab2Flag:false,btnSubmitFlag:true,activeTabKey:'2'});
+            }else{
+              const args = {
+                message: '通信失败',
+                description: res.msg,
+                duration: 2,
+              };
+              notification.error(args);
+            }
+          }).catch((error)=>{
+            console.log(error);
+          });
+        }
+      }
+    })}
+
+  //绑定水费、电费、餐费关联
+  handleWaterFeeLink(){
+    this.setState({waterFlag:true});
+  }
+  handleWaterSelect(value){
+    this.setState({waterFlag:false});
+  }
+  handleKwhFeeLink(){
+    this.setState({kwhFlag:true});
+  }
+  handleKwhSelect(value){
+    this.setState({kwhFlag:false});
+  }
+  handleMealFeeLink(){
+    this.setState({mealFlag:true});
+  }
+  handleMealSelect(value){
+    this.setState({mealFlag:false});
+  }
+
+
+  //获取listAreaTree
+  getListAreaTree(){
+    const {customerId} = this.props;
+    httpServer.getRoomTree({customerId}).then((res)=>{
+      if (res.code === 200) {
+        res.data?this.setState({listAreaInfo:[res.data]}):this.setState({listAreaInfo:[]});
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+            const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+
+  //关联收费项目选取
+  getPayItemChild(){
+    const {customerId} = this.props;
+    httpServer.selectPayItemChild({customerId}).then((res)=>{
+      if (res.code === 200) {
+        res.data?this.setState({chargeItemList:res.data}):this.setState({chargeItemList:[]});
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+            const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  //自定义身份证号校验
+  handleConfirmIdNumber(rule, value, callback){
+    if(value && !/^\d{6}(18|19|20)?\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}(\d|[xX])$/.test(value)){
+      callback("身份证号格式错误");
+    }else{
+      callback();
+    }
+  }
+  //自定义水费校验
+  handleConfirmShareProportionWater(rule, value, callback){
+    if(value && !/^(0|[1-9][0-9]?|100)$/.test(value)){
+       callback("请输入0-100的正整数");
+    }else{
+      callback();
+    }
+  }
+  //自定义电费校验
+  handleConfirmShareProportionPower(rule, value, callback){
+    if(value && !/^(0|[1-9][0-9]?|100)$/.test(value)){
+       callback("请输入0-100的正整数");
+    }else{
+      callback();
+    }
+  }
+
+  //区域、房间选择相关
+  handleModalVisiable(){//单击使modal可见
+    this.setState({modalFlag:true});
+  }
+  handleModalCancel(){//单击使modal不可见
+    this.setState({modalFlag:false});
+  }
+  renderTreeNodes = data => data.map((item) => { //区域数渲染
+    if (item.children && item.children.length>0) {
+      return (
+        <TreeNode title={item.areaName} key={item.areaCode} dataRef={item} disabled>
+          {this.renderTreeNodes(item.children)}
+        </TreeNode>
+      );
+    }
+    return <TreeNode title={item.areaName} key={item.areaCode} dataRef={item} icon={<Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a"/>}/>;
+  })
+  onSelect(selectedKeys,info){ //单击树节点
+    const {customerId} = this.props;
+    const areaId = info.selectedNodes[0].props.dataRef.id;
+    httpServer.listRoomInfo({customerId,areaId}).then((res)=>{
+      if (res.code === 200) {
+        this.props.form.setFieldsValue({
+          roomCode:null,
+        });
+        res.data?this.setState({optionsList:res.data,modalFlag:false,action:'add'}):this.setState({optionsList:[],modalFlag:false,action:'add'});
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+            const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  handleSelectChange(value,option){
+    this.setState({roomName:option.props.children});
+    httpServer.listBedInfoByRoomId({roomUuid:value}).then((res)=>{
+      if(res.code){
+        this.props.form.setFieldsValue({
+          bedNumber:null,
+        });
+        res.data?this.setState({optionsListBed:res.data}):this.setState({optionsListBed:[]});
+      }else{
+        const args = {
+          message: '通信失败',
+          description: res.msg,
+          duration: 2,
+        };
+        notification.error(args);
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  render(){
+    const { getFieldDecorator } = this.props.form;
+    const {listAreaInfo,chargeItemList,waterFlag,kwhFlag,mealFlag,modalFlag,optionsList,optionsListBed,editFlag,btnSubmitFlag} = this.state;
+    const {
+      name,    //老人姓名
+      idNumber,//老人身份证号 需要正则判断
+      socialSecurityNumber,//社保卡号
+      sex,//老人性别 int
+      birthday,//老人生日 datetime
+      maritalStatus,//老人婚姻状况 int
+      address,//老人住址
+      politicalFace,//老人政治面貌 int
+      livingCondition,//老人居住状况 int
+      economicSituation,//老人经济状况 int
+      hobby,//爱好特长
+      opetator,//操作员
+      roomName,//房间名称
+      roomCode,//房间uuid
+      bedNumber,//床位号
+      itemCodeWater,//水费对应项
+      itemCodeKwh,//电费对应项
+      itemCodeMeal,//餐费对应项
+      shareProportionWater,//水费承担比例
+      shareProportionPower,//电费承担比例
+    } = this.state.oldManInfoList;
+    const formItemLayout = {
+      labelCol: {
+        xs: { span: 24 },
+        sm: { span: 8 },
+      },
+      wrapperCol: {
+        xs: { span: 24 },
+        sm: { span: 16 },
+      },
+    };
+    const tailFormItemLayout = {
+      wrapperCol: {
+        xs: {
+          span: 24,
+          offset: 0,
+        },
+        sm: {
+          span: 16,
+          offset: 8,
+        },
+      },
+    };
+    return(
+      <Fragment>
+        <div className="card-container">
+          <Tabs type="card" tabBarExtraContent={<Button onClick={this.elderlyListFlagToTrue} type="primary">返回</Button>} activeKey={this.state.activeTabKey} onChange={this.handleTabChange}>
+            <TabPane tab="老人信息" key="1" >
+              <Form onSubmit={this.handleSubmit} hideRequiredMark>
+                <Form.Item
+                  {...formItemLayout}
+                  label="操作员"
+                >
+                  {getFieldDecorator('opetator', {
+                    rules: [{required: true, message: '请输入操作员',}],
+                    initialValue:opetator
+                  })(
+                    <Input disabled/>
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="老人姓名"
+                >
+                  {getFieldDecorator('name', {
+                    rules: [{required: true, message: '请输入老人姓名',}],
+                    initialValue:name
+                  })(
+                    <Input disabled={editFlag}/>
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="身份证号"
+                >
+                  {getFieldDecorator('idNumber', {
+                    rules: [{required: true, message: '请输入老人身份证号',},{
+                       validator: this.handleConfirmIdNumber
+                    }],
+                    initialValue:idNumber
+                  })(
+                    <Input disabled={editFlag}/>
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="社保卡号"
+                >
+                  {getFieldDecorator('socialSecurityNumber', {
+                    rules: [{required: true, message: '请输入社保卡号',}],
+                    initialValue:socialSecurityNumber
+                  })(
+                    <Input disabled={editFlag}/>
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="性别"
+                >
+                  {getFieldDecorator('sex', {
+                    rules: [{required: true, message: '请选择老人性别',}],
+                    initialValue:sex
+                  })(
+                    <Radio.Group  buttonStyle="solid" disabled={editFlag}>
+                      <Radio.Button value={1}>男</Radio.Button>
+                      <Radio.Button value={0}>女</Radio.Button>
+                    </Radio.Group>
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="出生日期"
+                >
+                  {getFieldDecorator('birthday', {
+                    rules: [{required: true, message: '请选择出生日期',}],
+                    initialValue:birthday?moment(birthday,'YYYY-MM-DD') : null
+                  })(
+                    <DatePicker format="YYYY-MM-DD" disabled={editFlag} />
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="婚姻状况"
+                >
+                  {getFieldDecorator('maritalStatus', {
+                    rules: [{required: true, message: '请选择婚姻状况',}],
+                    initialValue:maritalStatus
+                  })(
+                    <Radio.Group buttonStyle="solid" disabled={editFlag}>
+                      <Radio.Button value={1}>未婚</Radio.Button>
+                      <Radio.Button value={2}>已婚</Radio.Button>
+                      <Radio.Button value={3}>丧偶</Radio.Button>
+                      <Radio.Button value={4}>离异</Radio.Button>
+                    </Radio.Group>
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="家庭住址"
+                >
+                  {getFieldDecorator('address', {
+                    rules: [{required: true, message: '请输入老人家庭住址',}],
+                    initialValue:address
+                  })(
+                    <Input disabled={editFlag}/>
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="政治面貌"
+                >
+                  {getFieldDecorator('politicalFace', {
+                    rules: [{required: true, message: '请选择老人政治面貌',}],
+                    initialValue:politicalFace
+                  })(
+                    <Radio.Group  buttonStyle="solid" disabled={editFlag}>
+                      <Radio.Button value={1}>群众</Radio.Button>
+                      <Radio.Button value={2}>党员</Radio.Button>
+                      <Radio.Button value={3}>其他党派</Radio.Button>
+                    </Radio.Group>
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="居住状况"
+                >
+                  {getFieldDecorator('livingCondition', {
+                    rules: [{required: true, message: '请选择老人居住状况',}],
+                    initialValue:livingCondition
+                  })(
+                    <Radio.Group  buttonStyle="solid" disabled={editFlag}>
+                      <Radio.Button value={1}>独居</Radio.Button>
+                      <Radio.Button value={2}>与家庭成员同住</Radio.Button>
+                      <Radio.Button value={3}>其他</Radio.Button>
+                    </Radio.Group>
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="经济状况"
+                >
+                  {getFieldDecorator('economicSituation', {
+                    rules: [{required: true, message: '请选择老人经济状况',}],
+                    initialValue:economicSituation
+                  })(
+                    <Radio.Group  buttonStyle="solid" disabled={editFlag}>
+                      <Radio.Button value={1}>离休</Radio.Button>
+                      <Radio.Button value={2}>退休金</Radio.Button>
+                      <Radio.Button value={3}>子女供给</Radio.Button>
+                      <Radio.Button value={4}>社会保险与救济</Radio.Button>
+                      <Radio.Button value={5}>其他</Radio.Button>
+                    </Radio.Group>
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="爱好特长"
+                >
+                  {getFieldDecorator('hobby', {
+                    rules: [{required: true, message: '请输入老人的爱好特长',}],
+                    initialValue:hobby
+                  })(
+                    <Input disabled={editFlag}/>
+                  )}
+                </Form.Item>
+                 
+                <Form.Item
+                  {...formItemLayout}
+                  label="房间名称"
+                >
+                  <Button type="primary" onClick={this.handleModalVisiable} disabled={this.state.roomDisflag || editFlag}>选择区域</Button>
+                  {getFieldDecorator('roomCode', {
+                    rules: [{required: true, message: '请选择房间名称',}],
+                    initialValue:roomName
+                  })(  
+                  <Select placeholder="请先选择区域，才能选择房间" onSelect={this.handleSelectChange} disabled={this.state.roomDisflag || editFlag}>
+                    {optionsList&&optionsList.map(item => <Option key={item.roomUuid}>{item.roomName}</Option>)}
+                  </Select>
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="床位名称"
+                >
+                  {getFieldDecorator('bedNumber', {
+                    rules: [{required: true, message: '请选择房间名称',}],
+                    initialValue:bedNumber
+                  })(  
+                  <Select placeholder="请先选择房间，才能选择床位" onSelect={this.handleSelectChangeBed} disabled={this.state.roomDisflag || editFlag}>
+                    {optionsListBed&&optionsListBed.map(item => <Option key={item.bedName}>{item.bedName}</Option>)}
+                  </Select>
+                  )}
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="水费对应项"
+                >
+                  {getFieldDecorator('itemCodeWater', {
+                    rules: [{required: true, message: '请选择水费对应项',}],
+                    initialValue:itemCodeWater
+                  })(
+                    <Select showArrow={false} open={waterFlag} disabled onSelect={(value)=>{this.handleWaterSelect(value)}}>
+                      {chargeItemList.map(item => <Option key={item.itemCode}>{item.name}</Option>)}
+                    </Select>
+
+                  )}
+                  <Button onClick={this.handleWaterFeeLink} disabled={editFlag}>添加关联</Button>
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="电费对应项"
+                >
+                  {getFieldDecorator('itemCodeKwh', {
+                    rules: [{required: true, message: '请选择电费对应项',}],
+                    initialValue:itemCodeKwh
+                  })(
+                     <Select showArrow={false} open={kwhFlag} disabled onSelect={(value)=>{this.handleKwhSelect(value)}}>
+                      {chargeItemList.map(item => <Option key={item.itemCode}>{item.name}</Option>)}
+                    </Select>
+                  )}
+                  <Button onClick={this.handleKwhFeeLink} disabled={editFlag}>添加关联</Button>
+                </Form.Item>
+                <Form.Item
+                  {...formItemLayout}
+                  label="餐费对应项"
+                >
+                  {getFieldDecorator('itemCodeMeal', {
+                    rules: [{required: true, message: '请选择餐费对应项',}],
+                    initialValue:itemCodeMeal
+                  })(
+                    <Select showArrow={false} open={mealFlag} disabled onSelect={(value)=>{this.handleMealSelect(value)}}>
+                      {chargeItemList.map(item => <Option key={item.itemCode}>{item.name}</Option>)}
+                    </Select>
+                  )}
+                  <Button onClick={this.handleMealFeeLink} disabled={editFlag}>添加关联</Button>
+                </Form.Item>
+                 <Form.Item
+                  {...formItemLayout}
+                  label="水费承担比例(%)"
+                >
+                  {getFieldDecorator('shareProportionWater', {
+                    rules: [{required: true, message: '请输入水费承担比例(0-100的正整数)',},{
+                       validator: this.handleConfirmShareProportionWater
+                    }],
+                    initialValue:shareProportionWater
+                  })(
+                    <InputNumber min={0} max={100} disabled={editFlag}/>
+                  )}
+                </Form.Item>
+                 <Form.Item
+                  {...formItemLayout}
+                  label="电费承担比例(%)"
+                >
+                  {getFieldDecorator('shareProportionPower', {
+                    rules: [{required: true, message: '请输入电费承担比例(0-100的正整数)',},{
+                       validator: this.handleConfirmShareProportionPower
+                    }],
+                    initialValue:shareProportionPower
+                  })(
+                    <InputNumber min={0} max={100} disabled={editFlag}/>
+                  )}
+                </Form.Item>
+                <Form.Item {...tailFormItemLayout}>
+                  <Button type="primary" htmlType="submit" disabled={editFlag || btnSubmitFlag}>确认提交</Button>
+                </Form.Item>
+              </Form>
+            </TabPane>
+            <TabPane tab="家庭成员信息" key="2" disabled={this.state.tab2Flag}>
+              <FamilyMember elderlyId={this.state.elderlyId} editFlag={editFlag}/>
+            </TabPane>
+          </Tabs>
+        </div>
+        {
+          modalFlag?
+            <Modal 
+              title="选择区域"
+              visible={true}
+              onCancel={this.handleModalCancel}
+              footer={null}
+            >
+              <Tree       
+                defaultExpandAll         
+                onSelect={this.onSelect}
+                showIcon={true}
+              >
+                {this.renderTreeNodes(listAreaInfo)}
+              </Tree>
+            </Modal>:null
+        }
+      </Fragment>
+    )
+  }
+}
+
+const OldManInfo =  Form.create()(OldManInfo1);
+export default OldManInfo;

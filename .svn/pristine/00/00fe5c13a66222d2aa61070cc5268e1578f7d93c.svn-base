@@ -1,0 +1,37 @@
+import React, { Component , Fragment } from 'react';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import httpServer from '../../../axios';
+import {Row,Col,Card,Button} from 'antd';
+class WorkProjects extends Component{
+  render(){
+    return(
+      <Fragment>
+        <BreadcrumbCustom first="基础信息" second="工作项目" />
+        <Row >
+          <Col md={4} style={{background:'#fff'}}>
+            <Card 
+              title="护理级别" 
+              bordered={false} 
+              style={{ width: '100%' }}
+              extra={<Button type="primary">刷新</Button>}
+            >
+             
+            </Card>
+          </Col>
+          <Col md={20} style={{padding:'0 0 0 20px'}}>
+            <Card 
+              title="护理项目列表" 
+              bordered={false} 
+              style={{ width: '100%' }}
+              extra={<Button type="primary">新增</Button>}
+            >
+             
+            </Card>
+          </Col>
+        </Row>
+      </Fragment>
+    )
+  }
+}
+
+export default WorkProjects;

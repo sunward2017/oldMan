@@ -1,0 +1,105 @@
+/**
+ * 接口地址配置文件
+ */
+export const host = (() => {
+    switch (process.env.NODE_ENV) {
+        case "development": return { api: 'http://192.168.10.235:9751' };
+        default: return { api: '' };
+    }
+
+})();
+/*params
+ * fn:url
+ * 接口
+*/
+export default {
+    login: host.api + '/Login',
+    //客户信息
+    listCustomerInfo: host.api + '/listCustomerInfo',//客户信息列表
+    saveCustomer: host.api + '/saveCustomer',        //增加客户信息
+    updateCustomer: host.api + '/updateCustomer',    //修改客户信息
+    deleteCustomer: host.api + '/deleteCustomer',     //删除用户信息
+    
+    //操作员信息
+    listOperator: host.api + '/listOperator',//客户信息列表
+    saveOperator: host.api + '/saveOperator',        //增加客户信息
+    updateOperator: host.api + '/updateOperator',    //修改客户信息
+    deleteOperator: host.api + '/deleteOperator' ,    //删除用户信息
+
+    //权限管理
+    getCustomerPermission: host.api + '/getCustomerPermission', //获取客户权限
+    saveCustomerPermission: host.api + '/saveCustomerPermission',//保存客户权限
+
+    //基础信息--系统参数
+    listParam: host.api + '/listParam',              //系统基本参数列表
+    deleteParam:host.api+ '/deleteParam',            //系统基本参数删除
+    saveParam:host.api+'/saveParam',                 //系统基本参数增加
+    updateParam:host.api+'/updateParam',              //系统基本参数
+
+    //基础信息--药品信息
+    listDrugInfoInfo:host.api + '/listDrugInfoInfo',  //药品库列表
+    saveDrugInfo:host.api + '/saveDrugInfo',          //药品库增加
+    updateDrugInfo:host.api + '/updateDrugInfo',      //药品库修改
+    deleteDrugInfo:host.api + '/deleteDrugInfo',      //药品库删除
+    
+	//评估库
+    listEstimateLib: host.api + '/listEestimateLib',           
+    saveEstimateLib:host.api+'/saveEestimateLib',               
+    deleteEstimateLib:host.api+ '/deleteEestimateLib',            
+    updateEstimateLib:host.api+'/updateEestimateLib', 
+    checkEestimateLib:host.api+'/checkEestimateLib',
+    
+    //评估库详情
+    deleteEestimateLibDetail:host.api + '/deleteEestimateLibDetail',
+    listEestimateLibDetail:host.api + '/listEestimateLibDetail',
+    saveEestimateLibDetail:host.api + '/saveEestimateLibDetail',
+    updateEestimateLibDetail:host.api + '/updateEestimateLibDetail',
+    //评估等级
+    listEstimateGrade:host.api + '/listEstimateGrade',           
+    saveEstimateGrade:host.api+'/saveEstimateGrade',               
+    deleteEstimateGrade:host.api+ '/deleteEstimateGrade',            
+    updateEstimateGrade:host.api+'/updateEstimateGrade',
+    
+    //护士
+    listNurseInfo: host.api + '/listNurseInfo',
+    saveNurseInfo: host.api + '/saveNurseInfo',       
+    updateNurseInfo: host.api + '/updateNurseInfo',    
+    deleteNurseInfo: host.api + '/deleteNurseInfo' ,   
+
+    //收费项信息
+    getPayItemTree:host.api + '/getPayItemTree',
+    savePayItem:host.api +'/savePayItem',
+    savePayItemChild:host.api + '/savePayItemChild',
+    //护工
+    deleteWorkerInfo: host.api + '/deleteWorkerInfo',//护工信息删除
+    listWorkerInfo: host.api + '/listWorkerInfo',    //护工信息列表
+    saveWorkerInfo: host.api + '/saveWorkerInfo',    //护工信息增加
+    updateWorkerInfo: host.api + '/updateWorkerInfo',//护工信息修改
+
+    //护理等级
+    deleteNursingGrade: host.api + '/deleteNursingGrade',//护理等级删除
+    listNursingGrade: host.api + '/listNursingGrade',    //护理等级列表
+    saveNursingGrade: host.api + '/saveNursingGrade',    //护理等级增加
+    updateNursingGrade: host.api + '/updateNursingGrade',//护理等级修改 
+
+    //护理等级
+    deleteWorkeItemSet: host.api + '/deleteWorkeItemSet',//护理级别对应工作项设置删除
+    listWorkeItemSet: host.api + '/listWorkeItemSet',    //护理级别对应工作项设置列表
+    saveWorkeItemSet: host.api + '/saveWorkeItemSet',    //护理级别对应工作项设置增加
+    updateWorkeItemSet: host.api + '/updateWorkeItemSet',//护理级别对应工作项设置修改    
+    
+    //房间管理
+      //护士
+    listRoomInfo: host.api + '/listRoomInfo',
+    saveRoomInfo: host.api + '/saveRoomInfo',       
+    updateRoomInfo: host.api + '/updateRoomInfo',    
+    deleteRoomInfo: host.api + '/deleteRoomInfo' ,   
+    saveBatchRoomInfo: host.api + '/saveBatchRoomInfo',
+    
+    //区域管理
+    listAreaInfo: host.api + '/listAreaInfo',
+    saveAreaInfo: host.api + '/saveAreaInfo',       
+    deleteAreaInfo: host.api + '/deleteAreaInfo' ,   
+    updateAreaInfo: host.api + '/updateAreaInfo',
+    
+}

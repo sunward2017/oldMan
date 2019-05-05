@@ -1,0 +1,98 @@
+import React, {
+	Component,
+	Fragment
+} from 'react';
+import { Modal, Button, Input, Icon, Table, Tag } from 'antd';
+import httpServer from '@/axios';
+
+class drugSelect extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			name:'',
+			visible:false,
+			data:[]
+		};
+	}
+    componentDidMount(){
+    	this.ListElderly();
+    }
+    
+    showModal=()=>{
+    	this.setState({visible:true})
+    }
+    handleCancel() {
+		this.setState({visible:false});
+	}
+	triggerChange = (changedValue) => {
+		const onChange = this.props.onChange;
+		if(onChange) {
+			onChange(changedValue);
+		}
+	}
+
+	ListElderly = () => {
+		const {elderlyId} =this.props;
+		httpServer.listDrugStockInfo({elderlyId}).then(res => {
+			if(res.code === 200 && res.data) {
+				const {value} = this.props;
+				const data = res.data.map(m=>({...m,...m.tbDrugInfo}))
+				const drug =data.find(i=>(i.code===value));
+				this.setState({
+					data,
+					name:drug?drug.name:'',
+				})
+			}else{
+				this.setState({data:[]})
+			}
+		})
+	}
+
+	rowClick = (r, text) => {
+        this.setState({name:r.name,visible:false},function(){
+        	this.triggerChange(r);
+        })
+	}
+	render() {
+	const columns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      width:'5%',
+      key:'index'
+    },{
+      title: '药品名称',
+      dataIndex: 'name',
+      key: 'name',
+      width:'10%'
+    }, {
+      title: '库存数量',
+      dataIndex: 'quantity',
+      key: 'quantity',
+      width:'8%'
+    }, {
+      title: '单位',
+      dataIndex: 'minUnit',
+      key: 'minUnit',
+      width:'5%'
+    }];
+        const {name,data} =this.state;
+       
+		return(<Fragment>
+	        <Input.Group compact>
+	            <Input value={name} disabled placeholer="药品选取" style={{ width: '90%' }} disabled/>
+	            <Button type="primary" style={{ width: '10%' }} icon="search" onClick={this.showModal}></Button>
+	        </Input.Group>
+	        <Modal
+		          title="药品库存列表"
+		          width="60%"
+		          visible={this.state.visible}
+		          footer={null}
+		          onCancel={()=>{this.handleCancel()}}
+		        >
+		        <Table bordered  rowKey={record => record.id} columns={columns} dataSource={data} rowKey='id' size="small" onRow={(record,rowkey)=>({onClick:this.rowClick.bind(this,record,rowkey)  })}/> 
+	        </Modal>
+        </Fragment>);
+	}
+}
+
+export default drugSelect;

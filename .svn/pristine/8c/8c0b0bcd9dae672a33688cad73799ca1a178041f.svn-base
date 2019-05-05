@@ -1,0 +1,252 @@
+import React, { Component , Fragment } from 'react';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import httpServer from '../../../axios';
+import {Row,Col,Card,Button,Tree,Icon,notification,Table,Tag,Divider,Popconfirm} from 'antd';
+import MineForm from './Form';
+
+const { TreeNode } = Tree;
+const itemTypeList =[{name:'单位',type:'1'},{name:'支付方式',type:'2'}];
+const tabList = [{
+  key: 'tab1',
+  tab: 'tab1',
+}, {
+  key: 'tab2',
+  tab: 'tab2',
+}];
+
+
+class WorkProjects extends Component{
+  constructor(props){
+    super(props);
+    this.state={
+      nursingGradeLists:[],
+      selectedKeys:'',
+      tabKey:'tab1',
+      dataSource:[],
+      nursingGradeCode:'',
+      nursingGradeName:'',
+      record:{},
+      operaterName:'',//操作员
+      customerId:'',
+      id:'',
+    }
+    this.handleOnSelect = this.handleOnSelect.bind(this);
+    this.handleClickRefresh = this.handleClickRefresh.bind(this);
+    this.handleClickAdd = this.handleClickAdd.bind(this);
+    this.changeTabskey = this.changeTabskey.bind(this);
+  }
+
+  componentDidMount(){
+    this.getNursingGrade();//获取护理等级
+  }
+  //获取护理等级
+  getNursingGrade(){
+    const {customerId} = JSON.parse(localStorage.getItem('auth'));
+    httpServer.listNursingGrade({customerId}).then((res)=>{
+       if (res.code === 200) {
+        console.log(res.data);
+          res.data?this.setState({nursingGradeLists:res.data}):this.setState({nursingGradeLists:[]});
+        } else {
+          if(res.message ==='Request failed with status code 500'){
+              console.log(res.message);
+           }else{
+               const args = {
+              message: '通信失败',
+              description: res.msg,
+              duration: 2,
+            };
+            notification.error(args);
+           }
+        }
+    }).catch((err)=>{
+      console.log(err);
+    });
+  }
+
+  //获取护理等级对应的护理项目列表
+  getNursingGradeWorks(){
+    const {customerId,id} = this.state;
+    httpServer.listWorkeItemSet({customerId,id}).then((res)=>{
+       if (res.code === 200) {
+        console.log(res.data);
+          res.data?this.setState({dataSource:res.data}):this.setState({dataSource:[]});
+        } else {
+          if(res.message ==='Request failed with status code 500'){
+              console.log(res.message);
+           }else{
+               const args = {
+              message: '通信失败',
+              description: res.msg,
+              duration: 2,
+            };
+            notification.error(args);
+           }
+        }
+    }).catch((err)=>{
+      console.log(err);
+    });
+  }
+  
+
+  //刷新护理等级树
+  handleClickRefresh(){
+    this.getNursingGrade();
+  }
+
+  //点击树节点时出发
+  handleOnSelect(selectedKeys,params){
+    const {account,customerId} = JSON.parse(localStorage.getItem('auth'));
+    const {nursingGradeCode,nursingGradeName,id} = params.selectedNodes[0].props.dataRef;
+    this.setState({selectedKeys,nursingGradeCode,nursingGradeName,tabKey:'tab1',customerId,operaterName:account,id},()=>{
+          this.getNursingGradeWorks();
+    });
+  }
+
+  onTabChange = (tabKey, type) => {
+    this.setState({ tabKey});
+  }
+
+  changeTabskey(){
+    this.setState({tabKey:'tab1'});
+  }
+  handleClickAdd(){
+    const {selectedKeys,nursingGradeName,nursingGradeCode,operaterName} = this.state;
+    if(selectedKeys.length === 0){
+      const args = {
+        message: '友情提示',
+        description: '请先使用鼠标左键单击选择护理等级',
+        duration: 2,
+      };
+      notification.info(args);
+      return false;
+    }
+    this.setState({ tabKey:'tab2',record:{nursingGradeName,nursingGradeCode,operaterName}});
+  }
+
+  render(){
+    const {nursingGradeLists,dataSource,record} = this.state;
+    const columns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber',
+      width:'5%'
+    },{
+      title:'等级名称',
+      dataIndex: 'nursingGradeName',
+      key: 'nursingGradeName',
+      width:'10%'
+    },{
+      title:'项目名称',
+      dataIndex: 'money',
+      key: 'money',
+      width:'10%'
+    },{
+      title:'重复时间',
+      dataIndex: 'repeatDate',
+      key: 'repeatDate',
+      width:'10%'
+    },{
+      title:'时长',
+      dataIndex: 'timeLenght',
+      key: 'timeLenght',
+      width:'10%'
+    },{
+      title: '状态',
+      dataIndex: 'state',
+      key: 'state',
+      render:(text,record)=>{
+        return record.state === 1?<Tag color="green">正常</Tag>:<Tag color="red">无效</Tag>
+      },
+      width:'10%'
+    },{
+      title: '添加日期',
+      dataIndex: 'addtime',
+      key: 'addtime',
+      width:'15%'
+    },{
+      title: '操作员',
+      dataIndex: 'operaterName',
+      key: 'operaterName',
+      width:'10%'
+    },{
+      title:'操作',
+      dataIndex:'action',
+      key:'action',
+      render:(text,record)=>{
+        return(
+          <span>
+            <a href="javascript:;" onClick={() => { this.handleRead(record) }} style={{color:'#2ebc2e'}}>查看</a>
+            <Divider type="vertical" />
+            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+              <Divider type="vertical" />
+              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+              </Popconfirm>
+          </span>
+        )
+      },
+    }]; 
+    const contentList = {
+      tab1: <Table dataSource={dataSource} columns={columns}/>,
+      tab2: <MineForm 
+              changeTabskeyToTab1={this.changeTabskey} 
+              itemTypeList={itemTypeList}
+              record={record}
+              />,
+    };
+    return(
+      <Fragment>
+        <BreadcrumbCustom first="基础信息" second="工作项目" />
+        <Row >
+          <Col md={4} style={{background:'#fff'}}>
+            <Card 
+              title="护理级别" 
+              bordered={false} 
+              style={{ width: '100%' }}
+              extra={<Button type="primary" onClick={this.handleClickRefresh}>刷新</Button>}
+            >
+              <Tree
+                showIcon
+                defaultExpandAll
+                onSelect={this.handleOnSelect}
+              >
+                <TreeNode 
+                  icon={<Icon type="smile-o" style={{color:'green'}}/>} 
+                  title="护理等级" 
+                  key="0-0"
+                  selectable={false}
+                >
+                  {
+                    nursingGradeLists && nursingGradeLists.map((item,index)=>{
+                      return <TreeNode
+                              icon={<Icon type="smile-o" style={{color:'green'}}/>} 
+                              title={item.nursingGradeName}
+                              key={item.id}
+                              dataRef={item}
+                            />
+                    })
+                  }
+                </TreeNode>
+              </Tree>
+            </Card>
+          </Col>
+          <Col md={20} style={{padding:'0 0 0 20px'}}>
+            <Card 
+              title="护理项目" 
+              bordered={false} 
+              style={{ width: '100%' }}
+              extra={<Button type="primary" onClick={this.handleClickAdd} >新增</Button>}
+              // tabList={tabList}
+              activeTabKey={this.state.tabKey}
+              onTabChange={(tabKey) => { this.onTabChange(tabKey, 'tabKey'); }}
+            >
+              {contentList[this.state.tabKey]}
+            </Card>
+          </Col>
+        </Row>
+      </Fragment>
+    )
+  }
+}
+
+export default WorkProjects;

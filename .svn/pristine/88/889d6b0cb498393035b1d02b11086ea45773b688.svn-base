@@ -1,0 +1,26 @@
+import React from 'react';
+import { Route, Switch } from 'react-router-dom';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import RecordList from './recordList';
+import RecordEdit from './recordEdit';
+
+export default class HealthRecord extends React.Component {
+    state = {
+        editFlag:false,
+    };
+    componentDidMount(){
+        console.log('record index props:',this.props);
+    }
+    render() {
+        const { match } = this.props;
+        return (
+            <div>
+                <BreadcrumbCustom first="医护管理" second="健康档案" />
+                <Switch>
+                    <Route exact path={match.path} component={props => <RecordList {...props} auth={this.props.auth} />} />
+                    <Route exact path={`${match.path}/:userId/edit`} component={RecordEdit} />
+                </Switch>
+            </div>
+        )
+    }
+}

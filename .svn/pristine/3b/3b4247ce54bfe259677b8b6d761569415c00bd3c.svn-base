@@ -1,0 +1,231 @@
+import React from 'react';
+import { Row, Col, Card, Button, notification, Icon, Spin } from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import Tree from '../../../common/tree';
+import PriceSlider from './priceSlider';
+import httpServer from '../../../axios/index';
+
+export default class PayItem extends React.Component {
+    state = {
+        zNodes :[],
+        payItem:[],
+        selectedNode:null,
+        loading:false
+    };
+    componentDidMount() {
+        console.log('payitem props:',this.props);
+        this.fetchTreeData();
+    }
+    fetchTreeData() {
+        this.postSever('getPayItemTree',{customerId:this.props.auth.customerId}).then(res => {
+            // console.log('pay tree res:',res);
+            if(res.code === 200 ) {
+                res.data ? this.setState({ zNodes : [{...res.data, open:true}]}) : this.setState({ zNodes : []})
+            }
+        })
+    }
+    fetchPayItem(data) {
+        const { id, customerId } = data;
+        this.postSever('lisPayItemChild',{pid:id, customerId}).then(res => {
+            // console.log('item list res:',res);
+            if(res.code === 200) {
+                res.data && this.setState({payItem : [...this.state.payItem, ...res.data]});
+            }
+        })
+    }
+    nodeEditHandler = (nodeData, cb) => {
+        // console.log('edit nodeData:', nodeData);
+        const { customerId,id,name,pid } = nodeData;
+        this.postSever('updatePayItem',{ customerId,id,name,pid}).then(res => {
+            // console.log('edit res:',res);
+            if(res.code ===200) {
+                cb(true);
+                this.fetchTreeData();
+                this.notice('success',res.msg);
+            }else{
+                cb(false);
+                this.notice('error',res.msg);
+            }
+        });
+    };
+    nodeDeleteHandler = (nodeData, cb) => {
+        // console.log('delete nodeData:', nodeData);
+        const { customerId,id ,pid} = nodeData;
+        this.postSever('deletePayItem',{customerId,id,pid}).then(res => {
+            // console.log('del res:',res);
+            if(res.code === 200) {
+                cb(true,nodeData);
+                this.fetchTreeData();
+                this.delPayItemList(id);
+                this.notice('success', res.msg);
+            }else {
+                this.notice('error', res.msg);
+            }
+        });
+    };
+    nodeAddHandler = (pNode, cb) => {
+        const { customerId } = pNode;
+        this.postSever('savePayItem',{name:'new', customerId, pid:1}).then(res => {
+            // console.log('add node res:',res);
+            if(res.code ===200) {
+                cb(true,res.data);
+                this.fetchTreeData();
+                this.notice('success', res.msg);
+            }else {
+                this.notice('error', res.msg);
+            }
+        }).catch(err => {});
+    };
+    nodeClickHandler = (nodeData) => {
+        // console.log('click nodes:', nodeData);
+        const { selectedNode } = this.state;
+        if(nodeData.pid ===0 || (selectedNode && selectedNode.id === nodeData.id)) return;
+        this.setState({selectedNode:nodeData,payItem : []});
+        this.fetchPayItem(nodeData);
+    };
+    payItemChildDataChangeHandler = (resRecord) => {
+        // console.log('resRecord:',resRecord);
+        this.setState({payItem: this.state.payItem.map(item => {
+            return item.id === resRecord.id ? resRecord : item;
+        })})
+    };
+    payItemChildSaveHandler = (resRecord) => {
+        const {days} = resRecord;
+        const reg=/^([1-9]\d*|[0]{1,1})$/;
+        if(!reg.test(days)){
+                notification.warning({
+                message: '提示：',
+                description: '天数只能是0或正整数，并且不能为空',
+            });
+            return false;
+        }
+        this.postSever('updatePayItemChild',resRecord).then(res => {
+            res.code ===200 ? this.notice('success', res.msg) : this.notice('error', res.msg);
+        });
+    };
+    payItemChildDelHandler = (resRecord) => {
+        const { id, customerId } = resRecord;
+        this.postSever('deletePayItemChild',{id, customerId}).then(res => {
+            // console.log('del item child res:',res);
+            if(res.code ===200){
+                this.setState({
+                    payItem:this.state.payItem.filter(item => {
+                        return item.id !== id;
+                    })
+                });
+                this.notice('success', res.msg);
+            }else {
+                this.notice('error', res.msg);
+            }
+        });
+    };
+    payItemAddHandler = () => {
+        const { id, customerId } = this.state.selectedNode;
+        this.postSever('savePayItemChild',{name:'新建收费项', pid: id, price: 0, unit: 4, customerId,days:0}).then(res => {
+            // console.log('add res:',res);
+            if(res.code ===200){
+                this.notice('success', res.msg);
+                this.setState({payItem: [res.data, ...this.state.payItem]});
+            }else {
+                this.notice('error', res.msg);
+            }
+        })
+    };
+    postSever(url,data){
+        this.loadingSwitch(true);
+        return new Promise((resolve, reject) => {
+            httpServer[url](data).then(res => {
+                this.loadingSwitch(false);
+                resolve(res);
+            }).catch(err => {
+                this.loadingSwitch(false);
+                reject(err);
+            });
+        })
+    }
+    delPayItemList(nodeId) {
+        nodeId === this.state.selectedNode.id && this.setState({selectedNode:null});
+    }
+    notice(status, msg) {
+        let text = status==='success' ? '成功' : (status === 'error'? '失败' : '');
+        notification[status]({
+            message: `${text}提示:`,
+            description:msg,
+            duration:2
+        })
+    }
+    loadingSwitch(b){
+        this.setState({loading:b})
+    }
+    render() {
+        const { zNodes, payItem, selectedNode, loading } = this.state;
+        return (
+            <div>
+                <BreadcrumbCustom first="财务管理" second="收费项目" />
+                <Row gutter={16}>
+                    <Col className="gutter-row" md={4}>
+                        <div className="gutter-box">
+                            <Card bordered={false} size="small" title="收费类别:">
+                                <Tree id={'payItemTree'} zNodes={zNodes}
+                                      onEdit={this.nodeEditHandler}
+                                      onDelete={this.nodeDeleteHandler}
+                                      onAddNew={this.nodeAddHandler}
+                                      onNodeClick={this.nodeClickHandler}
+                                      editableTree="true"
+                                      levelMax={1}
+                                />
+                            </Card>
+                        </div>
+                    </Col>
+                    <Col className="gutter-row" md={20}>
+                        <div className="gutter-box" >
+                            <Card bordered={false}>
+                                {
+                                    selectedNode ?
+                                        <React.Fragment>
+                                            <Button className="payItemAddBtn" type="primary" title="新增收费项" size="small"
+                                                    onClick={this.payItemAddHandler}
+                                            >
+                                                <Icon type="plus" />
+                                            </Button>
+                                            <h3 style={{textAlign:'center'}}>{selectedNode.name} :</h3>
+                                            <PriceSlider data={payItem}
+                                                         onDataChange={this.payItemChildDataChangeHandler}
+                                                         onRowSave={this.payItemChildSaveHandler}
+                                                         onRowDelete={this.payItemChildDelHandler}
+                                            />
+                                        </React.Fragment> : <p style={{color:'rgb(208,208,208)'}}>在右侧选择收费类别!</p>
+                                }
+                            </Card>
+                        </div>
+                    </Col>
+                </Row>
+                {
+                    loading ? <Spin className="loadingSpin" indicator={<Icon type="loading" style={{ fontSize: 30 }} spin />} /> : null
+                }
+                <style>{`
+                    .sliderNameIpt{
+                        border:none;
+                        border-bottom:1px solid #d9d9d9;
+                        position: relative;
+                        z-index:50;
+                        width:100%;
+                        background-color:transparent;
+                    }
+                    .sliderNameIpt:focus{
+                        outline:none;
+                    }
+                    .payItemAddBtn{
+                        position:absolute;
+                    }
+                    .loadingSpin{
+                        position:absolute;
+                        z-index:100;
+                        left:55%;
+                        top:40%;
+                    }
+                `}</style>
+            </div>
+        )
+    }
+}

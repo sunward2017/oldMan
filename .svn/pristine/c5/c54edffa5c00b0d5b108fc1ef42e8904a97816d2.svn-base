@@ -1,0 +1,228 @@
+import React,{Component,Fragment} from 'react';
+import Ueditor from '../../../common/ueditor';
+import {Button,notification,Form,Input,Row,Col,DatePicker,Popconfirm} from 'antd';
+import httpServer from '../../../axios';
+import moment from 'moment';
+class CaseCare extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      record:props.tbNursingScheduledThree || {},
+      disFlag:props.disFlagTab4,
+    }
+    this.handleContentChange = this.handleContentChange.bind(this);
+    this.handleClickSubmit = this.handleClickSubmit.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+  handleContentChange(content){
+    const record = Object.assign({},this.state.record,{content});
+    this.setState({record});
+  }
+
+  handleIptText(target,e) { //审核部分信息各字段发生变化
+    let record = Object.assign({},this.state.record);
+    record[target] = e.target ? e.target.value : e;
+    this.setState({record});
+  }
+
+  handleClickSubmit(){
+    const {record} = this.state;
+    const {content} = this.state.record;
+    const {nursingScheduledId} =this.props;
+    if(content && content.length===0){
+      const args = {
+        message: '友情提示',
+        description: "请先输入文本框中的内容",
+        duration: 2,
+      };
+      notification.info(args);
+      return false;
+    }
+    if(record.id){
+      const id = record.id;
+      httpServer.updateNursingScheduledSheet4({content,nursingScheduledId,id}).then((res)=>{
+        if(res.code === 200){
+          const args = {
+            message: '通信成功',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.success(args);
+          this.setState({record:res.data});
+        }else{
+          if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+             const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+        }
+        
+      }).catch((error)=>{
+        console.log(error);
+      });
+    }else{
+      httpServer.saveNursingScheduledSheet4({content,nursingScheduledId}).then((res)=>{
+        if(res.code === 200){
+          const args = {
+            message: '通信成功',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.success(args);
+          this.setState({record:res.data});
+        }else{
+          if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+             const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+        }
+      }).catch((error)=>{
+        console.log(error);
+      });
+    } 
+  }
+
+  handleSubmit(){//审核
+    const {record} = this.state;
+    const {nursingScheduledId} = this.props;
+    const {nursingDept,optDate,officeDept,opt2Date,familyConfirm} = this.state.record;
+    const data = record;
+    delete data.content;
+    if(optDate){
+      data.optDate = moment(optDate).format('YYYY-MM-DD HH:mm:ss');
+    }
+    if(opt2Date){
+      data.opt2Date = moment(opt2Date).format('YYYY-MM-DD HH:mm:ss');
+    }
+    if(record.id){
+      if(nursingDept && optDate && officeDept && opt2Date && familyConfirm ){
+       this.setState({disFlag:true});
+      }
+      httpServer.updateNursingScheduledSheet4(data).then((res)=>{
+        if(res.code === 200){
+          const args = {
+            message: '通信成功',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.success(args);
+          this.setState({record:res.data});
+        }else{
+          if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+             const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+        }
+      }).catch((error)=>{
+        console.log(error);
+      });
+    }else{
+      const args = {
+        message: '友情提示',
+        description: "请先提交个案护理计划",
+        duration: 2,
+      };
+      notification.info(args);
+    }
+    
+  }
+  render(){
+    const {content,nursingDept,optDate,officeDept,opt2Date,familyConfirm} = this.state.record;
+    const {disFlag} = this.state;
+    const formItemLayout = {
+      labelCol: {
+        xs: { span: 24 },
+        sm: { span: 8 },
+      },
+      wrapperCol: {
+        xs: { span: 24 },
+        sm: { span: 16 },
+      },
+    };
+    const tailFormItemLayout = {
+      wrapperCol: {
+        xs: {
+          span: 24,
+          offset: 0,
+        },
+        sm: {
+          span: 16,
+          offset: 8,
+        },
+      },
+    };
+    return(
+      <Fragment>
+        <Row gutter={16}>
+          <Col md={16}>
+            <Ueditor value={content} onChange={this.handleContentChange} disabled={disFlag}/>
+            <Button type="primary" onClick={this.handleClickSubmit} disabled={disFlag} style={{marginTop:15}}>提交</Button>
+          </Col>
+          <Col md={8}>
+            <Form hideRequiredMark >
+              <Form.Item
+                label='护理部主任签名'
+                {...formItemLayout}
+                style={{marginBottom:'10px'}}
+              >
+                <Input value={nursingDept} onChange={(e) => this.handleIptText('nursingDept',e)} disabled={disFlag} />
+              </Form.Item>
+              <Form.Item
+                label='完成日期'
+                {...formItemLayout}
+                style={{marginBottom:'10px'}}
+              >
+                <DatePicker format='YYYY-MM-DD HH:mm:ss' showTime value={optDate?moment(optDate,'YYYY-MM-DD HH:mm:ss'):null} onChange={(e) => this.handleIptText('optDate',e)} allowClear={false} disabled={disFlag} />
+              </Form.Item>
+              <Form.Item
+                label='评估小组负责人'
+                {...formItemLayout}
+                style={{marginBottom:'10px'}}
+              >
+                <Input value={officeDept} onChange={(e) => this.handleIptText('officeDept',e)} disabled={disFlag} />
+              </Form.Item>
+              <Form.Item
+                label='日期'
+                {...formItemLayout}
+                style={{marginBottom:'10px'}}
+              >
+                <DatePicker format='YYYY-MM-DD HH:mm:ss' showTime value={opt2Date?moment(opt2Date,'YYYY-MM-DD HH:mm:ss'):null} onChange={(e) => this.handleIptText('opt2Date',e)} allowClear={false} disabled={disFlag} />
+              </Form.Item>
+              <Form.Item
+                label='家属确认'
+                {...formItemLayout}
+                style={{marginBottom:'10px'}}
+              >
+                <Input value={familyConfirm}  onChange={(e) => this.handleIptText('familyConfirm',e)} disabled={disFlag} />
+              </Form.Item>
+              <Form.Item {...tailFormItemLayout}>
+                <Popconfirm title="审核完成后将无法进行修改，确认要进行审核么？" okText="确定" cancelText="取消" onConfirm={this.handleSubmit}>
+                  <Button type="primary" disabled={disFlag}>审核确认</Button>
+                </Popconfirm>
+              </Form.Item>
+            </Form>
+          </Col>
+        </Row>
+      </Fragment>
+    )
+  }
+}
+
+export default CaseCare;

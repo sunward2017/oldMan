@@ -1,0 +1,44 @@
+import React from 'react';
+import { Row, Col, Card, Button, notification, Select } from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import httpServer from '../../../axios/index';
+import IndicatorChart from './indicatorChart';
+const Option = Select.Option;
+
+export default class HealthExMemo extends React.Component {
+    render() {
+        return (
+            <div>
+                <BreadcrumbCustom first="医护管理" second="体检记录" />
+                <Card>
+                    <Row className="mb-s">
+                        <Col md={7}>老人 :
+                            <Select className="w60p"
+                                    showSearch
+                                    showArrow={false}
+                                    placeholder="搜索老人"
+                                    labelInValue
+                                    onChange={this.elderlySelectedChangeHandler}
+                                    filterOption={(inputValue, option) => option.props.children[0].toLowerCase().indexOf(inputValue.toLowerCase()) >= 0}
+                            >
+                                {/*{elderlyArr.map(d => <Option key={d.id} >{d.name} -- {d.sex ? '男' : '女'} -- {d.age}岁 -- {d.tbBedInfo ? d.tbBedInfo.bedName : ''}房间</Option>)}*/}
+                            </Select>
+                        </Col>
+                    </Row>
+                    {/*<Row className="mb-s">
+
+                    </Row>*/}
+                </Card>
+                <Row gutter={16}>
+                    <Col className="gutter-row" md={24}>
+                        <div className="gutter-box">
+                            <Card title="血压波动表" bordered={false}>
+                                <IndicatorChart />
+                            </Card>
+                        </div>
+                    </Col>
+                </Row>
+            </div>
+        )
+    }
+}

@@ -1,0 +1,28 @@
+export const clientMenus = [
+    { key: '/app/pension-agency/dashboard/index', title: '首页', icon: 'mobile', component: 'ClientDashboard' },
+    {
+        key: '/app/ui', title: '预约管理', icon: 'scan',
+        sub: [
+            { key: '/app/pension-agency/ui/icons', title: '图标', component: 'Icons' },
+        ],
+    },
+    {
+        key: '/app/pension-agency/basicInfo', title: '基础信息', icon: 'tool',
+        sub: [
+            { key: '/app/pension-agency/basicInfo/workerInfo/WorkerInfo', title: '护工信息', component: 'WorkerInfo' },
+            { key: '/app/pension-agency/basicInfo/nurseInfo/NurseInfo', title: '护士信息', component: 'NurseInfo' },
+            { key: '/app/pension-agency/basicInfo/nursingGrade/NursingGrade', title: '护理等级', component: 'NursingGrade' },
+            { key: '/app/pension-agency/basicInfo/workProjects/WorkProjects', title: '工作项目', component: 'WorkProjects' },
+            { key: '/app/pension-agency/basicInfo/area', title: '区域管理', component:'Area'},
+            { key: '/app/pension-agency/basicInfo/room', title: '房间管理', component:'Room'},
+            { key: '/app/pension-agency/basicInfo/reductionMonth/ReductionMonth', title: '水费减免月', component: 'ReductionMonth' },
+            { key: '/app/pension-agency/basicInfo/diseaseLibrary/DiseaseLibrary', title: '病症库', component: 'DiseaseLibrary' },
+        ],
+    },
+    {
+        key: '/app/pension-agency/financial', title: '财务管理', icon: 'tool',
+        sub: [
+            { key: '/app/pension-agency/financial/payItem', title: '收费项目', component: 'PayItem' },
+        ],
+    },
+];

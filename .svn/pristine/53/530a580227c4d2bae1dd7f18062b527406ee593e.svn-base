@@ -1,0 +1,197 @@
+import React from 'react';
+import { Row, Col, Card, Button, notification, Icon } from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import Tree from '../../../common/tree';
+import PriceSlider from './priceSlider';
+import httpServer from '../../../axios/index';
+
+export default class PayItem extends React.Component {
+    state = {
+        zNodes :[],
+        payItem:[],
+        selectedNode:null,
+    };
+    componentDidMount() {
+        // console.log('payitem auth:',this.props);
+        this.fetchTreeData();
+    }
+    fetchTreeData() {
+        httpServer.getPayItemTree({customerId:this.props.auth.customerId}).then(res => {
+            // console.log('pay tree res:',res);
+            if(res.code === 200 ) {
+                res.data ? this.setState({ zNodes : [{...res.data, open:true}]}) : this.setState({ zNodes : []})
+            }
+        })
+    }
+    fetchPayItem(data) {
+        const { id, customerId } = data;
+        httpServer.lisPayItemChild({pid:id, customerId}).then(res => {
+            // console.log('item list res:',res);
+            if(res.code === 200) {
+                res.data && this.setState({payItem : [...this.state.payItem, ...res.data]});
+            }
+        })
+    }
+    nodeEditHandler = (nodeData, cb) => {
+        // console.log('edit nodeData:', nodeData);
+        const { customerId,id,name } = nodeData;
+        httpServer.updatePayItem({ customerId,id,name }).then(res => {
+            // console.log('edit res:',res);
+            if(res.code ===200) {
+                cb(true);
+                this.fetchTreeData();
+                this.notice('success',res.msg);
+            }else{
+                cb(false);
+                this.notice('error',res.msg);
+            }
+        });
+    };
+    nodeDeleteHandler = (nodeData, cb) => {
+        // console.log('delete nodeData:', nodeData);
+        const { customerId,id } = nodeData;
+        httpServer.deletePayItem({customerId,id}).then(res => {
+            // console.log('del res:',res);
+            if(res.code === 200) {
+                cb(true,nodeData);
+                this.fetchTreeData();
+                this.delPayItemList(id);
+                this.notice('success', res.msg);
+            }else {
+                this.notice('error', res.msg);
+            }
+        });
+    };
+    nodeAddHandler = (pNode, cb) => {
+        const { customerId } = pNode;
+        httpServer.savePayItem({name:'new', customerId, pid:1}).then(res => {
+            // console.log('add node res:',res);
+            if(res.code ===200) {
+                cb(true,res.data);
+                this.fetchTreeData();
+                this.notice('success', res.msg);
+            }else {
+                this.notice('error', res.msg);
+            }
+        }).catch(err => {});
+    };
+    nodeClickHandler = (nodeData) => {
+        // console.log('click nodes:', nodeData);
+        const { selectedNode } = this.state;
+        if(nodeData.pid ===0 || (selectedNode && selectedNode.id === nodeData.id)) return;
+        this.setState({selectedNode:nodeData,payItem : []});
+        this.fetchPayItem(nodeData);
+    };
+    payItemChildDataChangeHandler = (resRecord) => {
+        // console.log('resRecord:',resRecord);
+        this.setState({payItem: this.state.payItem.map(item => {
+            return item.id === resRecord.id ? resRecord : item;
+        })})
+    };
+    payItemChildSaveHandler = (resRecord) => {
+        httpServer.updatePayItemChild(resRecord).then(res => {
+            res.code ===200 ? this.notice('success', res.msg) : this.notice('error', res.msg);
+        });
+    };
+    payItemChildDelHandler = (resRecord) => {
+        const { id, customerId } = resRecord;
+        httpServer.deletePayItemChild({id, customerId}).then(res => {
+            // console.log('del item child res:',res);
+            if(res.code ===200){
+                this.setState({
+                    payItem:this.state.payItem.filter(item => {
+                        return item.id !== id;
+                    })
+                });
+                this.notice('success', res.msg);
+            }else {
+                this.notice('error', res.msg);
+            }
+        });
+    };
+    payItemAddHandler = () => {
+        const { id, customerId } = this.state.selectedNode;
+        httpServer.savePayItemChild({name:'新建收费项', pid: id, price: 0, unit: 4, customerId}).then(res => {
+            // console.log('add res:',res);
+            if(res.code ===200){
+                this.notice('success', res.msg);
+                this.setState({payItem: [res.data, ...this.state.payItem]});
+            }else {
+                this.notice('error', res.msg);
+            }
+        })
+    };
+    delPayItemList(nodeId) {
+        nodeId === this.state.selectedNode.id && this.setState({selectedNode:null});
+    }
+    notice(status, msg) {
+        let text = status==='success' ? '成功' : (status === 'error'? '失败' : '');
+        notification[status]({
+            message: `${text}提示:`,
+            description:msg,
+            duration:2
+        })
+    }
+    render() {
+        const { zNodes, payItem, selectedNode } = this.state;
+        return (
+            <div>
+                <BreadcrumbCustom first="财务管理" second="收费项目" />
+                <Row gutter={16}>
+                    <Col className="gutter-row" md={4}>
+                        <div className="gutter-box">
+                            <Card bordered={false} size="small" title="收费类别:">
+                                <Tree id={'payItemTree'} zNodes={zNodes}
+                                      onEdit={this.nodeEditHandler}
+                                      onDelete={this.nodeDeleteHandler}
+                                      onAddNew={this.nodeAddHandler}
+                                      onNodeClick={this.nodeClickHandler}
+                                      editableTree="true"
+                                      levelMax={1}
+                                />
+                            </Card>
+                        </div>
+                    </Col>
+                    <Col className="gutter-row" md={20}>
+                        <div className="gutter-box" >
+                            <Card bordered={false}>
+                                {
+                                    selectedNode ?
+                                        <React.Fragment>
+                                            <Button className="payItemAddBtn" type="primary" title="新增收费项" size="small"
+                                                    onClick={this.payItemAddHandler}
+                                            >
+                                                <Icon type="plus" />
+                                            </Button>
+                                            <h3 style={{textAlign:'center'}}>{selectedNode.name} :</h3>
+                                            <PriceSlider data={payItem}
+                                                         onDataChange={this.payItemChildDataChangeHandler}
+                                                         onRowSave={this.payItemChildSaveHandler}
+                                                         onRowDelete={this.payItemChildDelHandler}
+                                            />
+                                        </React.Fragment> : <p style={{color:'rgb(208,208,208)'}}>在右侧选择收费类别!</p>
+                                }
+                            </Card>
+                        </div>
+                    </Col>
+                </Row>
+                <style>{`
+                    .sliderNameIpt{
+                        border:none;
+                        border-bottom:1px solid #d9d9d9;
+                        position: relative;
+                        z-index:50;
+                        width:100%;
+                        background-color:transparent;
+                    }
+                    .sliderNameIpt:focus{
+                        outline:none;
+                    }
+                    .payItemAddBtn{
+                        position:absolute;
+                    }
+                `}</style>
+            </div>
+        )
+    }
+}

@@ -1,0 +1,173 @@
+import React,{Component , Fragment} from 'react';
+import {Row,Col,Input,Button,Modal,Divider,Popconfirm,Table,Form,Radio} from 'antd';
+
+const RadioGroup = Radio.Group;
+class EvaluateInfo extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      modalFlag:false,
+      infoFlag:false,
+      dataSource:[],
+      dataList:{},
+    }
+    this.handleCancel = this.handleCancel.bind(this);
+    this.handleSearch = this.handleSearch.bind(this);
+    this.handleAdd = this.handleAdd.bind(this);
+  }
+
+  handleAdd(){
+    this.setState({infoFlag:true});
+  }
+
+  handleSearch(){
+    this.setState({modalFlag:true});
+  }
+
+  handleCancel(){
+    this.setState({modalFlag:false});
+  }
+  render(){
+    const {modalFlag,dataSource,infoFlag} = this.state;
+    const {name, sex, age} = this.state.dataList;
+    const formItemLayout = {
+      labelCol: {
+        xs: { span: 24 },
+        sm: { span: 5 },
+      },
+      wrapperCol: {
+        xs: { span: 24 },
+        sm: { span: 19 },
+      },
+    };
+    const tailFormItemLayout = {
+      wrapperCol: {
+        xs: {
+          span: 24,
+          offset: 0,
+        },
+        sm: {
+          span: 16,
+          offset: 8,
+        },
+      },
+    };
+    const columns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber',
+      width:'15%'
+    },{
+      title: '姓名',
+      dataIndex: 'name',
+      key: 'name',
+      width:'15%'
+    },{
+      title:'年龄',
+      dataIndex: 'addtime',
+      key: 'addtime',
+      width:'15%'
+    },{
+      title: '性别',
+      dataIndex: 'estimateGradeCode',
+      key: 'estimateGradeCode',
+      width:'15%'
+    },{
+      title:'操作',
+      dataIndex:'action',
+      key:'action',
+      render:(text,record)=>{
+        return(
+          <span>
+            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+              <Divider type="vertical" />
+              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+              </Popconfirm>
+          </span>
+        )
+      },
+    }];
+    return(
+      <Fragment>
+        <Row gutter={16} style={{backgroundColor:"#ccc",padding:"10px 20px"}}>
+          <div style={{marginBottom:"10px"}}>友情提示：点击搜索按钮后单击选中老人可自动填充老人信息(姓名,身份证,住址)</div>
+          <Col md={6}><Input placeholder="老人姓名:" disabled style={{textAlign:"center",backgroundColor:"#fff"}} /></Col>
+          <Col md={12}>
+            <Input style={{paddingLeft:"10px",backgroundColor:"#fff"}} disabled/>
+          </Col>
+          <Button type="primary" onClick={this.handleSearch}>搜索</Button>
+        </Row>
+        <Row gutter={16} style={{backgroundColor:"#ccc",padding:"10px 20px"}}>
+          <Col md={6}><Input placeholder="老人年龄:" disabled style={{textAlign:"center",backgroundColor:"#fff"}} /></Col>
+          <Col md={12}>
+            <Input style={{paddingLeft:"10px",backgroundColor:"#fff"}} disabled/>
+          </Col>
+        </Row>
+        <Row gutter={16} style={{backgroundColor:"#ccc",padding:"10px 20px"}}>
+          <Col md={6}><Input placeholder="老人性别:" disabled style={{textAlign:"center",backgroundColor:"#fff"}} /></Col>
+          <Col md={12}>
+            <Input style={{paddingLeft:"10px",backgroundColor:"#fff"}} disabled/>
+          </Col>
+        </Row>
+        {
+          modalFlag?
+            <Modal
+              title="老人信息"
+              visible={true}
+              onCancel={this.handleCancel}
+              footer={null}
+              maskClosable={false}
+              width = {660}
+            >
+              <div>
+                <Button type="primary" onClick={this.handleAdd}>新增</Button>
+                {
+                  infoFlag?
+                    <Form hideRequiredMark onSubmit={this.handleSubmit}>
+                      <Form.Item
+                        label='姓名'
+                        {...formItemLayout}
+                        style={{marginBottom:'4px'}}
+                      >
+                        <Input placeholder='必填项' value={name} onChange={(e) => this.handleIptText('name',e)} />
+                      </Form.Item>
+                      <Form.Item
+                        label='性别'
+                        {...formItemLayout}
+                        style={{marginBottom:'4px'}}
+                      >
+                        <RadioGroup value={sex} onChange={(e) => this.handleIptText('sex',e)}>
+                          <Radio value={1}>男</Radio>
+                          <Radio value={0}>女</Radio>
+                        </RadioGroup>
+                        （默认值：男）
+                      </Form.Item>
+                      <Form.Item
+                        label='年龄'
+                        {...formItemLayout}
+                        style={{marginBottom:'4px'}}
+                      >
+                        <Input value={age} onChange={(e) => this.handleIptText('age',e)}/>
+                      </Form.Item>
+                      <Form.Item {...tailFormItemLayout}>
+                        <Button type="primary" htmlType="submit">确认</Button>
+                        <Button type="primary" >取消</Button>
+                      </Form.Item>
+                    </Form>:null
+                }
+              </div>
+              <Table 
+                bordered
+                dataSource={dataSource} 
+                columns={columns} 
+                pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                rowKey={record => record.id}
+              />
+            </Modal>:null
+        }
+      </Fragment>
+    )
+  }
+}
+export default EvaluateInfo;
