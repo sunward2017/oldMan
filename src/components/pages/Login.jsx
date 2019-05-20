@@ -1,6 +1,3 @@
-/**
- * Created by hao.cheng on 2017/4/16.
- */
 import React from 'react';
 import { Form, Icon, Input, Button, message } from 'antd';
 import { connect } from 'react-redux';

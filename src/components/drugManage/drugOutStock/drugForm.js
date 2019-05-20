@@ -32,9 +32,6 @@ class drugForm extends Component{
   }
   drugChange=(v)=>{
   	 this.setState({max:v.quantity});
-  	 this.props.form.setFieldsValue({
-  	 	minUbit:v.minUnit
-  	 })
   }
   render(){
     const {
@@ -98,26 +95,9 @@ class drugForm extends Component{
                   rules: [{ required: true, message: '请输入数量'}],
                   initialValue:quantity
                 })(
-                    <InputNumber placeHolder="请输入入库数量" min={0} max={this.state.max}/>
+                    <InputNumber placeHolder="请输入入库数量" min={0} max={this.state.max} style={{width:'100%'}}/>
                 )}
-              </Form.Item>
-               <Form.Item
-                label='最小单位'
-                {...formItemLayout}
-                style={{marginBottom:'4px'}}
-              >
-                {getFieldDecorator('minUbit', {
-                  rules: [{ required: false, message: '请选择最小单位'}],
-                  initialValue:minUbit
-                })(
-                  <RadioGroup buttonStyle="solid" disabled>
-					    {units.map(i=>{
-                		    return <Radio.Button value={i.value} key={i.id}>{i.value}</Radio.Button>
-                	    })}
-                  </RadioGroup>    
-                )}
-              </Form.Item>
-                
+              </Form.Item>   
             </Form>
           </Modal>
     )

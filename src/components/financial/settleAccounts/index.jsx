@@ -28,16 +28,7 @@ class SettleAccounts extends React.Component {
     param={};
     componentWillMount(){
     	const pageTxt=(this.props.location.pathname.indexOf('settleAccounts')>-1)?'在院':'出院';
-    	this.setState({pageTxt})
- 
-//      if(data){
-//         this.setState({pageTxt,elderlyInfo:data,elderSelected:data.id});
-//         this.elderlyId = data.id;
-//      }else{
-//         const { history } = this.props;
-//        // history.replace('/app/pension-agency/financial/settleAccounts') 
-//      }
-        
+    	this.setState({pageTxt})        
     }
     componentDidMount(){
         const {customerId, account}= this.props.auth;
@@ -60,8 +51,8 @@ class SettleAccounts extends React.Component {
         this.customerId = customerId;
         this.param = {account,customerId};
         this.fetchSysParams('creditList');
-        this.fetchElderlyInfo()
-        this.fetchSumMoney()
+        //this.fetchElderlyInfo()
+       // this.fetchSumMoney()
        
     }
     componentWillUnmount(){
@@ -172,24 +163,17 @@ class SettleAccounts extends React.Component {
     }
     
     handleSubmit=()=>{
-    	const {collection,ids,count,computed} = this.state;
+    	const {collection,ids,count,computed,pageTxt} = this.state;
     	if(!count){
     		message.error('没有要结算费用');
     		return false;
     	}
     	
-    	if(computed!==count){
+    	if(parseInt(computed)!==parseInt(count)){
     		message.error('收款金额不对，请核对');
     		return false;
     	}
-    	
-    	if(collection.length===0){
-    		message.error('没有付款记录,无法进行结算');
-    		return false;
-    	}
-    	
-    	const { name,customerId } = this.props.auth;
-    	 
+    	const { name,customerId } = this.props.auth
     	var values = {
     		...ids,
     		tbPayMoneyDetailInfo: collection,
@@ -213,9 +197,9 @@ class SettleAccounts extends React.Component {
 					this.notice('error', res.msg);
 			}
 		   const { history } = this.props;
-           history.replace('/app/pension-agency/financial/settleAccounts') 
+		   const curUrl = pageTxt==="在院"?'/app/pension-agency/financial/settleAccounts':'/app/pension-agency/financial/leaveSettle';
+           history.replace(curUrl) 
           }).catch(err => { console.log(err) });
- 
     }
     
     showCost=()=>{
@@ -227,16 +211,15 @@ class SettleAccounts extends React.Component {
     }
     
     changeElderly=(r)=>{
-    	console.log(r)
     	this.elderlyId = r.id;
-        this.setState({elderlyInfo:r,elderSelected:r.id},()=>{
+        this.setState({elderlyInfo:r,elderSelected:r.id,collection:[]},()=>{
          	this.fetchSysParams('creditList');
             this.fetchElderlyInfo()
             this.fetchSumMoney()
         })
     }
     render() {
-        const {elderlyInfo, fee, elderSelected, pageTxt,collection,record,sumMoney} = this.state;
+        const {elderlyInfo, fee, elderSelected, pageTxt,collection,record,sumMoney,count} = this.state;
         const { account }= this.props.auth;
         const creditList = this.param.creditList;
       
@@ -253,11 +236,12 @@ class SettleAccounts extends React.Component {
         		 switch(t){
         		 	case '1': return "现金";
         		 	case '2': return "支付宝"
-        		 	case '3': return "微信"
-        		 	case '4': return "刷卡"
+        		 	case '3': return "医疗押金"
+        		 	case '8': return "刷卡"
         		 	case '5': return "转账"
         		 	case '6': return "住院预交"
         		 	case '7': return "其他预交"
+        		 	case '3': return "微信"
         		 }
         	}
         },{
@@ -313,7 +297,7 @@ class SettleAccounts extends React.Component {
                 <BreadcrumbCustom first="财务管理" second={`${pageTxt}结算`} />
                 <Card bordered={false} style={{marginBottom:10}}>
 	                <Row gutter={16}>
-	                  <Col md={20}>
+	                  <Col sm={24} md={16}>
 	                   {elderlyInfo.id?
 	                    <span>
 	                             姓名:&emsp; <Tag color="magenta">{elderlyInfo.name}</Tag>
@@ -324,7 +308,7 @@ class SettleAccounts extends React.Component {
 	                               
 	                    </span>:null
 	                    }</Col>
-	                  <Col md={4}>
+	                  <Col sm={24} md={8}>
 	                    <Elderlys onChange={this.changeElderly} launchFlag={pageTxt==="在院"?"0":"1"}/>
 	                  </Col>                
 	                </Row>
@@ -345,7 +329,7 @@ class SettleAccounts extends React.Component {
                        <Col xs={24} sm={6}>
                          <Card title="费用统计">
                            <h3> 结算老人: <span className="ml-m"><Tag color="magenta">{elderlyInfo.name}</Tag></span></h3>
-                           <h3> 应收费用 : <span className="ml-m">{this.state.count}元</span></h3>
+                           <h3> 应收费用 : <span className="ml-m">{(+count).toFixed(1)}元</span></h3>
                            <h3> 收 款 人 : <span className="ml-m">{account}</span></h3>
                          </Card>  
                        </Col>
@@ -357,7 +341,11 @@ class SettleAccounts extends React.Component {
                           dataSource={collection} 
                           pagination={{ pageSize: 50 }} 
                           scroll={{ y: 240 }}   
-                          footer={() =><div>合计:{this.state.computed}元<Button className="pull-right tb-footer-text" type="primary" size="small" onClick={this.showCost}>历史记录</Button><Button className="pull-right tb-footer-text" type="primary" size="small" onClick={this.handleSubmit}>提交</Button><Button className="pull-right tb-footer-text" size="small" type="primary" onClick={this.add}>付款</Button></div>}
+                          footer={() =><div>
+                          	合计:{this.state.computed}元
+                          	<Button className="pull-right tb-footer-text" type="primary" size="small" onClick={this.showCost} disabled={!elderlyInfo.name}>历史记录</Button>
+                            <Button className="pull-right tb-footer-text" type="primary" size="small" onClick={this.handleSubmit} disabled={this.state.collection.length===0}>提交</Button>
+                            <Button className="pull-right tb-footer-text" size="small" type="primary" onClick={this.add} disabled={(+count)==0.0}>付款</Button></div>}
                           />
                        </Col>
                     </Row> 
@@ -384,11 +372,12 @@ class SettleAccounts extends React.Component {
 				             <RadioGroup  buttonStyle="solid">
 				                <Radio.Button value="1">现金</Radio.Button>
 						        <Radio.Button value="2">支付宝</Radio.Button>
-						        <Radio.Button value="3">微信</Radio.Button>
-						        <Radio.Button value="4">刷卡</Radio.Button>
+						        <Radio.Button value="4">微信</Radio.Button>
+						        <Radio.Button value="8">刷卡</Radio.Button>
 						        <Radio.Button value="5">转账</Radio.Button>
 						        <Radio.Button value="6">住院预交</Radio.Button>
 						        <Radio.Button value="7">其他预交</Radio.Button>
+						        <Radio.Button value="3">医疗押金</Radio.Button>
 						      </RadioGroup>
 				          )}
 				        </Form.Item>
@@ -401,7 +390,7 @@ class SettleAccounts extends React.Component {
 				            rules: [{ required: true, message: '请输入付款金额' }],
 				            initialValue:record.money
 				          })(
-				            <InputNumber min={1} style={{width:'100%'}}/>
+				            <InputNumber min={0} style={{width:'100%'}}/>
 				          )}
 				        </Form.Item>
 				         <Form.Item

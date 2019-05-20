@@ -10,6 +10,7 @@ class WaterKwhInit extends Component{
       dataSource:[],
       edit:false,
       roomUuid:'',
+      type:'',
     }
   }
   componentDidMount(){
@@ -45,15 +46,19 @@ class WaterKwhInit extends Component{
     this.setState({dataSource:newDataSource});
   }
 
-  handleModify(r){ //编辑
+  handleModify(r,type){ //编辑
     const {roomUuid} = r;
-    this.setState({edit:true,roomUuid,});
+    this.setState({edit:true,roomUuid,type});
   }
 
   handleSave(r){
-    const {customerId} = this.props.auth;
+  	const {type} = this.state;
     const {id,kwh,water,roomUuid} = r;
-    httpServer.setRoomWaterAndKwh({customerId,id,kwh,water,roomCode:roomUuid}).then((res)=>{
+    const data = {id,kwh,water,roomCode:roomUuid};
+    console.log(type);
+    if(type) delete data.id
+    console.log(data)
+    httpServer.setRoomWaterAndKwh(data).then((res)=>{
       if(res.code === 200){
         const args = {
           message: '通信成功',
@@ -141,7 +146,9 @@ class WaterKwhInit extends Component{
             <a href="javascript:;" onClick={() => { this.handleCancle() }} style={{color:'#2ebc2e'}}>取消</a>
           </span>:
           <span>
-            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>编辑</a>
+            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>初始化</a>
+            <Divider type="vertical" />
+            <a href="javascript:;" onClick={() => { this.handleModify(record,"reset") }} style={{color:'#606d10'}}>更换水电表</a>
           </span>
         )
       },
@@ -158,7 +165,7 @@ class WaterKwhInit extends Component{
               rowKey='roomUuid' 
               dataSource={dataSource} 
               columns={columns}
-              pagination={{ defaultPageSize:10000,showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+              pagination={{ defaultPageSize:10,showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
             />
           </Card>
       </Fragment>

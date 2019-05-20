@@ -320,7 +320,7 @@ class EstimateLib extends Component {
           modalFlag?
           <Modal 
             title="评估信息输入"
-            width='80%'
+            width='60%'
             onCancel={this.handleCancel}
             visible={modalFlag}
             footer={null}

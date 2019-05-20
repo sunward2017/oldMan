@@ -305,8 +305,7 @@ class PayItem1 extends React.Component {
             render: (text, record) => {
                 return (
                     <React.Fragment>
-                        <a href="javascript:;" onClick={() => { this.saveModifyHandler(record) }}>修改</a>
-                        <Divider type="vertical" />
+                         
                         <Popconfirm title="确定删除?" onConfirm={() => this.rowDeleteHandler(record)}>
                             <a href="javascript:;">删除</a>
                         </Popconfirm>
@@ -371,7 +370,7 @@ class PayItem1 extends React.Component {
                           rules: [{ required: true, message: '请输入收费价格!' }],
                           initialValue:price,
                         })(
-                          <InputNumber min={0} step="0.01"/>
+                          <InputNumber min={0} step="0.001" style={{width:'100%'}}/>
                         )}
                       </Form.Item>
                       <Form.Item
@@ -396,7 +395,7 @@ class PayItem1 extends React.Component {
                             validator:this.validateDays,}],
                           initialValue:days,
                         })(
-                          <InputNumber min={0} />
+                          <InputNumber min={0} style={{width:'100%'}}/>
                         )}
                       </Form.Item>
                       <Form.Item {...tailFormItemLayout}>

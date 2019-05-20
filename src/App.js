@@ -7,7 +7,9 @@ import { receiveData, isLogin } from './action';
 import { connect } from 'react-redux';
 import Routes from './routes';
 import zh_CN from 'antd/lib/locale-provider/zh_CN';
+import moment from 'moment';
 import 'moment/locale/zh-cn';
+moment.locale('zh-cn');
 
 const { Content} = Layout;
 

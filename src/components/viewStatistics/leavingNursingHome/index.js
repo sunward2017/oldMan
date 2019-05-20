@@ -9,7 +9,7 @@ export default class LeavingNursingHome extends React.Component {
         baseUrl:'/app/pension-agency/medicalCare/healthRecord'
     };
     componentDidMount(){
-        console.log('record index props:',this.props);
+        //console.log('record index props:',this.props);
     }
     render() {
       const { match } = this.props;

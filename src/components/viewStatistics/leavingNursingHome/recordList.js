@@ -1,155 +1,166 @@
-import React from 'react';
-import { Card, Input, Col, Row, TreeSelect, notification } from 'antd';
-import { healthRecords } from '../../../action';
-import httpServer from '../../../axios/index';
-import RecordItem from './recordItem';
-import { connect } from 'react-redux';
-const Search = Input.Search;
-const SHOW_PARENT = TreeSelect.SHOW_PARENT;
-const TreeNode = TreeSelect.TreeNode;
+import React, {
+	Component,
+	Fragment
+} from 'react';
+import { Modal, Button, Input, Icon, Table, Tag, notification,Divider,Card,message} from 'antd';
+import httpServer from '@/axios';
+import ElderlyInfo from '@/common/elderlyInfo'
+import { Balance} from '../../financial/feeInOut/feeInfo';
 
-class RecordList extends React.Component {
-    state = {
-        records:[],
-        treeData:[],
-        searchKey:{},
-        chargeItemList:[],
-    };
+class ElderlySelect extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			sourceData:[],
+			data:[],
+			searchText:'',
+			modalFlag:false,
+			elderly:{},
+			pledgeVisible:false,
+			feeData:{},
+		};
+	}
     componentDidMount(){
-        // console.log('list props:',this.props);
-        // if(this.props.history.action === 'POP'){
-        //     const { healthRecord } = this.props;
-        //     this.setState({
-        //         records:(healthRecord && healthRecord.records) || [],
-        //         searchKey: (healthRecord && healthRecord.searchKey) || {}
-        //     })
-        // }
-        this.customerId = this.props.auth.customerId;
-        this.fetchElderlyRoomTree();
-        this.getPayItemChild();
-        this.fetchElderlyByKey();
+    	this.ListElderly();
     }
-
-    //关联收费项目选取
-  getPayItemChild(){
-    httpServer.selectPayItemChild({customerId:this.customerId}).then((res)=>{
-      if (res.code === 200) {
-        res.data?this.setState({chargeItemList:res.data}):this.setState({chargeItemList:[]});
-      } else {
-        if(res.message ==='Request failed with status code 500'){
-            console.log(res.message);
-         }else{
-            const args = {
-            message: '通信失败',
-            description: res.msg,
-            duration: 2,
-          };
-          notification.error(args);
-         }
-      }
-    }).catch((error)=>{
-      console.log(error);
-    });
-  }
-
-    fetchElderlyRoomTree(){
-        httpServer.listAreaInfo({customerId:this.customerId}).then(res => {
-            console.log('room info:',res);
-            res.code ===200 ? this.setState({treeData:[res.data]}) : this.setState({treeData:[]});
+    handleSearchElderly=()=>{
+    const { searchText } = this.state;
+	    if(searchText){
+	      const reg = new RegExp(searchText, 'gi');
+	      const data = this.state.sourceData.filter((record) =>record.name && record.name.match(reg));
+	      this.setState({
+	        data,
+	      });
+	    }else{
+	       this.ListElderly()
+	    }
+    }
+    handleInputChange=(e) =>{ //老人姓名搜索框发生变化
+	    this.setState({ searchText: e.target.value });
+	}
+    
+	ListElderly = () => {
+		httpServer.listElderlyInfo({
+			listStatus:'4',
+		}).then(res => {
+			if(res.code === 200) {
+				this.setState({
+					data: res.data||[],
+					sourceData:res.data||[],
+				})
+			}else{
+				this.setState({data:[]});
+				message.error('获取老人失败')
+			}
+		})
+	}
+    handleReset = ()=>{ 
+    	this.setState({searchText:''},()=>{
+    		 this.ListElderly();
+    	})
+    }
+    lookAt=(r)=>{
+    	this.setState({modalFlag:true,elderly:r})
+    }
+    lookAtPledge=(id)=>{
+    	this.fetchElderlyBalance(id);
+    }
+    fetchElderlyBalance(id){
+        httpServer.getMoneyInfo({elderlyId:id}).then(res => {
+            if(res.code === 200){
+            	this.setState({feeData:res.data || {},fledgeVisible:true})
+            }else{
+            	message.error('获取明细失败')
+            }
         })
     }
-    fetchElderlyByKey(searchKey){
-        // console.log('search key:',searchKey);
-        httpServer.listElderlyInfo({customerId:this.customerId, listStatus:'4', ...searchKey,launchFlag:2 }).then(res => {
-            console.log(res);
-            this.setState({records: res.data || []});
-            res.code ===200 ? this.notice('success', res.msg) : this.notice('error', res.msg) ;
-            // this.props.recordsStatus({records: res.data || [], searchKey});
-        })
+    handleCancel=()=>{
+    	this.setState({feeData:{},fledgeVisible:false})
     }
-    renderTreeNodes = data => data.map(item => {
-        if (item.children) {
-            return (
-                <TreeNode title={item.areaName} key={item.id} value={item.areaCode}>
-                    {this.renderTreeNodes(item.children)}
-                </TreeNode>
-            );
-        }
-        return <TreeNode title={item.areaName} key={item.id} value={item.areaCode} />;
-    });
-    notice(status, msg) {
-        let text = status==='success' ? '成功' : (status === 'error'? '失败' : '');
-        notification[status]({
-            message: `${text}提示:`,
-            description:msg,
-            duration:2
-        })
-    }
-    onTreeSelectChangeHandler = (value) => {
-        value.length >0 ? this.fetchElderlyByKey({areaCode:value.join(',')}) : this.setState({records: []});
-    };
-    onNameSearchHandler = (value) => {
-        /\S+/.test(value) && this.fetchElderlyByKey({name:value.trim()});
-    };
-    onRecordDeleteHandler = (record) => {
-        console.log('go to delete:',record);
-        const { id, customerId } = record;
-        httpServer.deleteHealthInfo({id, customerId}).then(res => {
-            res.code===200 ? this.notice('success', res.msg) : this.notice('error', res.msg);
-        })
-    };
-    render() {
-        const { treeData, records, searchKey } = this.state;
-        const  url  = this.props.location.pathname;
-        return (
-            <React.Fragment>
-                <Card bordered={false}>
-                    <Row gutter={16}>
-                        <Col md={4}>
-                            <TreeSelect className="w-full"
-                                dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-                                treeDefaultExpandedKeys={['1']}
-                                onChange={this.onTreeSelectChangeHandler}
-                                treeCheckable="true"
-                                showCheckedStrategy={SHOW_PARENT}
-                                searchPlaceholder="选择楼层房间" >
-                                {this.renderTreeNodes(treeData)}
-                            </TreeSelect>
-                        </Col>
-                        <Col md={4}>
-                            <Search
-                                defaultValue={searchKey.name||''}
-                                placeholder="按姓名搜索"
-                                onSearch={value => this.onNameSearchHandler(value)}
-                                enterButton
-                            />
-                        </Col>
-                    </Row>
-                </Card>
-                <Card bordered={false} style={{marginTop:'10px'}}>
-                    <Row>
-                        {
-                            records.length>0 ? records.map(r =>
-                                <Col xxl={4} xl={5} lg={8} md={12} key={r.id}>
-                                    <RecordItem data={r} baseUrl={url} onDel={() => this.onRecordDeleteHandler(r)} customerId={this.customerId} chargeItemList={this.state.chargeItemList}/>
-                                </Col>
-                            ) : '无搜索结果'
-                        }
-                    </Row>
-                </Card>
-
-            </React.Fragment>
-        )
-    }
+	render() {
+		const columns = [{
+		      title: '序号',
+		      render:(text,record,index)=>`${index+1}`,
+		      key:'serialNumber',
+		      width:'5%'
+		    },{
+				title: '姓名',
+				dataIndex: 'name',
+				key: 'name',
+				render: text => <a href="javascript:;">{text}</a>,
+			},{
+			      title: '性别',
+			      dataIndex: 'sex',
+			      key: 'sex',
+			      width:'10%',
+			      render:(text)=>{
+			      	 return text===1?<Tag color="#87d068">男</Tag>:<Tag color="#2db7f5">女</Tag>
+			      }
+			},{
+				title:'年龄',
+				dataIndex:'age'
+			},{
+				title: '住址',
+				dataIndex: 'address',
+				key: 'address',
+			},{
+				title: '入院日期',
+				dataIndex: 'checkInDate',
+				render:(t,r)=>{
+					return <Tag color="geekblue">{t.substr(0,10)}</Tag>
+				}
+			},{
+				title: '出院日期',
+				dataIndex: 'requestTime',
+				render:(t,r)=>{
+					return <Tag color="purple">{t.substr(0,10)}</Tag>
+				}
+			},{
+				title: '备注',
+				dataIndex:'moneyClear',
+				render:(t,r)=>{
+					return t>0?<Tag  color="#108ee9">押金未退</Tag>:null 
+				}
+			},{
+				title: '操作',
+				dataIndex: 'action',
+				render:(t,r)=>{
+				 
+				return <span>
+						 <a href="javascript:;" onClick={() => { this.lookAt(r)}} style={{color:'#2ebc2e'}}>基础信息</a>
+				      	 <Divider type="vertical"/>
+				      	 <a href="javascript:;" onClick={() => { this.lookAtPledge(r.id)}} style={{color:'#2ebc2e'}}>押金明细</a>
+				      </span>
+				}
+			}];
+        const {name,data,modalFlag,elderly} =this.state;
+		return(<Fragment>
+			<Card>
+		        <Input 
+                  placeholder="按老人姓名搜索" 
+                  style={{width:300,marginRight:'10px'}}
+                  ref={ele => this.searchInput = ele}
+                  value={ this.state.searchText }
+                  onChange={this.handleInputChange}
+                  onPressEnter={this.handleSearchElderly}
+                />
+                <Button type="primary" onClick={this.handleSearchElderly}>搜索</Button>
+                <Button type="primary" onClick={this.handleReset}>刷新</Button>
+                <Divider/>
+		        <Table bordered columns={columns} dataSource={data} rowKey='id' size="small"/> 
+		    </Card> 
+		    <ElderlyInfo visible={modalFlag} data={elderly} close={()=>{this.setState({modalFlag:false})}}/>
+		    <Modal
+		          title="押金明细"
+		          visible={this.state.fledgeVisible}
+		          footer={null}
+		          onCancel={()=>{this.handleCancel()}}
+		          width={400}
+		    >
+		       <Balance feeData={this.state.feeData} />
+		    </Modal>
+        </Fragment>)
+	}
 }
-// const mapStateToProps = state => {
-//     const { healthRecord } = state.temporaryData;
-//     return {healthRecord};
-// };
-// const mapDispatchToProps = dispatch => ({
-//     recordsStatus:(data) => {
-//         dispatch(healthRecords(data))
-//     }
-// });
-export default RecordList;
-//connect(mapStateToProps, mapDispatchToProps)(RecordList)
+
+export default ElderlySelect;

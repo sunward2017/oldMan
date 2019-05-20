@@ -3,7 +3,7 @@
 	Fragment
 } from 'react';
 import { connect } from 'react-redux'
-import { Table, Tag, Divider, Popconfirm, Button,Tree,Row,Col,notification,Card} from 'antd';
+import { Table, Tag, Divider, Popconfirm, Button,Tree,Row,Col,notification,Card,Input} from 'antd';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '@/axios/';
 import DrugStock from './drugStock';
@@ -19,7 +19,8 @@ class Plan extends Component {
 			customerId:'',
 			areaTree:[],
 			visible:false,
-			drugStockInfo:{}
+			drugStockInfo:{},
+			data:[]
 		}
 	}
 	componentDidMount() {
@@ -60,7 +61,7 @@ class Plan extends Component {
     fetchElderlyByKey(searchKey){
         httpServer.listElderlyInfo({customerId:this.state.customerId,listStatus: '3',...searchKey }).then(res => {
             const data = res.data?res.data:[];
-            this.setState({dataSource:data});
+            this.setState({dataSource:data,data});
             res.code !==200&&this.notice('error', res.msg) ;
         })
     }
@@ -87,9 +88,31 @@ class Plan extends Component {
     	   }
     	})
     }
+    handleInputChange=(e) =>{ //老人姓名搜索框发生变化
+	  this.setState({ searchText: e.target.value });
+	}
+  
+	handleReset = ()=>{
+	    const {dataSource} = this.state;
+	    this.setState({data:dataSource,searchText:''})
+	}
+	handleSearch=()=>{
+	    const { searchText } = this.state;
+		    if(searchText){
+		      const reg = new RegExp(searchText, 'gi');
+		      const data = this.state.dataSource.filter((record) =>record.name && record.name.match(reg));
+		      this.setState({
+		        data,
+		      });
+		    }else{
+		    	const {dataSource} = this.state;
+		      this.setState({data:dataSource})
+		    }
+	}
+	
 	render() {
 		const {
-			dataSource,
+			data,
 			areaTree,
 			visible
 		} = this.state;
@@ -139,7 +162,7 @@ class Plan extends Component {
 		      render:(text,record)=>{
 		        return(
 		          <span>
-		            <a href="javascript:;" onClick={() => { this.handleLook(record) }} style={{color:'#2ebc2e'}}>查看</a>
+		            <a href="javascript:;" onClick={() => { this.handleLook(record) }} style={{color:'#2ebc2e'}}>查看库存</a>
 		          </span>
 		        )
 		      }
@@ -159,10 +182,21 @@ class Plan extends Component {
 				    </Card>  
 	            </Col>
 	            <Col  xs={{ span: 24}} lg={{ span: 20}}>
+	              <Input 
+                  placeholder="按老人姓名搜索" 
+                  style={{width:'40%',marginRight:'10px'}}
+                  ref={ele => this.searchInput = ele}
+                  value={this.state.searchText}
+                  onChange={this.handleInputChange}
+                  onPressEnter={this.handleSearch}
+                />
+                <Button type="primary" onClick={this.handleSearch}>搜索</Button>
+                <Button type="primary" onClick={this.handleReset}>刷新</Button>
+                <Divider/>
 		          <Table 
 		            bordered
 		            rowKey='id' 
-		            dataSource={dataSource} 
+		            dataSource={data} 
 		            columns={columns} 
 		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
 		          />

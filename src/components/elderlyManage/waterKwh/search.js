@@ -68,7 +68,7 @@ class Search extends Component{
   renderTreeNodes = data => data.map((item) => { //区域数渲染
     if (item.children && item.children.length>0) {
       return (
-        <TreeNode title={item.areaName} key={item.areaCode} dataRef={item} disabled>
+        <TreeNode title={item.areaName} key={item.areaCode} dataRef={item}>
           {this.renderTreeNodes(item.children)}
         </TreeNode>
       );
@@ -113,19 +113,19 @@ class Search extends Component{
             style={{marginBottom:'10px'}}
           >
             <Button type="primary" onClick={this.handleModalVisiable}>选择区域</Button>
-            <Select   placeholder="请先选择区域，才能房间" value={selectValue} onChange={this.handleSelectChange}>
+            <Select   placeholder="选择房间" value={selectValue} onChange={this.handleSelectChange}>
               {optionsList&&optionsList.map(item => <Option key={item.roomUuid}>{item.roomName}</Option>)}
             </Select>
           </Form.Item>
           <Form.Item
-            label='起始日期'
+            label='抄表起始日期'
             style={{marginBottom:'10px'}}
             required
           >
             <DatePicker format='YYYY-MM-DD' value={rq1?moment(rq1,'YYYY-MM-DD'):null}  onChange={this.handleChangeRq1} allowClear={false} style={{width:'100%'}} />
           </Form.Item>
           <Form.Item
-            label='结束日期'
+            label='抄表结束日期'
             style={{marginBottom:'10px'}}
             required
           >
@@ -145,9 +145,8 @@ class Search extends Component{
               footer={null}
             >
               <Tree       
-                defaultExpandAll         
                 onSelect={this.onSelect}
-                showIcon={true}
+                showIcon={false}
               >
                 {this.renderTreeNodes(listAreaInfo)}
               </Tree>

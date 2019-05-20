@@ -59,7 +59,7 @@ class CMT extends Component {
 	}
 	listByElderly=()=>{
 	  	 const {customerId} = this.props.auth;
-	  	 httpServer.listElderlyInfo({listStatus:"0,1,2,3",customerId}).then((res) => {
+	  	 httpServer.listElderlyInfo({listStatus:"0,1,2,3,4",customerId}).then((res) => {
 			      if (res.code === 200) {
 			         if(res.data){
 			         	 let obj = {};

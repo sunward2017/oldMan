@@ -8,7 +8,6 @@ const { TextArea } = Input;
 class ModalInfo extends Component{
   constructor(props){
     super(props);
-    console.log(props.record);
     this.state = {
       dataList:props.record,
     }
@@ -24,9 +23,9 @@ class ModalInfo extends Component{
     this.props.form.validateFieldsAndScroll((err, fieldsValue) => {
      	if(!err){
          if(action !=='read'){
-		      const data = fieldsValue;
-		      if(data.id){
-		        httpServer.updateDrugInfo(data,{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then((res)=>{
+		      let id = this.props.record.id;
+		      if(id){
+		        httpServer.updateDrugInfo({...fieldsValue,id},{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then((res)=>{
 		           if (res.code === 200) {
 		              const args = {
 		                message: '通信成功',
@@ -52,7 +51,7 @@ class ModalInfo extends Component{
 		          console.log(err);
 		        });
 		      }else{
-		        httpServer.saveDrugInfo(data,{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then((res)=>{
+		        httpServer.saveDrugInfo(fieldsValue,{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then((res)=>{
 		           if (res.code === 200) {
 		              const args = {
 		                message: '通信成功',
@@ -82,14 +81,12 @@ class ModalInfo extends Component{
 		      this.props.cancleClick();
 		    }  	 	  
      	}
-    })
-    
-    
-    
+    }) 
   }
   render(){
     const {unitList,flag} = this.props;
-    const {vender, name, alias, shortName, referencePrice, dosageForm, barcode, specification,prescription=1, insurance=1, indicationsFunction, usage1, minUnit, store, classOne, approvalNo, status=1, operatedOn, addtime} = this.state.dataList;
+    const {vender, name, alias, shortName, referencePrice, dosageForm, barcode, specification,prescription, insurance, indicationsFunction, usage1, minUnit, store, classOne, approvalNo, status=1, operatedOn, addtime} = this.state.dataList;
+    console.log(insurance)
     const formItemLayout = {
       labelCol: {
         xs: { span: 24 },
@@ -118,28 +115,13 @@ class ModalInfo extends Component{
         title="药品信息添加"
         okText='提交'
         visible={true}
-        onOk={()=>{this.handleOk()}}
+        onOk={()=>{this.handleSubmit()}}
         onCancel={this.props.cancleClick}
         maskClosable={false}
-        footer={null}
-        width="80%"
+        width="60%"
       >
-        <Form  onSubmit={this.handleSubmit}>
+        <Form >
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label='厂家名称'
-                {...formItemLayout}
-                style={{marginBottom:'4px'}}
-              >  
-                { getFieldDecorator('vender', {
-                  rules: [{ required: true, message: '厂家不可为空'}],
-                  initialValue:vender
-                })(
-                    <Input placeholder='请输入厂家' disabled={flag}/>  
-                )}               
-              </Form.Item>
-            </Col>
             <Col span={12}>
               <Form.Item
                 label='药品名称'
@@ -147,27 +129,28 @@ class ModalInfo extends Component{
                 style={{marginBottom:'4px'}}
               >
                 { getFieldDecorator('name', {
-                  rules: [{ required: true, message: '请选择药品'}],
+                  rules: [{ required: true, message: '请输入药品名称'}],
                   initialValue:name
                 })(
                    <Input placeholder='药品名' disabled={flag}/>  
                 )} 
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={12}>  
               <Form.Item
-                label='药品别名'
+                label='条形码'
                 {...formItemLayout}
                 style={{marginBottom:'4px'}}
               > 
-                { getFieldDecorator('alias', {
-                  rules: [{ required: false, message: '请选择药品'}],
-                  initialValue:alias
+                { getFieldDecorator('barcode', {
+                  rules: [{ required: true, message: '请输入条形码'}],
+                  initialValue:barcode
                 })(
-                   <Input placeholder='药品别名' disabled={flag}/>  
-                )}
+                   <Input placeholder='药品条形码' disabled={flag}/>  
+                )} 
               </Form.Item>
             </Col>
+           
             <Col span={12}>  
               <Form.Item
                 label='药品简称'
@@ -184,16 +167,29 @@ class ModalInfo extends Component{
             </Col>
             <Col span={12}>  
               <Form.Item
-                label='剂型'
+                label='存储方式'
                 {...formItemLayout}
                 style={{marginBottom:'4px'}}
-              > 
-                { getFieldDecorator('dosageForm', {
-                  rules: [{ required: false, message: '请选择药品'}],
-                  initialValue:dosageForm
+              > { getFieldDecorator('store', {
+                  rules: [{ required: false, message: '请输入存储方式'}],
+                  initialValue:store
                 })(
-                   <Input placeholder='药品简称' disabled={flag}/>  
-                )} 
+                   <Input placeholder='储存方式' disabled={flag}/>  
+                )}
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label='生产厂家'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >  
+                { getFieldDecorator('vender', {
+                  rules: [{ required: true, message: '厂家不可为空'}],
+                  initialValue:vender
+                })(
+                    <Input placeholder='请输入厂家' disabled={flag}/>  
+                )}               
               </Form.Item>
             </Col>
             <Col span={12}>  
@@ -212,45 +208,18 @@ class ModalInfo extends Component{
             </Col>
             <Col span={12}>  
               <Form.Item
-                label='单位'
+                label='最小单位'
                 {...formItemLayout}
                 style={{marginBottom:'4px'}}
               > { getFieldDecorator('minUnit', {
                   rules: [{ required: true, message: '请输入单位'}],
                   initialValue:minUnit
                 })(
-                 <Select
-                  showSearch
-                  style={{ width: 200 }}
-                  placeholder="选择药品单位"
-                  optionFilterProp="children"
-                  filterOption={(input, option) => option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
-                  
-                  disabled={flag}
-                >
-                  {
-                    unitList&&unitList.map((item,index)=>{
-                      return  <Option key={item.value}>{item.value}</Option>
-                    })
-                  }
-                 
-                </Select>
+                  <Input placeholder="单位"/>
                  )} 
               </Form.Item>
             </Col>
-            <Col span={12}>  
-              <Form.Item
-                label='存储方式'
-                {...formItemLayout}
-                style={{marginBottom:'4px'}}
-              > { getFieldDecorator('store', {
-                  rules: [{ required: true, message: '请输入药品规格'}],
-                  initialValue:store
-                })(
-                   <Input placeholder='药品简称' disabled={flag}/>  
-                )}
-              </Form.Item>
-            </Col>
+            
             <Col span={12}>  
               <Form.Item
                 label='价格'
@@ -260,62 +229,23 @@ class ModalInfo extends Component{
                   rules: [{ required: false, message: '请输入药品规格'}],
                   initialValue:referencePrice
                 })(
-                   <InputNumber placeholder='药品简称' disabled={flag} min={0}/>  
+                   <InputNumber style={{width:'90%'}} placeholder='输入价格' disabled={flag} min={0}/>  
                 )}元
               </Form.Item>
             </Col>
-             <Col span={12}>   
+             
+              <Col span={12}>  
               <Form.Item
-                label='准字号'
-                {...formItemLayout}
-                style={{marginBottom:'4px'}}
-              > { getFieldDecorator('approvalNo', {
-                  rules: [{ required: false, message: '请输入准字号'}],
-                  initialValue:approvalNo
-                })(
-                   <Input placeholder='批次准字号' disabled={flag}/>  
-                )}
-              </Form.Item>
-            </Col>
-            <Col span={12}>  
-              <Form.Item
-                label='药品功效'
-                {...formItemLayout}
-                style={{marginBottom:'4px'}}
-              > { getFieldDecorator('indicationsFunction', {
-                  rules: [{ required: false, message: '请输入药品规格'}],
-                  initialValue:indicationsFunction
-                })(
-                  <TextArea rows={4}  disabled={flag}/>
-                )}
-              </Form.Item>
-            </Col>
-            <Col span={12}>  
-              <Form.Item
-                label='服用方法'
-                {...formItemLayout}
-                style={{marginBottom:'4px'}}
-              > { getFieldDecorator('usage1', {
-                  rules: [{ required: true, message: '请输入服用方法'}],
-                  initialValue:usage1
-                })(
-                  <TextArea rows={4} disabled={flag} placeholder="服用方法"/>
-                )}
-              </Form.Item>
-            </Col>
-           
-            <Col span={12}>  
-              <Form.Item
-                label='是否为处方药'
+                label='是否处方药'
                 {...formItemLayout}
                 style={{marginBottom:'4px'}}
               > { getFieldDecorator('prescription', {
-                  rules: [{ required: false, message: '请输入药品规格'}],
-                  initialValue:prescription||1
+                  rules: [{ required: true, message: '请输入药品规格'}],
+                  initialValue:prescription
                 })(
                   <RadioGroup disabled={flag}>
-                    <Radio value={1}>处方药</Radio>
-                    <Radio value={0}>非处方药</Radio>
+                    <Radio value={1}>是</Radio>
+                    <Radio value={0}>否</Radio>
                   </RadioGroup>
                 )}
               </Form.Item>
@@ -326,37 +256,43 @@ class ModalInfo extends Component{
                 {...formItemLayout}
                 style={{marginBottom:'4px'}}
               >{ getFieldDecorator('insurance', {
-                  rules: [{ required: false, message: '请输入药品规格'}],
-                  initialValue:insurance||1
+                  rules: [{ required: true, message: '请输入药品规格'}],
+                  initialValue:insurance
                 })(
                   <RadioGroup disabled={flag}>
-                    <Radio value={1}>医保用药</Radio>
-                    <Radio value={0}>非医保用药</Radio>
+                    <Radio value={1}>是</Radio>
+                    <Radio value={0}>否</Radio>
                   </RadioGroup>
                 )}
               </Form.Item>
             </Col>
-            <Col span={12}>
+            
+            <Col span={12}>  
               <Form.Item
-                label='状态'
+                label='功能主治'
                 {...formItemLayout}
                 style={{marginBottom:'4px'}}
-              >{ getFieldDecorator('status', {
-                  rules: [{ required: true, message: '请输入药品规格'}],
-                  initialValue:status||1
+              > { getFieldDecorator('indicationsFunction', {
+                  rules: [{ required: true, message: '请输入功能'}],
+                  initialValue:indicationsFunction
                 })(
-                  <RadioGroup  disabled={flag}>
-                    <Radio value={1}>正常</Radio>
-                    <Radio value={0}>注销</Radio>
-                  </RadioGroup>
+                  <TextArea rows={3}  disabled={flag}/>
                 )}
               </Form.Item>
             </Col>
             <Col span={12}>  
-              <Form.Item {...tailFormItemLayout}>
-                <Button type="primary" htmlType="submit">确认提交</Button>
+              <Form.Item
+                label='用法用量'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              > { getFieldDecorator('usage1', {
+                  rules: [{ required: true, message: '请输入用法用量'}],
+                  initialValue:usage1
+                })(
+                  <TextArea rows={3} disabled={flag} placeholder="用法用量"/>
+                )}
               </Form.Item>
-            </Col>
+            </Col>  
           </Row>  
         </Form>
       </Modal>

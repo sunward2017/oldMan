@@ -45,9 +45,9 @@ export const clientMenus = [
     {
         key: '/app/pension-agency/alarm', title: '告警信息', icon: 'alert',id:"39",
         sub: [
-            { key: '/app/pension-agency/alarm/arrearageAlarm' ,title:'余额不足提醒', component: 'ArrearageAlarm' ,id:"40"},
+            { key: '/app/pension-agency/alarm/arrearageAlarm' ,title:'余额不足', component: 'ArrearageAlarm' ,id:"40"},
             { key: '/app/pension-agency/alarm/drugAlarm' ,title:'缺药告警', component: 'DrugAlarm' ,id:"41"},
-            { key: '/app/pension-agency/alarm/waterKwhAlarm' ,title:'水电表异常情况', component: 'WaterKwhAlarm' ,id:"42"}
+            { key: '/app/pension-agency/alarm/waterKwhAlarm' ,title:'水电表异常', component: 'WaterKwhAlarm' ,id:"42"}
         ]
     },
     {
@@ -65,6 +65,7 @@ export const clientMenus = [
             { key: '/app/pension-agency/financial/leaveSettle', title: '出院结算' , component: 'SettleAccounts',id:"47"},
             { key: '/app/pension-agency/financial/feeInOut', title: '费用收支' , component: 'FeeInOut',id:"48"},
             { key: '/app/pension-agency/financial/payItem', title: '收费项目', component: 'PayItem' ,id:"49"},
+            { key: '/app/pension-agency/financial/daily', title: '日常收费', component: 'Daily' ,id:"78"},
             // { key: '/app/pension-agency/financial/payItem', title: '水电费结算' },
             // { key: '/app/pension-agency/financial/payItem', title: '药费清单' },
             // { key: '/app/pension-agency/financial/payItem', title: '出院审核' },

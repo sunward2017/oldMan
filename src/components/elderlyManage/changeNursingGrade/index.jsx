@@ -2,6 +2,7 @@ import React,{Fragment} from 'react';
 import { Card, Input,Modal ,Button,Select, Form, Avatar, notification, Divider,Icon,Tag,DatePicker,Table} from 'antd';
 import httpServer from '@/axios';
 import moment from 'moment';
+import img from '@/style/imgs/smile.jpg'
 
 const { Meta } = Card;
 const Option = Select.Option;
@@ -102,7 +103,7 @@ class changeNursingGrade extends React.Component {
 		      >
                 <Card title="基础信息">
 				    <Meta
-				        avatar={<Avatar src="http://imgsrc.baidu.com/imgad/pic/item/09fa513d269759ee03b7bedab8fb43166d22df38.jpg" />}
+				        avatar={<Avatar src={img}/>}
 				        title={elderlyInfo.name}
 				        description={<span>性别:&emsp;<Tag color="#108ee9">{elderlyInfo.sex===1?"男":'女'}</Tag>&emsp;年龄:&emsp;<Tag color="orange">{elderlyInfo.age}岁</Tag>&emsp;&emsp;房间:&emsp;&emsp;<Tag color="geekblue">&emsp;{elderlyInfo.roomName}</Tag></span>}
 				    />

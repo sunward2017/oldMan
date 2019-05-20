@@ -55,7 +55,7 @@ export class BillInfo extends React.Component{
                     </Col>
                 </Row>
                 <Table columns={columns} dataSource={data.list ? data.list.data: []} rowKey={record => record.id}
-                       footer={() => <span><span >总计 : {data.list && data.list.money}</span> <Button size="small" type="primary" disabled={this.state.isSubmit||!data.list} className="pull-right tb-footer-text" onClick={this.onBillSubmitHandler}>结算</Button></span>}
+                       footer={() => <span><span >总计 : {data.list && data.list.money}</span> <Button size="small" type="primary" disabled={this.state.isSubmit||!data.list||data.list.data.length===0} className="pull-right tb-footer-text" onClick={this.onBillSubmitHandler}>结算</Button></span>}
                 />
                 
             </React.Fragment>

@@ -27,9 +27,6 @@ export const FeeTabs = ({data, selected, onBillSubmit, onTabChange}) => {
     },{
         title:'护理员',
         dataIndex:'workerName'
-    },{
-        title:'说明',
-        dataIndex:'meno',
     }];
     const columnsM =[{
         title: '月份',
@@ -37,6 +34,9 @@ export const FeeTabs = ({data, selected, onBillSubmit, onTabChange}) => {
     },{
         title:'项目名称',
         dataIndex:'itemName'
+    },{
+    	title:'天数',
+    	dataIndex:'inDay',
     },{
         title:'费用/月',
         dataIndex:'mealFee'
@@ -65,7 +65,10 @@ export const FeeTabs = ({data, selected, onBillSubmit, onTabChange}) => {
         dataIndex:'curValue'
     },{
         title:'抄表日期',
-        dataIndex:'addtime'
+        dataIndex:'regDate',
+        render:(t,r)=>{
+        	return t?t.substr(0,10):''
+        }
     },{
         title:'使用度数',
         dataIndex:'diffValue'

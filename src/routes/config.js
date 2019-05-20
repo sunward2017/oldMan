@@ -11,6 +11,7 @@ import WorkerInfo from '../components/basicInfo/workerInfo';
 import PayItem from '../components/financial/payItem';
 import FeeInOut from '../components/financial/feeInOut';
 import SettleAccounts from '../components/financial/settleAccounts';
+import Daily from '../components/financial/daily';
 import HealthRecord from '../components/medicalCare/healthRecord';
 import HealthExMemo from '../components/medicalCare/healthExaminationMemo';
 import DrugUsageInfo from '../components/medicalCare/drugUsageInfo';
@@ -72,6 +73,7 @@ export default {
     WorkerInfo,
     PayItem,
     FeeInOut,
+    Daily,
     SettleAccounts,
     HealthRecord,
     HealthExMemo,

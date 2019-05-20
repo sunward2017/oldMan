@@ -4,7 +4,8 @@ import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '../../../axios/index';
 import { Charge } from './charge';
 import { Balance, DetailTable } from './feeInfo';
-import  Elderlys  from '@/common/elderlySelect'
+import  Elderlys  from '@/common/elderlySelect';
+import PrintPage from './printPage';
 
 export default class HealthRecord extends React.Component {
     state = {
@@ -12,22 +13,19 @@ export default class HealthRecord extends React.Component {
         feeData:{},
         elderSelected:'',
         chargeFeeObj:{},
-        feeDetailData:[]
+        feeDetailData:[],
+        printFlag:false,
+        elderlyInfo:'',
+        printData:'',
     };
     constructor(props) {
         super(props);
     }
+    
     componentDidMount(){
-        // console.log('fee index props:',this.props);
-        this.fetchElderly();
         this.fetchSysParams();
     }
-    fetchElderly() {
-        httpServer.listElderlyInfo({customerId:this.props.auth.customerId, listStatus:'3' }).then(res => {
-            // console.log(res);
-            res.code ===200 ? this.setState({elderlyArr: res.data || []}) : this.notice('error', res.msg) ;
-        })
-    };
+     
     fetchElderlyBalance(id){
         httpServer.getMoneyInfo({elderlyId:id}).then(res => {
             // console.log('info :', res);
@@ -38,7 +36,6 @@ export default class HealthRecord extends React.Component {
         const { customerId } = this.props.auth;
         const { elderSelected } = this.state;
         httpServer.listMoneyDeposits({customerId, elderlyId:elderSelected}).then(res => {
-            console.log('list res:',res);
             res.code ===200 ? this.setState({feeDetailData: res.data || []}) : this.notice('error','费用明细获取失败');
         })
     }
@@ -62,7 +59,6 @@ export default class HealthRecord extends React.Component {
         })
     }
     elderlySelectedChangeHandler = (value) => {
-    	console.log(value)
         this.setState({elderSelected:value});
         this.fetchElderlyBalance(value);
     };
@@ -85,6 +81,15 @@ export default class HealthRecord extends React.Component {
             } else {this.notice('error', res.msg)}
         })
     };
+    outName=(elderly)=>{
+    	this.setState({elderlyInfo:elderly})
+    }
+    bills=(r)=>{
+       	this.setState({printFlag:true,printData:r})
+    }
+    closePrint=()=>{
+        this.setState({printFlag:false})
+    }
     showFeeDetailHandler = () => {
         const showDetail = (this.state.showDetail && this.state.showDetail==='feeDetailAnimOut') ? 'feeDetailAnimIn' : 'feeDetailAnimOut';
         this.setState({ showDetail });
@@ -93,34 +98,36 @@ export default class HealthRecord extends React.Component {
         }
     };
     render() {
-        const {feeData, chargeFeeObj, elderlyArr, showDetail, feeDetailData, iptColor } = this.state;
+        const {feeData, chargeFeeObj, elderlyArr, showDetail, feeDetailData, iptColor,printFlag,elderlyInfo,printData} = this.state;
         return (
             <div>
                 <BreadcrumbCustom first="财务管理" second="费用收支" />
-                <Card className={showDetail ? showDetail :''} style={{position: 'absolute'}} title={<div style={{width:600}}><Elderlys  listStatus='3' onChange={this.elderlySelectedChangeHandler}/></div>}>
-                    <Charge
-                        chargeFeeObj={chargeFeeObj}
-                        elderlyArr={elderlyArr}
-                        disabled={this.canRecharge(chargeFeeObj)}
-                        creditList={this.creditList || []}
-                        onFeeSave={this.feeSaveHandler}
-                        onFeeChange={this.feeChangeHandler}
-                        onElderlyChange={this.elderlySelectedChangeHandler}
-                        iptColor={iptColor || 'inherit'}
-                    />
-                    <Row style={{marginTop:'25px'}}>
-                        <Col>
-                            <Balance feeData={feeData} showFeeDetail={this.showFeeDetailHandler} />
-                        </Col>
-                    </Row>
+                <Card className={showDetail ? showDetail :''} style={{position: 'absolute',background:'#EFF0F4'}} title={<div style={{width:300,float:'right'}}><Elderlys  listStatus='1,2,3,4' onChange={this.elderlySelectedChangeHandler} outName={this.outName}/></div>}>
+                    <Row>
+	                    <Col span={12} offset={6}>
+		                    <Charge
+		                        chargeFeeObj={chargeFeeObj}
+		                        disabled={this.canRecharge(chargeFeeObj)}
+		                        creditList={this.creditList || []}
+		                        onFeeSave={this.feeSaveHandler}
+		                        onFeeChange={this.feeChangeHandler}
+		                        onElderlyChange={this.elderlySelectedChangeHandler}
+		                        iptColor={iptColor || 'inherit'}
+		                    />
+		                    <div style={{marginTop:'25px'}}>
+		                        <Balance feeData={feeData} showFeeDetail={this.showFeeDetailHandler} />
+		                    </div>
+	                    </Col>
+                   </Row>    
                 </Card>
                 {
                     showDetail === 'feeDetailAnimOut' ?
                     <Card>
                         <Button onClick={this.showFeeDetailHandler} size="small">返回</Button>
-                        <DetailTable listData={feeDetailData} />
+                        <DetailTable listData={feeDetailData}   bills={this.bills}/>
                     </Card> : null
                 }
+                <PrintPage printFlag={printFlag} close={this.closePrint} elderlyInfo={elderlyInfo} printData={printData} />
             </div>
         )
     }

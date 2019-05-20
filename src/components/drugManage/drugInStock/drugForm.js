@@ -99,7 +99,7 @@ class drugForm extends Component{
                   rules: [{ required: true, message: '请输入数量'}],
                   initialValue:quantity
                 })(
-                    <InputNumber placeHolder="请输入入库数量" min={1}/>
+                    <InputNumber style={{width:'100%'}} placeHolder="请输入入库数量" min={1}/>
                 )}
               </Form.Item>
                 
@@ -112,7 +112,7 @@ class drugForm extends Component{
                   rules: [{ required: true, message: '请输入单号'}],
                   initialValue:validityDate?moment(validityDate):moment()
                 })(
-                    <DatePicker/>
+                    <DatePicker style={{width:'100%'}}/>
                 )}
               </Form.Item>
             </Form>

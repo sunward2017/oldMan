@@ -151,7 +151,7 @@ class editForm extends Component {
           
           	<Col span={6}>
              <div className="bed" onClick={this.add}><span style={{fontSize:'70px',fontWeight:'bold'}}>+</span></div>
-            </Col>:null
+            </Col>
           }
         </Row>
         <style>

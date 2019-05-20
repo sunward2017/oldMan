@@ -1,14 +1,13 @@
 import React from 'react';
-import { Row, Col, Button, InputNumber, Select, Input } from 'antd';
+import { Row, Col, Button, InputNumber, Select, Input,Icon } from 'antd';
 
 const Option = Select.Option;
 
-export const Charge = ({ elderlyArr, disabled, onFeeSave, onFeeChange, creditList, iptColor}) => {
+export const Charge = ({ disabled, onFeeSave, onFeeChange, creditList, iptColor}) => {
     return (
         <React.Fragment>
-            
             <Row className="mb-s">
-                <Col md={7}>收费项目 :
+                <Col md={24}>收费项目 :
                     <Select className="w60p ml-m"
                         onChange={(v) => onFeeChange('type', Number(v))}
                     >
@@ -23,21 +22,21 @@ export const Charge = ({ elderlyArr, disabled, onFeeSave, onFeeChange, creditLis
                 </Col>
             </Row>
             <Row className="mb-s">
-                <Col md={7}>&emsp;付款人:
+                <Col md={24}>&emsp;付款人:
                     <Input className="w60p ml-m" onChange={(e) => onFeeChange('payName', e.target.value )} />
                 </Col>
             </Row>
             <Row className="mb-s">
-                <Col md={7}>收款账号:
+                <Col md={24} >收款账号:
                     <Select className="ml-m w60p" onChange={(v) => onFeeChange('creditedAccount', v)}>
                         { creditList.map(o => <Option value={o.value} key={o.id}>{o.value}</Option>) }
                     </Select>
                 </Col>
             </Row>
             <Row>
-                <Col md={12}>付款金 额 :
-                    <InputNumber className="w-150 mr-s ml-m"
-                                 style={{color:iptColor}}
+                <Col md={24}>付款金额 :
+                    <InputNumber className="mr-s ml-m"
+                                 style={{color:iptColor,width:120}}
                                  onChange={(v) => onFeeChange('money',v)}
                                  formatter={value => `￥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     />

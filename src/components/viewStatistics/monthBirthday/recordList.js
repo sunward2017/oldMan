@@ -54,16 +54,15 @@ class RecordList extends React.Component {
 
     fetchElderlyRoomTree(){
         httpServer.listAreaInfo({customerId:this.customerId}).then(res => {
-            console.log('room info:',res);
+//          console.log('room info:',res);
             res.code ===200 ? this.setState({treeData:[res.data]}) : this.setState({treeData:[]});
         })
     }
     fetchElderlyByKey(searchKey){
-        // console.log('search key:',searchKey);
         httpServer.listCurrentMonthBirthdayElderly({customerId:this.customerId,  ...searchKey,}).then(res => {
-            console.log(res);
+//          console.log(res);
             this.setState({records: res.data || []});
-            res.code ===200 ? this.notice('success', res.msg) : this.notice('error', res.msg) ;
+            res.code !==200&&this.notice('error', res.msg) ;
             // this.props.recordsStatus({records: res.data || [], searchKey});
         })
     }

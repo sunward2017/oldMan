@@ -12,6 +12,7 @@ import Evaluate from './evaluate';
 import NursingRecord from './nursingRecord'
 import Tentative from './tentative'
 import './index.css';
+import moment from 'moment'
 
 const TabPane = Tabs.TabPane;
 const SHOW_PARENT = TreeSelect.SHOW_PARENT;
@@ -354,9 +355,9 @@ class CarePlan extends Component {
 			key: 'name',
 			width: '10%'
 		}, {
-			title: '身份证号',
-			dataIndex: 'idNumber',
-			key: 'idNumber',
+			title: '住址',
+			dataIndex: 'address',
+			key: 'address',
 			width: '20%'
 		}, {
 			title: '房间名称',
@@ -406,7 +407,7 @@ class CarePlan extends Component {
                             </Col>
                             <Col md={4}>
                               <Search
-                                placeholder="按姓名搜索"
+                                placeholder="按老人姓名搜索(全名)"
                                 onSearch={value => this.onNameSearchHandler(value)}
                                 enterButton
                               />
@@ -445,7 +446,7 @@ class CarePlan extends Component {
                 <Row gutter={2}>
                     <Col xs={24} md={4} sm={4}>
                       <div style={{ border: '1px solid #d9d9d9', borderRadius: 4 }}>
-                        <Calendar fullscreen={false} onSelect={this.onPanelChange}  dateCellRender={this.dateCellRender}/>
+                        <Calendar defaultValue={moment()} fullscreen={false} onSelect={this.onPanelChange}  dateCellRender={this.dateCellRender}/>
                       </div>  
                    </Col>
                     <Col xs={24} md={20} sm={20}>

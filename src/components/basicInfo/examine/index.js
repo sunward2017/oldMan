@@ -275,6 +275,11 @@ class examineConfig extends Component {
 			dataIndex: 'unit',
 			key: 'unit',
 			width: '5%',
+			render:(t,r)=>{
+			   const {units} = this.state;
+			   const u= units.find(i=>(i.id==t));
+			   return u?u.value:'次'
+			}
 			 
 		},{
 			title:'描述',

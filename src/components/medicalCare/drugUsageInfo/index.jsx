@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, notification, Table, Collapse, Tag, TreeSelect, Row, Col, Input, DatePicker } from 'antd';
+import { Card, notification, Table, Collapse, Tag, TreeSelect, Row, Col, Input, DatePicker} from 'antd';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '../../../axios/index';
 import moment from 'moment';
@@ -27,7 +27,6 @@ export default class DrugUsageInfo extends React.Component {
     fetchElderlyUseDrugInfoList(elderlyId, date){
         const { customerId } = this.props.auth;
         httpServer.listElderlyUseDrugInfo({customerId, elderlyId, runtime:date ? moment(date).format('YYYY-MM-DD HH:mm:ss') : undefined}).then(res => {
-            console.log('drug list: ',res);
             this.setState({oneDayDrugListObj : {...this.state.oneDayDrugListObj, [elderlyId]:res.data || []}});
             res.code !== 200 && this.notice('error', res.msg);
         })
@@ -105,8 +104,11 @@ export default class DrugUsageInfo extends React.Component {
             title: '数量',
             dataIndex: 'quantity',
         },{
-            title: '单位',
-            dataIndex: 'tbDrugInfo.minUnit',
+        	title:'状态',
+        	dataIndex:'state',
+        	render:(t,r)=>{
+        		return t==1?<Tag color="green">已服用</Tag>:<Tag color="red">未服用</Tag>;
+        	}
         }];
         return (
             <div>
@@ -120,7 +122,7 @@ export default class DrugUsageInfo extends React.Component {
                                 onChange={this.onTreeSelectChangeHandler}
                                 treeCheckable="true"
                                 showCheckedStrategy={SHOW_PARENT}
-                                searchPlaceholder="选择楼层房间" >
+                                searchPlaceholder="楼层房间" >
                                 {this.renderTreeNodes(treeData)}
                             </TreeSelect>
                         </Col>
@@ -132,7 +134,7 @@ export default class DrugUsageInfo extends React.Component {
                             />
                         </Col>
                         <Col md={4}>
-                            <DatePicker onChange={this.onDateChange} defaultValue={moment(new Date(), 'YYYY-MM-DD')} />
+                           日期: <DatePicker onChange={this.onDateChange} defaultValue={moment(new Date(), 'YYYY-MM-DD')} />
                         </Col>
                     </Row>
                 </Card>

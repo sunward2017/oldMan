@@ -28,7 +28,11 @@ class OldManEvaluate extends Component{
     	})
     
   }
-
+  componentWillUnmount(){
+		this.setState = (state,callback)=>{
+          return;
+       }
+	}
   onTabChange = (tabKey, type) => {
     this.setState({ tabKey});
   }

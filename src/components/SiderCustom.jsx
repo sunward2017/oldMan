@@ -96,6 +96,7 @@ class SiderCustom extends Component {
     render() {
         return (
             <Sider
+                width={220}
                 trigger={null}
                 breakpoint="lg"
                 collapsed={this.props.collapsed}

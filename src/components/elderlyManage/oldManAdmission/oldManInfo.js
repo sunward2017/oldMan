@@ -66,6 +66,7 @@ class OldManInfo1 extends Component{
           'roomCode':bedInfo.roomUuid||bedInfo.roomCode,
           'bedNumber':bedInfo.bedCode||bedInfo.bedNumber,
         };
+        if(fieldsValue['changeNursingFeeDate'])values.changeNursingFeeDate=fieldsValue['changeNursingFeeDate'].format('YYYY-MM-DD HH:mm:ss');
         const { id}= this.state.oldManInfoList;
         delete values.bedInfo;
         if(id){
@@ -167,16 +168,13 @@ class OldManInfo1 extends Component{
     }
   }
   setBirthday=(v)=>{
-    console.log(v);
     const str = v.substr(6,8);
     const year = str.substr(0,4);
     const month = str.substr(4,2);
     const day = str.substr(6,2);
     const date = `${year}-${month}-${day}`;
     const {oldManInfoList} =this.state;
-    this.setState({oldManInfoList:{...oldManInfoList,birthday:date}},()=>{
-      console.log(this.state.oldManInfoList.birthday);
-    });
+    this.setState({oldManInfoList:{...oldManInfoList,birthday:date}});
   }
   //自定义身份证号校验
   handleConfirmIdNumber(rule, value, callback){
@@ -234,6 +232,7 @@ class OldManInfo1 extends Component{
       livingCondition,//老人居住状况 int
       economicSituation,//老人经济状况 int
       hobby,//爱好特长
+      changeNursingFeeDate,
       //opetator,//操作员
       roomName,//房间名称
       roomCode,//房间uuid
@@ -249,8 +248,9 @@ class OldManInfo1 extends Component{
       memo,//备注
       tbBedInfo,
       bedInfo,
+      id
     } = this.state.oldManInfoList;
-   
+    
     const formItemLayout = {
       labelCol: {
         xs: { span: 24 },
@@ -470,7 +470,7 @@ class OldManInfo1 extends Component{
                     <Col md={12}>
                       <Form.Item
                         {...formItemLayout}
-                        label="经济状况"
+                        label="经济来源"
                       >
                         {getFieldDecorator('economicSituation', {
                           rules: [{required: true, message: '请选择老人经济状况',}],
@@ -611,7 +611,7 @@ class OldManInfo1 extends Component{
                           }],
                           initialValue:shareProportionWater
                         })(
-                          <InputNumber min={0} max={100} disabled={editFlag} formatter={value => `${value}%`} parser={value => value.replace('%', '')} />
+                          <InputNumber style={{width:'100%'}} min={0} max={100} disabled={editFlag} formatter={value => `${value}%`} parser={value => value.replace('%', '')} />
                         )}
                       </Form.Item>
                     </Col>
@@ -626,7 +626,7 @@ class OldManInfo1 extends Component{
                           }],
                           initialValue:shareProportionPower
                         })(
-                          <InputNumber min={0} max={100} disabled={editFlag} formatter={value => `${value}%`} parser={value => value.replace('%', '')}/>
+                          <InputNumber style={{width:'100%'}} min={0} max={100} disabled={editFlag} formatter={value => `${value}%`} parser={value => value.replace('%', '')}/>
                         )}
                       </Form.Item>
                     </Col>
@@ -639,10 +639,24 @@ class OldManInfo1 extends Component{
                           rules: [{required: true, message: '请输入护理费',}],
                           initialValue:nursingMoney
                         })(
-                          <InputNumber min={0}  disabled={editFlag} step="0.01"/>
+                          <InputNumber style={{width:'90%'}} min={0}  disabled={editFlag} step="0.01"/>
                         )}元
                       </Form.Item>
                     </Col>
+                    {id?<Col md={12}>
+                      <Form.Item
+                        {...formItemLayout}
+                        label="护理费调整日期"
+                      >
+                        {getFieldDecorator('changeNursingFeeDate', {
+                          rules: [{required: false, message: '请输入护理费调整日期'}],
+                          initialValue:changeNursingFeeDate?moment(changeNursingFeeDate):null
+                        })(
+                          <DatePicker format="YYYY-MM-DD HH:mm:ss" disabled={editFlag} showTime style={{width:'100%'}}/> 
+                        )}
+                      </Form.Item>  
+                    </Col>:null
+                    }
                   </Row>
                 </Card>     
                 <Form.Item style={{textAlign:'center'}}>
@@ -662,16 +676,4 @@ class OldManInfo1 extends Component{
 
 const OldManInfo =  Form.create()(OldManInfo1);
 export default OldManInfo;
-/*
-<Form.Item
-  {...formItemLayout}
-  label="操作员"
->
-    {getFieldDecorator('opetator', {
-      rules: [{required: true, message: '请输入操作员',}],
-      initialValue:opetator
-    })(
-      <Input disabled/>
-    )}
-</Form.Item>
- */
+ 

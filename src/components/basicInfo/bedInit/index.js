@@ -2,7 +2,8 @@ import React,{Fragment,Component} from 'react';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '../../../axios';
 import moment from 'moment';
-import {notification,Card,Table,Divider,Popconfirm,DatePicker} from 'antd';
+import {notification,Card,Table,Divider,Popconfirm,DatePicker,Input,Button} from 'antd';
+import locale from 'antd/lib/date-picker/locale/zh_CN';
 
 class MealInit extends Component{
   constructor(props){
@@ -11,6 +12,7 @@ class MealInit extends Component{
       dataSource:[],
       edit:false,
       id:'',
+      searchText:''
     }
   }
   componentDidMount(){
@@ -20,8 +22,8 @@ class MealInit extends Component{
     const {customerId} = this.props.auth;
     httpServer.listOldManBedIni({customerId}).then((res)=>{
        if (res.code === 200) {
-        console.log(res.data);
-          res.data?this.setState({dataSource:res.data}):this.setState({dataSource:[]});
+         
+          this.setState({dataSource:res.data,data:res.data||[]})
         }else{
           const args = {
             message: '通信失败',
@@ -55,7 +57,7 @@ class MealInit extends Component{
 
   handleSave(r){
     const {customerId} = this.props.auth;
-    const {endTime,tbElderlyMealInfo} = r;
+    const {endTime,tbElderlyBedFeeInfo} = r;
     if(!endTime){
       const args = {
         message: '通信失败',
@@ -66,8 +68,8 @@ class MealInit extends Component{
       return false;
     }
     const data={};
-    if(tbElderlyMealInfo){
-      const {id} = tbElderlyMealInfo;
+    if(tbElderlyBedFeeInfo){
+      const {id} = tbElderlyBedFeeInfo;
       data.id = id;
     }
     data.elderlyId = r.id;
@@ -102,8 +104,23 @@ class MealInit extends Component{
       this.getMealInitList();
     });
   }
+  handleInputChange=(e) =>{ //老人姓名搜索框发生变化
+	    this.setState({ searchText: e.target.value });
+	}
+  handleSearchElderly=()=>{
+    const { searchText,dataSource } = this.state;
+	    if(searchText){
+	      const reg = new RegExp(searchText, 'gi');
+	      const data = this.state.dataSource.filter((record) =>record.name && record.name.match(reg));
+	      this.setState({
+	        data,
+	      });
+	    }else{
+	       this.setState({data:dataSource})
+	    }
+  }
   render(){
-    const {dataSource,edit,id} = this.state;
+    const {data,edit,id} = this.state;
     const columns = [{
       title: '序号',
       render: (text, record, index) => `${index+1}`,
@@ -137,7 +154,7 @@ class MealInit extends Component{
           <DatePicker 
             allowClear={false}
             format="YYYY-MM-DD"
-            value={record.endTime?moment(record.endTime,'YYYY-MM-DD'):null } 
+            locale={locale}  
             onChange={(e) => this.changeHandler(record,e)}
           />:record.tbElderlyBedFeeInfo?record.tbElderlyBedFeeInfo.endTime.substr(0,10):''
         ) 
@@ -166,15 +183,26 @@ class MealInit extends Component{
       <Fragment>
         <BreadcrumbCustom first="基础信息" second="床位费初始化" />
         <Card 
-          title="餐费初始化列表" 
+          title="床位费初始化列表" 
           bordered={false} 
+          extra={
+          	<Input.Group compact>
+		            <Input 
+		              placeholder="老人名字" style={{ width: 200 }}
+		              value={this.state.searchText}
+                  onChange={this.handleInputChange}
+                  onPressEnter={this.handleSearchElderly}
+		            />
+		            <Button type="primary" style={{ width: '10%' }} icon="search" onClick={this.handleSearchElderly}></Button>
+		        </Input.Group>
+          }
         >
             <Table 
               bordered
               rowKey='id' 
-              dataSource={dataSource} 
+              dataSource={data} 
               columns={columns}
-              pagination={{ defaultPageSize:10000,showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+              pagination={{ defaultPageSize:10,showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
             />
           </Card>
       </Fragment>

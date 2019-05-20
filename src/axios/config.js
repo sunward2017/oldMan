@@ -355,5 +355,10 @@ export default {
     getSettlementInfo:host.api+"/getSettlementInfo",
     getSettlementInfoPrint:host.api+"/getSettlementInfoPrint",
     
-    getSystemMsg:host.api+'/getSystemMsg'
+    getSystemMsg:host.api+'/getSystemMsg',
+    
+    listImmediateFee:host.api+'/listImmediateFee',
+    saveImmediateFee:host.api+'/saveImmediateFee',
+    updateImmediateFee:host.api+'/updateImmediateFee',
+    delImmediateFee:host.api+'/delImmediateFee',
 }

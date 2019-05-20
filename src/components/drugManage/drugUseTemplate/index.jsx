@@ -112,7 +112,7 @@ class CMT extends Component {
 					'customerId': this.state.customerId,
 					'operator':this.state.operator,
 				};
-			  if(values.type==2){
+			  if(values.type!=1){
 			  	values.point = values.point.join(',')
 			  }
 			  const { id }= this.state.record;
@@ -370,9 +370,9 @@ class CMT extends Component {
                 )}
               </Form.Item>
               {
-              	type==3||type==4?
+              	type&&type!=1&&
               	<Fragment>
-              	  <Form.Item
+              	 <Form.Item
 	                label='重复值域'
 	                {...formItemLayout}
 	                style={{marginBottom:'4px'}}
@@ -381,23 +381,9 @@ class CMT extends Component {
 	                  rules: [{ required: true, message: '请输入值域' }],
 	                  initialValue:days,
 	                })(
-	                  <Input placeholder="重复类型是每周[1-7],每月[1-31],任意数字用逗号分割,如1,3"/>
+	                  <Input placeholder="重复类型是日期任意数字用逗号分割,如1,3(间断不连续的日期)或1-XX（连续的日期）"/>
 	                )}
-	              </Form.Item>
-	               <Form.Item
-	                label='时间点'
-	                {...formItemLayout}
-	                style={{marginBottom:'4px'}}
-	              >
-	                {getFieldDecorator('point', {
-	                  rules: [{ required: true, message: '请输入时间点' }],
-	                  initialValue:point,
-	                })(
-	                   <Input/>
-	                )}
-	              </Form.Item>
-              	</Fragment>:type==2?
-              	<Fragment>
+	            </Form.Item>
               	 <Form.Item
 	                label='时间点'
 	                {...formItemLayout}
@@ -405,12 +391,12 @@ class CMT extends Component {
 	              >
 	                {getFieldDecorator('point', {
 	                  rules: [{ required: true, message: '请输入时间点' }],
-	                  initialValue:point,
+	                  initialValue:point?point.split(','):[],
 	                })(
 	                   <CheckboxGroup options={plainOptions}/> 
 	                )}
 	              </Form.Item>
-              	</Fragment>:null
+              	</Fragment>
               }
                
               <Form.Item
@@ -419,7 +405,7 @@ class CMT extends Component {
                 style={{marginBottom:'4px'}}
               >
                 {getFieldDecorator('describes', {
-                  rules: [{ required: true, message: '请输入简要描述信息!' }],
+                  rules: [{ required: false, message: '请输入简要描述信息!' }],
                   initialValue:describes,
                 })(
                   <Input />

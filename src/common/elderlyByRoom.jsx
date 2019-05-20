@@ -3,7 +3,7 @@ import React, {
 	Fragment
 } from 'react';
 import { connect } from 'react-redux'
-import { Table, Tag,Tree,Row,Col,notification,Card,Icon,Modal,Empty,Divider,message} from 'antd';
+import { Table, Tag,Tree,Row,Col,notification,Card,Icon,Modal,Empty,Divider,message,Button,Input} from 'antd';
 import { Link } from 'react-router-dom';
 
 import BreadcrumbCustom from '../components/BreadcrumbCustom';
@@ -31,6 +31,8 @@ class Plan extends Component {
 			Grades:[],
 			areaCode:'',
 			type:'edit',
+			searchText:'',
+			data:[]
 		}
 	}
 	componentDidMount() {
@@ -102,7 +104,7 @@ class Plan extends Component {
     	httpServer.listElderlyInfo({listStatus:'3', launchFlag:0, areaCode}).then(res => {
         	if(res.code===200){
         	   const data = res.data||[];
-        	   this.setState({dataSource:data})	
+        	   this.setState({dataSource:data,data})	
         	}else{
         		message.error('获取入住老人失败');
         		this.setState({dataSource:[]})
@@ -152,9 +154,33 @@ class Plan extends Component {
 	      console.log(err);
 	    });
 	}
+    handleInputChange=(e) =>{ //老人姓名搜索框发生变化
+	    this.setState({ searchText: e.target.value });
+	}
+    handleSearchElderly=()=>{
+    const { searchText } = this.state;
+	    if(searchText){
+	      const reg = new RegExp(searchText, 'gi');
+	      const data = this.state.dataSource.filter((record) =>record.name && record.name.match(reg));
+	      this.setState({
+	        data,
+	      });
+	    }else{
+	      const args = {
+	        message: '友情提示',
+	        description: "请先输入老人姓名",
+	        duration: 2,
+	      };
+	      notification.info(args);
+	    }
+    }
+    handleReset = ()=>{
+    	const {data,dataSource} = this.state;
+    	this.setState({data:dataSource,searchText:''})
+    }
 	render() {
 		const {
-			dataSource,
+			data,
 			areaTree,
 			visible,
 			rooms,
@@ -231,7 +257,6 @@ class Plan extends Component {
                     case '水电比例变更': return(
 					                    	<span className="manual">
 						                    	<span onClick={() => { this.handleChange(record,'edit') }} style={{color:'#2ebc2e'}}>水电比例变更</span><Divider type="vertical" />
-						                    	<span onClick={() => { this.handleChange(record,'read') }} style={{color:'#2ebc2e'}}>变更记录</span>
 					                     	</span>
 					                    )
                     
@@ -265,10 +290,23 @@ class Plan extends Component {
 				    </Card>  
 	            </Col>
 	            <Col  xs={{ span: 24}} lg={{ span: 20}} style={{background:'#fff'}}>
+	             <div className="search">
+	                <Input 
+	                  placeholder="按老人姓名搜索" 
+	                  style={{width:'40%',marginRight:'10px'}}
+	                  ref={ele => this.searchInput = ele}
+	                  value={this.state.searchText}
+	                  onChange={this.handleInputChange}
+	                  onPressEnter={this.handleSearchElderly}
+	                />
+	                <Button type="primary" onClick={this.handleSearchElderly}>开始搜索</Button>
+	                <Button type="primary" onClick={this.handleReset}>刷新</Button>
+	             </div>   
+	             <Divider/>
 		          <Table 
 		            bordered
 		            rowKey='id' 
-		            dataSource={dataSource} 
+		            dataSource={data} 
 		            columns={columns} 
 		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
 		          />
@@ -279,6 +317,9 @@ class Plan extends Component {
 	        	visible?this.registerComponent():null
 	        }
 	        <style>{`
+	        	    .search{
+	        	    	padding-top:30px;
+	        	    }
 			        .manual>span{
 					   cursor:pointer;
 					}		 

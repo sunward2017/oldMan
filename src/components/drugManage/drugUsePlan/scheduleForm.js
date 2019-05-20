@@ -90,21 +90,11 @@ class editForm extends Component {
   componentDidMount(){
   	const r = this.props.record;
   	let record = {...r};
-  	if(record.type==2){
-  	  record.point=record.point?record.point.split(','):[];
-  	}
   	this.setState({record})
   }
   tplChange=(v)=>{
-    const {days,point,type} = v;
-    let p =[];
-    if(type==2){
-    	 p = point?point.split(','):[];
-    }else{
-    	 p = point;
-    }
-    
-    const record = {...this.state.record,days,point:p,type};
+    const {days,point,type} = v; 
+    const record = {...this.state.record,days,point,type};
     this.setState({record})
   }
   changeType=(e)=>{
@@ -207,8 +197,7 @@ class editForm extends Component {
                   <DrugList  elderlyId={this.props.elderlyId}/>
                 )}
               </Form.Item>
-              
-			          <Row gutter={8}>
+			        <Row gutter={8}>
 			            <Col span={12}>
 			            <Form.Item
 						          {...tailFormItemLayout}
@@ -233,6 +222,7 @@ class editForm extends Component {
 											      <Radio.Button value="毫升">毫升</Radio.Button>
 											      <Radio.Button value="片">片</Radio.Button>
 											      <Radio.Button value="粒">粒</Radio.Button>
+											      <Radio.Button value="粒">克</Radio.Button>
 			                  </RadioGroup>
 			                )}
 			                </Form.Item>
@@ -255,7 +245,10 @@ class editForm extends Component {
                   </RadioGroup>
                 )}
               </Form.Item>
-              <Form.Item
+               {
+              	type&&type!=1&&
+              	<Fragment>
+              	 <Form.Item
 	                label='重复值域'
 	                {...formItemLayout}
 	                style={{marginBottom:'4px'}}
@@ -264,27 +257,9 @@ class editForm extends Component {
 	                  rules: [{ required: true, message: '请输入值域' }],
 	                  initialValue:days,
 	                })(
-	                  <Input placeholder="重复类型是每周[1-7],每月[1-31],任意数字用逗号分割,如1,3"/>
+	                  <Input placeholder="重复类型是日期任意数字用逗号分割,如1,3(间断不连续的日期)或1-XX（连续的日期）"/>
 	                )}
 	            </Form.Item>
-              {
-              	type==3||type==4?
-              	<Fragment>
-              	  
-	               <Form.Item
-	                label='时间点'
-	                {...formItemLayout}
-	                style={{marginBottom:'4px'}}
-	              >
-	                {getFieldDecorator('point', {
-	                  rules: [{ required: true, message: '请输入时间点' }],
-	                  initialValue:point,
-	                })(
-	                   <Input/>
-	                )}
-	              </Form.Item>
-              	</Fragment>:type==2?
-              	<Fragment>
               	 <Form.Item
 	                label='时间点'
 	                {...formItemLayout}
@@ -292,29 +267,13 @@ class editForm extends Component {
 	              >
 	                {getFieldDecorator('point', {
 	                  rules: [{ required: true, message: '请输入时间点' }],
-	                  initialValue:point,
+	                  initialValue:point?point.split(','):[],
 	                })(
 	                   <CheckboxGroup options={plainOptions}/> 
 	                )}
 	              </Form.Item>
-              	</Fragment>:null
+              	</Fragment>
               }
-              <Form.Item
-                label='状态'
-                {...formItemLayout}
-                style={{marginBottom:'4px'}}
-              >
-                {getFieldDecorator('status', {
-                  rules: [{ required: true, message: '请选择状态!'}],
-                  initialValue:status
-                })(
-                  <RadioGroup buttonStyle="solid">
-                      <Radio.Button value={1}>启用</Radio.Button>
-								      <Radio.Button value={2}>停用</Radio.Button>
-                  </RadioGroup>
-                )}
-              </Form.Item>
-             
             </Form>  
       </Modal> 
     )

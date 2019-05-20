@@ -1,8 +1,9 @@
 import React,{Component,Fragment} from 'react';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '../../../axios';
-import {Row,Popconfirm,notification,Col,Input,Button,Table,Divider,Tag,Card,Avatar,Modal} from 'antd';
+import {Row,Popconfirm,notification,Col,Input,Button,Table,Divider,Tag,Card,Avatar,Modal,DatePicker} from 'antd';
 import OldManInfo from './oldManInfo';
+import moment from 'moment'
 
 const { Meta } = Card;
 class OldManAdmission extends Component{
@@ -24,6 +25,9 @@ class OldManAdmission extends Component{
       modalFlag:false,
       recordInfo:'',
       imgSrc:'',
+      outFlag:false,
+      outDay:moment(), 
+      outElderlyId:'',
     }
     this.handleInputChange = this.handleInputChange.bind(this);//老人信息搜索框发生变化
     this.handleSearchElderly = this.handleSearchElderly.bind(this);//搜索老人信息
@@ -36,7 +40,7 @@ class OldManAdmission extends Component{
   componentDidMount(){
     //获取入院老人信息列表
     this.getListElderlyInfo();
-    this.getListEstimateGrade();
+    //this.getListEstimateGrade();
     this.getListNursingGrade();
   }
   //获取入院老人信息列表
@@ -201,10 +205,15 @@ class OldManAdmission extends Component{
       console.log(error);
     });
   }
-
-  handleOutHome(record){//出院申请
-    const {id} = record;
-    httpServer.outHomeInfo({id}).then((res) => {
+  handleOutHome(r){
+  	 this.setState({outFlag:true,outElderlyId:r.id}); 
+  }
+  handleOut=()=>{//出院申请
+    const {outDay,outElderlyId}= this.state;
+    if(!outDay)return;
+    
+    httpServer.outHomeInfo({id:outElderlyId,outDay:outDay.format('YYYY-MM-DD HH:mm:ss')}).then((res) => {
+    	this.hideModal();
       if (res.code === 200) {
         const args = {
             message: '通信成功',
@@ -269,13 +278,19 @@ class OldManAdmission extends Component{
     div.innerHTML = document.getElementById('img').innerHTML;
     iframeNode.contentDocument.body.appendChild(div);
     iframeNode.contentWindow.focus();
-    iframeNode.contentWindow.print();
-    
- 
-    
+    iframeNode.contentWindow.print();   
+  }
+  hideModal = () => {
+    this.setState({
+      outFlag:false,
+    });
+  };
+  
+  changeOutDay=(v)=>{
+  	this.setState({outDay:v})
   }
   render(){
-    const {pageFlag,oldManList_copy,customerId,oldManInfoList,modalFlag,recordInfo,imgSrc} = this.state;
+    const {pageFlag,oldManList_copy,customerId,oldManInfoList,modalFlag,recordInfo,imgSrc,outFlag,outDay} = this.state;
     const columns = [{
       title: '序号',
       render:(text,record,index)=>`${index+1}`,
@@ -416,6 +431,16 @@ class OldManAdmission extends Component{
                 
             </Modal>:null
         }
+         <Modal
+          title="日期输入"
+          visible={outFlag}
+          onOk={this.handleOut}
+          onCancel={this.hideModal}
+          okText="确认"
+          cancelText="取消"
+        >
+          离院结算日期:&emsp;<DatePicker  value={outDay} onChange={this.changeOutDay}/>
+        </Modal>
       </Fragment>
     )
   }

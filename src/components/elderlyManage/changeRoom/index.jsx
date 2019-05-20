@@ -3,7 +3,7 @@ import { Card, Input,InputNumber,Modal,Button, Row,Col,Form, Avatar, notificatio
 import httpServer from '@/axios';
 import moment from 'moment';
 import BedInfo  from '@/common/bedInfo';
-
+import img from '@/style/imgs/smile.jpg'
  
 const { Meta } = Card;
 const Option = Select.Option;
@@ -128,7 +128,7 @@ class changeRoom extends React.Component {
         	<Modal
 		        title="换房处理"
 		        okText='提交'
-		        width="40%"
+		        width="800px"
 		        visible={true}
 		        onOk={this.handleOk}
 		        onCancel={this.cancel}
@@ -136,7 +136,7 @@ class changeRoom extends React.Component {
 		      >
                 <Card title="基础信息">
 				    <Meta
-				        avatar={<Avatar src="http://imgsrc.baidu.com/imgad/pic/item/09fa513d269759ee03b7bedab8fb43166d22df38.jpg" />}
+				        avatar={<Avatar src={img}/>}
 				        title={elderlyInfo.name}
 				        description={
 				        	<span>性别:&emsp;<Tag color="#108ee9">{elderlyInfo.sex===1?'男':'女'}</Tag>

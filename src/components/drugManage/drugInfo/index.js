@@ -1,7 +1,7 @@
 import React , { Component } from 'react';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '../../../axios';
-import {Tag,Table,Divider,Popconfirm,notification,Button,Card} from 'antd';
+import {Tag,Table,Divider,Popconfirm,notification,Button,Card,Input} from 'antd';
 import ModalInfo from './DrugInfoModal';
 class DrugInfo1 extends Component{
   constructor(props){
@@ -13,7 +13,8 @@ class DrugInfo1 extends Component{
       unitList:[],
       record:{},
       flag:false,
-      customerId:'',
+      searchText:'',
+      data:[]
     }
     this.handleAdd = this.handleAdd.bind(this);
     this.handleCancel = this.handleCancel.bind(this);
@@ -21,15 +22,14 @@ class DrugInfo1 extends Component{
 
   componentDidMount(){
     this.getDrugList();
-    this.getUnitList();
+    //this.getUnitList();
   }
 
   //获取药品列表
   getDrugList(){
-    const {customerId} = this.props.auth;
-    httpServer.listDrugInfoInfo({customerId}).then(res => {
+    httpServer.listDrugInfoInfo({}).then(res => {
       if (res.code === 200) {
-        res.data ? this.setState({ dataSource: res.data }) : this.setState({ dataSource: [], });
+        this.setState({ dataSource: res.data||[],data:res.data||[] })  ;
       } else {
         const args = {
           message: '通信失败',
@@ -45,7 +45,7 @@ class DrugInfo1 extends Component{
 
   //获取单位列表
   getUnitList(){
-    httpServer.listParam({type:1},{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then((res)=>{
+    httpServer.listParam({type:1}).then((res)=>{
       if (res.code === 200) {
         res.data?this.setState({unitList:res.data},()=>{console.log(res.data);}):this.setState({unitList:[]});
       } else {
@@ -99,13 +99,32 @@ class DrugInfo1 extends Component{
   handleCancel(){
     this.setState({modalFlag:false});
   }
-
+  handleInputChange=(e) =>{ //老人姓名搜索框发生变化
+	  this.setState({ searchText: e.target.value });
+	}
+  
+  handleReset = ()=>{
+    this.getDrugList()
+  }
+  handleSearch=()=>{
+    const { searchText } = this.state;
+	    if(searchText){
+	      const reg = new RegExp(searchText, 'gi');
+	      const data = this.state.dataSource.filter((record) =>record.name && record.name.match(reg));
+	      this.setState({
+	        data,
+	      });
+	    }else{
+	    	const {dataSource} = this.state;
+	      this.setState({data:dataSource})
+	    }
+  }
   render(){
-    const { dataSource ,modalFlag,unitList,record,flag,action} = this.state;
+    const { data ,modalFlag,unitList,record,flag,action} = this.state;
     const columns = [{
       title: '序号',
       render:(text,record,index)=>`${index+1}`,
-      width:'5%',
+      width:'3%',
       key:'index'
     },{
       title: '药品名称',
@@ -113,63 +132,55 @@ class DrugInfo1 extends Component{
       key: 'name',
       width:'10%'
     },{
-      title:'单价',
-      dataIndex: 'referencePrice',
-      key: 'referencePrice',
+      title:'条形码',
+      dataIndex: 'barcode',
+      key: 'barcode',
       width:'5%'
     },{
-      title: '是否为处方药',
+      title: '是否处方',
       dataIndex: 'prescription',
       key: 'prescription',
       render:(text,record)=>{
-        return record.prescription === 0?<Tag color="red">非处方药</Tag>:<Tag color="green">处方药</Tag>
+        return record.prescription==0?<Tag color="red">否</Tag>:<Tag color="green">是</Tag>
         
       },
-      width:'10%'
+      width:'7%'
     },{
-      title: '是否为医保用药',
+      title: '是否医保',
       dataIndex: 'insurance',
       key: 'insurance',
       render:(text,record)=>{
-        return record.insurance === 0?<Tag color="red">非医保用药</Tag>:<Tag color="green">医保用药</Tag>
+        return record.insurance == 0?<Tag color="red">否</Tag>:<Tag color="green">是</Tag>
       },
-      width:'10%'
+      width:'7%'
     },{
-      title: '药品功能',
+      title: '功能主治',
       dataIndex: 'indicationsFunction',
       key: 'indicationsFunction',
-      width:'16%'
     },{
-      title: '使用方式',
+      title: '用法用量',
       dataIndex: 'usage1',
       key: 'usage1',
-      width:'16%'
+      width:'18%'
     },{
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render:(text,record)=>{
-        return record.status === 0?<Tag color="red">注销</Tag>:<Tag color="green">正常</Tag>
-      },
-      width:'5%'
+    	title: '规格',
+      dataIndex: 'specification',
+      key: 'specification',
+      width:'10%'
     },{
-      title: '操作日期',
-      dataIndex: 'operatedOn',
-      key: 'operatedOn',
-      render:(text,record)=>{
-        return record.operatedOn && record.operatedOn.substr(0,10)
-      },
-      width:'12%'
+    	title: '价格',
+      dataIndex: 'referencePrice',
+      key: 'referencePrice',
+      width:'6%'
     },{
       title:'操作',
       dataIndex:'action',
       key:'action',
+      width:'10%',
       render:(text,record)=>{
         return(
           <span>
-            <a href="javascript:;" onClick={() => { this.handleRead(record) }} style={{color:'#2ebc2e'}}>查看</a>
-            <Divider type="vertical" />
-            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+              <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
               <Divider type="vertical" />
               <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
                 <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
@@ -184,11 +195,24 @@ class DrugInfo1 extends Component{
         <Card 
           title="药品信息"
           bordered={false} 
-          extra={<Button type="primary" onClick={this.handleAdd}>点击添加</Button>}
+          extra={
+          	<span>
+          	    <Input 
+                  placeholder="按药品名称搜索" 
+                  style={{width:'40%',marginRight:'10px'}}
+                  value={this.state.searchText}
+                  onChange={this.handleInputChange}
+                  onPressEnter={this.handleSearch}
+                />
+                <Button type="primary" onClick={this.handleSearch}>搜索</Button>
+                <Button type="primary" onClick={this.handleReset}>刷新</Button>
+          	    <Button type="primary" onClick={this.handleAdd}>新增</Button>
+          	</span>
+          	}
         >
         <Table 
           bordered
-          dataSource={dataSource} 
+          dataSource={data} 
           columns={columns} 
           pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
           rowKey={record => record.id}

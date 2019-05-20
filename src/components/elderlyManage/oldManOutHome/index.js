@@ -3,6 +3,8 @@ import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '../../../axios';
 import {Row,Popconfirm,notification,Col,Input,Button,Table,Divider,Card} from 'antd';
 import FeeList from './feeList';
+import moment from 'moment'
+import ElderlyInfo from '@/common/elderlyInfo'
 
 class OldManOutHome extends Component{
   constructor(props){
@@ -23,7 +25,10 @@ class OldManOutHome extends Component{
       feeList3:[],
       feeList4:[],
       feeList5:[],
+      feeData:{},
       record:'',
+      modalFlag:false,
+      elderly:{}
     }
     this.handleInputChange = this.handleInputChange.bind(this);//老人信息搜索框发生变化
     this.handleSearchElderly = this.handleSearchElderly.bind(this);//搜索老人信息
@@ -222,21 +227,38 @@ class OldManOutHome extends Component{
     this.getListWaterRecoder(id);
     this.getListRoomFeeList(id);
     // this.getListDrugFeeList(id);
+    this.fetchElderlyBalance(id);
     this.setState({pageFlag:false});
   }
-
+  fetchElderlyBalance(id){
+        httpServer.getMoneyInfo({elderlyId:id}).then(res => {
+            if(res.code === 200){
+            	this.setState({feeData:res.data || {}})
+            }else{
+            	const args = {
+			          message: '失败',
+			          description: res.msg,
+			          duration: 2,
+			        };
+			        notification.error(args); 
+            }
+        })
+  }
+  lookAt=(r)=>{
+    	this.setState({modalFlag:true,elderly:r})
+  }
   render(){
-    const {pageFlag,oldManList_copy,customerId,f1,f2,f3,f4,f5,feeList1,feeList2,feeList3,feeList4,feeList5,record} = this.state;
+    const {feeData,pageFlag,oldManList_copy,customerId,f1,f2,f3,f4,f5,feeList1,feeList2,feeList3,feeList4,feeList5,record,modalFlag,elderly} = this.state;
     const columns = [{
       title: '序号',
       render:(text,record,index)=>`${index+1}`,
       key:'serialNumber',
-      width:'10%'
+      width:'8%'
     },{
       title:'入院编号',
       dataIndex: 'elderlyNo',
       key: 'elderlyNo',
-      width:'12%'
+      width:'10%'
     },{
       title: '老人姓名',
       dataIndex: 'name',
@@ -253,11 +275,10 @@ class OldManOutHome extends Component{
       key: 'roomName',
       width:'12%'
     },{
-      title:'入院时间',
-      dataIndex: 'checkInDate',
-      key: 'checkInDate',
+      title:'结算日期',
+      dataIndex: 'outDay',
       render:(text,record)=>{
-        return record.checkInDate && record.checkInDate.substr(0,10)
+        return moment(text).format('YYYY-MM-DD')
       },
       width:'20%'
     },{
@@ -267,10 +288,12 @@ class OldManOutHome extends Component{
       render:(text,record)=>{
         return(
           <span>
-            <a href="javascript:;" onClick={() => { this.handleClickRead(record) }} style={{color:'#2ebc2e'}}>费用信息</a>
+            <a href="javascript:;" onClick={() => { this.lookAt(record)}} style={{color:'#2ebc2e'}}>基础信息</a>
+            <Divider type='vertical' />
+            <a href="javascript:;" onClick={() => { this.handleClickRead(record) }} style={{color:'#108ee9'}}>费用明细</a>
             <Divider type="vertical" />
             <Popconfirm title="是否发起出院申请?" onConfirm={() => this.handleOutHomeCancel(record)}>
-              <a href="javascript:;" style={{color:'#2ebc2e'}}>取消出院申请</a>
+              <a href="javascript:;" style={{color:'orange'}}>取消出院</a>
             </Popconfirm>
           </span>
         )
@@ -320,10 +343,12 @@ class OldManOutHome extends Component{
             feeList4={feeList4}
             feeList5={feeList5}
             handleGoback={this.handleGoback}
+            feeData={feeData}
             record={record}
           />
           
         }
+         <ElderlyInfo visible={modalFlag} data={elderly} close={()=>{this.setState({modalFlag:false})}}/>
       </Fragment>
     )
   }

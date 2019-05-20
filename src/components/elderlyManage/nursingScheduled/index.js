@@ -1,8 +1,5 @@
- import React, {
-	Component,
-	Fragment
-} from 'react';
-import { Table, Card,Tag, Divider, Popconfirm, Button, Modal, Form, Input, DatePicker, Radio, Select,notification,InputNumber,Row,Col} from 'antd';
+ import React, {Component} from 'react';
+import { Table,Tag,Card, Popconfirm, Button, Modal, Form, Input, DatePicker, Radio, Select,notification,InputNumber,Row,Col} from 'antd';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import moment from 'moment';
 import httpServer from '@/axios/index';
@@ -53,8 +50,8 @@ class CMT extends Component {
 		httpServer.listNursingItemRecoder().then(res => {
 			if(res.code===200) {
 			    const elderlys= this.state.elderlys;
-				const data = res.data?res.data.map(item=>({...item,...item.tbElderlyInfo,name:elderlys[item.elderlyId]||"未知"})):[]
-				this.setState({	dataSource:data,intData:data })
+				const data = res.data?res.data.filter(i=>(i.flag!==3)):[]
+				this.setState({	dataSource:data,initData:data })
 			}else{
 			  const args = {
 		          message: '失败',
@@ -181,15 +178,12 @@ class CMT extends Component {
 	    this.setState({ searchText: e.target.value });
 	}
 	handleSearchElderly=()=>{
-		
-        const { searchText } = this.state;
-        console.log('search',searchText)
+          const { searchText } = this.state;
 	    if(searchText){
 	      const reg = new RegExp(searchText, 'gi');
 	      const data = this.state.dataSource.filter((record) =>record.name && record.name.match(reg));
 	      this.setState({dataSource:data});
-	    }else{
-	    	 
+	    }else{ 
 	       const {initData } = this.state;
 	       this.setState({dataSource:initData})
 	    }
@@ -239,13 +233,13 @@ class CMT extends Component {
 			key:'index'
 		},{
 			title:'护理老人',
-			dataIndex:'name',
+			dataIndex:'tbElderlyInfo.name',
 			width:'7%',
 		},{
 			title: '护理项目',
 			dataIndex: 'itemName',
 			key: 'itemName',
-			width: '7%',
+			width: '10%',
 			render:(t,r)=>{
 				return t?t:'等级护理'
 			}
@@ -267,7 +261,7 @@ class CMT extends Component {
 			title: '护工',
 			dataIndex: 'workerName',
 			key: 'workerName',
-			 width: '10%',
+			 width: '6%',
 		},{
 			title: '计划日期',
 			dataIndex: 'scheduledTime',
@@ -279,7 +273,7 @@ class CMT extends Component {
 			key: 'overFlag',
 			width:'5%',
 			render:(t,r)=>{
-				return t===1?'已完成':'未完成'
+				return t===1? <Tag color="#87d068">已完成</Tag>: <Tag color="#f50">未完成</Tag>
 			}
 		},{
 			title: '执行日期',
@@ -290,12 +284,13 @@ class CMT extends Component {
 			title: '操作',
 			dataIndex: 'action',
 			key: 'action',
-			width: '10%',
+			width: '8%',
 			render: (text, record) => {
 				return(
+					record.overFlag===1?null:
 					<span>
 		              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id)}>
-		                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+		                <a href="javascript:;" style={{color:'#2ebc2e'}}>撤销</a>
 		              </Popconfirm>
 		            </span>
 				)
@@ -342,19 +337,21 @@ class CMT extends Component {
 			                {...formItemLayout}
 			                style={{marginBottom:'4px'}}
 			            >
-			                 {getFieldDecorator('elderlyId', {
-			                  rules: [{ required: true, message: '请选择老人'}],
-			                  initialValue:elderlyId
-			                })(
-			                   <ElderlySelect listStatus="3" onChange={this.elderlyChange}/>
-			                )}
+			                 {
+			                  getFieldDecorator('elderlyId', {
+			                    rules: [{ required: true, message: '请选择老人'}],
+			                    initialValue:elderlyId
+			                  })(
+			                   <ElderlySelect listStatus="3" onChange={ this.elderlyChange }/>
+			                  )
+			                }
 			              </Form.Item>
 					      <Form.Item label="护理项"  {...formItemLayout}>
 					         {getFieldDecorator('itemCode', {
 			                  rules: [{ required: true, message: '不可为空' }],
 			                  initialValue:itemCode,
 			               })(
-							    <Select laceholder="请选择检查项" style={{ width:"100%" }}>
+							<Select laceholder="请选择检查项" style={{ width:"100%" }}>
 								{
 								    nursingItems.map(item=>(
 								        <Option key={item.id}>

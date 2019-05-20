@@ -10,7 +10,7 @@ class Cost extends React.Component {
 	state={
 		data:{},
 		userName:'',
-		costType:{"1":"现金","2":"支付宝","3":"微信","4":"刷卡","5":"转账","6":"住院预交","7":"其他预交",},
+		costType:{"1":"现金","2":"支付宝","4":"微信","3":"住院押金","5":"转账","6":"住院预交","7":"其他预交","8":"刷卡"},
 		flag:'list',
 		dataSource:[],
 		uuidCode:'',
@@ -32,7 +32,6 @@ class Cost extends React.Component {
 		window.location.reload();
     }
     componentDidMount(){
-    	//this.fetchRecord();
     	this.fetchSettlementInfo();
         const name = JSON.parse(sessionStorage.getItem("auth")).name;
     	this.setState({userName:name});
@@ -71,7 +70,6 @@ class Cost extends React.Component {
         const total=data.tbPayMoneyDetailInfo?data.tbPayMoneyDetailInfo.reduce((p,c)=>{
         	return p+=c.money;
         },0):0;
-        console.log(total)
         const columns = [{
         	    title: '序号',
 				render: (text, record, index) => `${index+1}`,
@@ -96,8 +94,13 @@ class Cost extends React.Component {
 			  title: '收款人',
 			  dataIndex: 'payee',
 			}];
-	    const subJe6 = data.tbPayMoneyDetailInfo&&data.tbPayMoneyDetailInfo["6"]?data.tbPayMoneyDetailInfo["6"]:0;
-	    const subJe7 = data.tbPayMoneyDetailInfo&&data.tbPayMoneyDetailInfo["7"]?data.tbPayMoneyDetailInfo["7"]:0;
+		let subJe6=0,subJe7=0; 	
+	    if(data.tbPayMoneyDetailInfo&&data.tbPayMoneyDetailInfo.find(i=>(i.type===6))){
+	    	subJe6=data.tbPayMoneyDetailInfo.find(i=>(i.type===6)).money;
+	    }
+	    if(data.tbPayMoneyDetailInfo&&data.tbPayMoneyDetailInfo.find(i=>(i.type===7))){
+	    	subJe7=data.tbPayMoneyDetailInfo.find(i=>(i.type===7)).money
+	    }
         return ( 
         	<Modal
 		        title="费用清单"
@@ -118,8 +121,9 @@ class Cost extends React.Component {
         	    <Table rowKey='id' columns={columns} dataSource={dataSource} onRow={(record,rowkey)=>({onClick:this.rowClick.bind(this,record,rowkey)})}/>
         	   :<div  id={"cost"}>
                <h2 style={{textAlign:'center'}}>欢乐之家养老院</h2> 
-               <div>老人姓名: &emsp;{elderlyInfo.name}&emsp;&emsp;房间:{elderlyInfo.roomName}&emsp;&emsp;护理等级:{elderlyInfo.nursingGradeName}&emsp;&emsp;<span>结算单号:{data.settlementNum}</span></div>
-               <div>上月结余: &emsp;住院预交:{subJe6+je6}元&emsp;&emsp;其他预交:{subJe7+je7}元</div>
+               <div><span>结算单号:&emsp;{data.settlementNum}</span></div>
+               <div>老人姓名: &emsp;{elderlyInfo.name}&emsp;&emsp;房间:&emsp;{elderlyInfo.roomName}&emsp;&emsp;
+               上月结余: &emsp;住院预交:&emsp;{je6?(je6+subJe6):subJe6}元&emsp;&emsp;其他预交:&emsp;{je7?(je7+subJe7):subJe7}元</div>
                <hr />
                <h3>基础收费项:</h3>
                <table border='1' cellSpacing="0" style={{width:'100%',textAlign:'center'}}>
@@ -137,7 +141,7 @@ class Cost extends React.Component {
                   <tbody>
                    {data.tbBaseItemFee&&data.tbBaseItemFee.map(item=>(<tr key={item.itemName}>
                    	  <td>{item.endTime}</td>
-                   	  <td>{item.itemName}</td>
+                   	  <td>{item.itemName||'护理费'}</td>
                    	  <td>{item.nursingFee}</td>
                    	  <td>{item.inDays}</td>
                    	  <td>{item.outDays}</td>
@@ -164,7 +168,7 @@ class Cost extends React.Component {
                     {
                     	data.tbElderlyUtilitiesInfo&&data.tbElderlyUtilitiesInfo.map(item=>(
                     	  <tr key={item.id+'u'}>
-		                   	  <td>{item.endTime}</td>
+		                   	  <td>{item.year}-{item.month}</td>
 		                   	  <td>{item.itemName}</td>
 		                   	  <td>{item.lastValue}</td>
 		                   	  <td>{item.curValue}</td>
@@ -207,13 +211,15 @@ class Cost extends React.Component {
                   <hr />
                   <div style={{float:'left',fontWeight:'bold'}}>
                     <p>账户信息:</p>
-                    <p>本次账户支付:¥{total}元</p>
-                    <p>住院预交:¥{je6||0}元</p>
-                    <p>其他结余:¥{je7||0}元</p>
-                    <p>预约定金:¥{je1||0}元</p>
-                    <p>押&emsp;金:&emsp;热水器:¥{je2||0}元
-                     &emsp;&emsp;&emsp;&emsp;医疗押金:¥{je3||0}元
-                     &emsp;&emsp;&emsp;&emsp;锁押金:¥{je4||0}元</p>
+                    <p>本次支付:&nbsp;¥{total}元</p>
+                    <p>住院预交:&nbsp;¥{je6||0}元</p>
+                    <p>其他结余:&nbsp;¥{je7||0}元</p>
+                    <p>预约定金:&nbsp;¥{je1||0}元</p>
+                    <p>
+                      押&emsp;金:&emsp;热水器:&nbsp;¥{je2||0}元 
+                     &emsp;医疗押金:&nbsp;¥{je3||0}元
+                     &emsp;锁押金:&nbsp;¥{je4||0}元
+                     </p>
                   </div>
                   <div style={{float:'right',fontWeight:'bold'}}>
                    <p>支付信息:</p>
@@ -224,7 +230,7 @@ class Cost extends React.Component {
                     }
                     <p>结算日期:{data.settlementDate}</p>
                   </div>
-                   <h3 style={{clear:'both',textAlign:'right'}}><p>开票人:{this.state.userName}</p></h3>
+                   <h3 style={{clear:'both',textAlign:'right'}}><p>开票人:&emsp;{this.state.userName}</p></h3>
                 </div>}
             </Modal>    
         )

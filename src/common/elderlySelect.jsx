@@ -33,7 +33,7 @@ class ElderlySelect extends Component {
 		}
 	}
     handleSearchElderly=()=>{
-    const { searchText } = this.state;
+    const { searchText,sourceData } = this.state;
 	    if(searchText){
 	      const reg = new RegExp(searchText, 'gi');
 	      const data = this.state.sourceData.filter((record) =>record.name && record.name.match(reg));
@@ -41,12 +41,7 @@ class ElderlySelect extends Component {
 	        data,
 	      });
 	    }else{
-	      const args = {
-	        message: '友情提示',
-	        description: "请先输入老人姓名",
-	        duration: 2,
-	      };
-	      notification.info(args);
+	      this.setState({data:sourceData})
 	    }
     }
     handleInputChange=(e) =>{ //老人姓名搜索框发生变化
@@ -54,12 +49,9 @@ class ElderlySelect extends Component {
 	}
     
 	ListElderly = () => {
-		 
 		const {value,listStatus}= this.props
 		httpServer.listElderlyInfo({
-			 
 			listStatus,
-			langchFlag:0,
 		}).then(res => {
 			if(res.code === 200 && res.data) {
 				const elderly = res.data.find(i=>(i.id==value))
@@ -80,6 +72,9 @@ class ElderlySelect extends Component {
 	rowClick = (r, text) => {
         this.setState({name:r.name,visible:false},function(){
         	this.triggerChange(r.id);
+        	if(this.props.outName){
+        		this.props.outName(r)
+        	}
         })
 	}
 	render() {
@@ -100,7 +95,7 @@ class ElderlySelect extends Component {
         const {name,data} =this.state;
 		return(<Fragment>
 	        <Input.Group compact>
-	            <Input value={name} disabled placeholder="搜索老人" style={{ width: '90%' }} disabled/>
+	            <Input value={name} disabled placeholder="搜索老人" style={{ width: '90%' }}/>
 	            <Button type="primary" style={{ width: '10%' }} icon="search" onClick={this.showModal}></Button>
 	        </Input.Group>
 	        <Modal
@@ -117,7 +112,7 @@ class ElderlySelect extends Component {
                   onChange={this.handleInputChange}
                   onPressEnter={this.handleSearchElderly}
                 />
-                <Button type="primary" onClick={this.handleSearchElderly}>开始搜索</Button>
+                <Button type="primary" onClick={this.handleSearchElderly}>搜索</Button>
                 <Button type="primary" onClick={this.handleReset}>刷新</Button>
                 <Divider/>
 		        <Table bordered columns={columns} dataSource={data} rowKey='id' size="small" onRow={(record,rowkey)=>({onClick:this.rowClick.bind(this,record,rowkey)})}/> 
