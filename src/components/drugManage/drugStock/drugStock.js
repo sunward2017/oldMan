@@ -1,6 +1,7 @@
 import React , { Component } from 'react';
 import httpServer from '@/axios';
 import {Tag,Table,notification,Button,Card,Modal,Divider,Avatar} from 'antd';
+import img from "@/style/imgs/smile.jpg"
 
 const { Meta } = Card;
 class DrugStock extends Component{
@@ -43,22 +44,22 @@ class DrugStock extends Component{
         onCancel={this.handleCancel}
         maskClosable={false}
         footer={[
-            <Button key="back" onClick={this.handleCancel}>返回</Button>,
+            <Button key="back" type="primary" onClick={this.handleCancel}>关闭</Button>,
          ]}
         >
         <Card title="老人基本信息">
 		    <Meta
-		        avatar={<Avatar src="http://imgsrc.baidu.com/imgad/pic/item/09fa513d269759ee03b7bedab8fb43166d22df38.jpg" />}
+		        avatar={<Avatar src={img}/>}
 		        title={elderly.name}
 				    description={<span>性别:&emsp;<Tag color="#108ee9">{elderly.sex===0?'女':'男'}</Tag>&emsp;年龄:&emsp;<Tag color="orange">{elderly.age}岁</Tag>&emsp;&emsp;房间:&emsp;<Tag color='geekblue'>{elderly.roomName}</Tag></span>}
 				/>
 	    </Card>
 	    <Divider/>
         <Table 
-          bordered
+          size="middle"
           dataSource={drugs} 
           columns={columns} 
-          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
           rowKey={record => record.drugCode}
         />
       </Modal>

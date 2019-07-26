@@ -1,0 +1,288 @@
+import React , {Component,Fragment} from 'react';
+import {Button,Table,Divider,Popconfirm,Modal,Form,Input,notification} from 'antd';
+import BreadcrumbCustom from '../../BreadcrumbCustom';
+import httpServer from '../../../axios';
+
+class DiseaseLibrary extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      dataSource:[],
+      modalFlag:false,
+      data:{},
+      action:'',
+      flag:false,
+    }
+    this.handleAdd = this.handleAdd.bind(this);
+    this.handleCancel = this.handleCancel.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+  componentDidMount(){
+    this.getDiseaseLibraryList();
+  }
+
+  getDiseaseLibraryList(){
+    const {customerId} = JSON.parse(sessionStorage.getItem('auth'));
+    httpServer.listDiseaseLibrary({customerId}).then((res)=>{
+      if (res.code === 200) {
+        res.data?this.setState({dataSource:res.data}):this.setState({dataSource:[]});
+      }else{
+        if(res.message ==='Request failed with status code 500'){
+          console.log(res.message);
+        }else{
+          const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+        }
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+
+  //Form表单发生变化
+  handleIptText(target,e) {
+    let data = Object.assign({},this.state.data);
+    data[target] = e.target ? e.target.value : e;
+    this.setState({data});
+  }
+
+  //关闭modal
+  handleCancel(){
+    this.setState({modalFlag:false});
+  }
+
+  //添加
+  handleAdd(){
+    this.setState({modalFlag:true,action:'',data:{},flag:false,});
+  }
+
+  //修改
+  handleModify(record){
+    this.setState({modalFlag:true,action:'',data:record,flag:false,});
+  }
+
+  //查看
+  handleRead(record){
+    this.setState({modalFlag:true,action:'read',data:record,flag:true,});
+  }
+
+  //删除
+  handleRowDelete(id){
+    httpServer.deleteDiseaseLibrary({id},{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then((res)=>{
+           if (res.code === 200) {
+              const args = {
+                message: '通信成功',
+                description: res.msg,
+                duration: 2,
+              };
+              notification.success(args);
+              this.getDiseaseLibraryList();
+            } else {
+              if(res.message ==='Request failed with status code 500'){
+                  console.log(res.message);
+               }else{
+                   const args = {
+                  message: '通信失败',
+                  description: res.msg,
+                  duration: 2,
+                };
+                notification.error(args);
+               }
+            }
+        }).catch((err)=>{
+          console.log(err);
+        });
+  }
+
+  //提交表单
+  handleSubmit(){
+    const {action} = this.state;
+    const {diseaseCode,diseaseName} = this.state.data;
+    const {customerId} = JSON.parse(sessionStorage.getItem('auth'));
+    const data = this.state.data;
+    if(action !== 'read'){
+      if(!(diseaseName)){
+        notification.warning({
+            message: '提示：',
+            description: '单据存在数据未填的情况，请仔细核对！',
+          });
+        return false
+      }
+      // data.diseaseCode = diseaseCode;
+      data.diseaseName = diseaseName;
+      data.customerId = customerId;
+      if(data.id){
+        httpServer.updateDiseaseLibrary(data,{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then((res)=>{
+           if (res.code === 200) {
+              const args = {
+                message: '通信成功',
+                description: res.msg,
+                duration: 2,
+              };
+              notification.success(args);
+              this.getDiseaseLibraryList();
+              this.handleCancel();
+            } else {
+              if(res.message ==='Request failed with status code 500'){
+                  console.log(res.message);
+               }else{
+                   const args = {
+                  message: '通信失败',
+                  description: res.msg,
+                  duration: 2,
+                };
+                notification.error(args);
+               }
+            }
+        }).catch((err)=>{
+          console.log(err);
+        });
+      }else{
+        httpServer.saveDiseaseLibrary(data,{headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then((res)=>{
+           if (res.code === 200) {
+              const args = {
+                message: '通信成功',
+                description: res.msg,
+                duration: 2,
+              };
+              notification.success(args);
+              this.getDiseaseLibraryList();
+              this.handleCancel();
+            } else {
+              if(res.message ==='Request failed with status code 500'){
+                  console.log(res.message);
+               }else{
+                   const args = {
+                  message: '通信失败',
+                  description: res.msg,
+                  duration: 2,
+                };
+                notification.error(args);
+               }
+            }
+        }).catch((err)=>{
+          console.log(err);
+        });
+      }  
+    }else{
+      this.handleCancel();
+    }
+
+  }
+
+  render(){
+    const {dataSource,modalFlag,flag} = this.state;
+    const { diseaseName } = this.state.data;
+    const formItemLayout = {
+      labelCol: {
+        xs: { span: 24 },
+        sm: { span: 5 },
+      },
+      wrapperCol: {
+        xs: { span: 24 },
+        sm: { span: 19 },
+      },
+    };
+    const tailFormItemLayout = {
+      wrapperCol: {
+        xs: {
+          span: 24,
+          offset: 0,
+        },
+        sm: {
+          span: 16,
+          offset: 8,
+        },
+      },
+    };
+    const columns = [{
+      title: '序号',
+      render:(text,record,index)=>`${index+1}`,
+      key:'serialNumber',
+      width:'10%'
+    },{
+      title: '疾病代码',
+      dataIndex: 'diseaseCode',
+      key: 'diseaseCode',
+      width:'20%'
+    },{
+      title:'疾病名称',
+      dataIndex: 'diseaseName',
+      key: 'diseaseName',
+      width:'20%'
+    },{
+      title:'添加日期',
+      dataIndex: 'addtime',
+      key: 'addtime',
+      width:'20%'
+    },{
+      title:'操作',
+      dataIndex:'action',
+      key:'action',
+      render:(text,record)=>{
+        return(
+          <span>
+            <a href="javascript:;" onClick={() => { this.handleRead(record) }} style={{color:'#2ebc2e'}}>查看</a>
+            <Divider type="vertical" />
+            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+              <Divider type="vertical" />
+              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id)}>
+                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+              </Popconfirm>
+          </span>
+        )
+      },
+    }];
+    return(
+      <Fragment>
+        <BreadcrumbCustom first="基础信息" second="病症库" />
+        <Button onClick={this.handleAdd} style={{marginBottom:'20px'}}>新增</Button>
+        <Table 
+          bordered
+          dataSource={dataSource} 
+          columns={columns} 
+          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
+          rowKey={record => record.id}
+        />
+        {
+          modalFlag?<Modal
+                      title="病症信息"
+                      visible={true}
+                      onCancel={this.handleCancel}
+                      maskClosable = {false}//点击遮罩层不允许关闭
+                      footer = {null}
+                    >
+                      <Form hideRequiredMark onSubmit={this.handleSubmit}>
+                        
+                        <Form.Item
+                          label='疾病名称'
+                          {...formItemLayout}
+                          style={{marginBottom:'4px'}}
+                        >
+                          <Input value={diseaseName} placeholder='必填项'  onChange={(e) => this.handleIptText('diseaseName',e)} disabled={flag}/>
+                        </Form.Item>
+                        <Form.Item {...tailFormItemLayout}>
+                          <Button type="primary" htmlType="submit">确认</Button>
+                        </Form.Item>
+                      </Form>
+                    </Modal>:null 
+        }
+      </Fragment>
+    )
+  }
+}
+
+export default DiseaseLibrary;
+/*
+<Form.Item
+                          label='疾病代码'
+                          {...formItemLayout}
+                          style={{marginBottom:'4px'}}
+                        >
+                          <Input value={diseaseCode} placeholder='必填项'  onChange={(e) => this.handleIptText('diseaseCode',e)} disabled={flag}/>
+                        </Form.Item>
+ */

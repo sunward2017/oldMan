@@ -51,7 +51,8 @@ class Cost extends React.Component {
 	                  <thead>
 	                  <tr>
 	                    <th>产生日期</th>
-	                    <th>收费项目</th>  
+	                    <th>收费项目</th>
+	                    <th>付款方式</th>  
 	                    <th>收费金额</th>  
 	                  </tr>
 	                  </thead>
@@ -61,6 +62,7 @@ class Cost extends React.Component {
 	                    		<tr key={item.id+'n'}>
 	                    	      <td>{moment(item.addtime).format('YYYY-MM-DD')}</td>
 			                   	  <td>{item.itemName}</td>
+			                   	  <td>{item.payType}</td>
 			                   	  <td>{item.money}</td>
 			                   	</tr>  
 	                    	))

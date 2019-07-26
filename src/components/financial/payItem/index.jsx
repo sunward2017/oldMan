@@ -2,7 +2,6 @@ import React from 'react';
 import { Row, Col, Card, Button, notification, Icon, Spin ,Divider,Popconfirm,Table,Modal,Form,Input,InputNumber,Select,Radio} from 'antd';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import Tree from '../../../common/tree';
-import PriceSlider from './priceSlider';
 import httpServer from '../../../axios/index';
 
 const Option = Select.Option;
@@ -24,7 +23,6 @@ class PayItem1 extends React.Component {
     }
     componentDidMount() {
         this.fetchTreeData();
-//      this.getUnitList();
     }
     fetchTreeData() {
         this.postSever('getPayItemTree',{customerId:this.props.auth.customerId}).then(res => {
@@ -105,24 +103,7 @@ class PayItem1 extends React.Component {
         })
     }
 
-    getUnitList(){
-        const {customerId} = this.props.auth;
-        const _this = this;
-        httpServer.listParam({type:1,customerId}).then((res)=>{
-            if(res.code === 200){
-               res.data?_this.setState({unitList:res.data}):_this.setState({unitList:null});
-            }else{
-                const args = {
-                    message: '通信失败',
-                    description: res.msg,
-                    duration: 2,
-                };
-                notification.error(args);
-            }   
-        }).catch(
-          err => { console.log(err) }
-        );
-    }
+     
     handleCancel(){
         this.setState({modalFlag:false});
     }
@@ -130,7 +111,7 @@ class PayItem1 extends React.Component {
         const {selectedNode} = this.state;
         if(!selectedNode){
             const args = {
-              message: '友情提示',
+              message: '提示',
               description: "请先单击选择收费类别",
               duration: 2,
             };
@@ -174,6 +155,9 @@ class PayItem1 extends React.Component {
         } else {
             callback();
         } 
+    }
+    handleModify=(r)=>{
+    	 this.setState({modalFlag:true,record:{...r}});
     }
     handleSubmit(){
         const { customerId } = this.state.selectedNode;
@@ -302,14 +286,11 @@ class PayItem1 extends React.Component {
             title: '操作',
             dataIndex: 'action',
             key:'action',
+            width:'10%',
+            align:'center',
             render: (text, record) => {
                 return (
-                    <React.Fragment>
-                         
-                        <Popconfirm title="确定删除?" onConfirm={() => this.rowDeleteHandler(record)}>
-                            <a href="javascript:;">删除</a>
-                        </Popconfirm>
-                    </React.Fragment>
+                     record.price?<Button size="small" onClick={() => { this.handleModify(record) }} title="修改" type="primary" icon="edit"></Button>:null
                 );
             }
         }];
@@ -333,9 +314,9 @@ class PayItem1 extends React.Component {
                         <Card 
                             title="收费项目"
                             bordered={false} 
-                            extra={<Button type="primary" onClick={this.handleClickAdd} >新增</Button>}
+                            extra={<Button type="primary" onClick={this.handleClickAdd}  title="新增" icon="plus"></Button>}
                         > 
-                            <Table columns={columns} dataSource={data} pagination={{ pageSize: 50 }} scroll={{ y: 500 }} rowKey={record => record.id} />
+                            <Table size="middle" columns={columns} dataSource={data} pagination={{ pageSize: 50 }} rowKey={record => record.id} />
                         </Card>
                     </Col>
                 </Row>

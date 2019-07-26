@@ -277,14 +277,15 @@ class estimateGrade extends React.Component {
       dataIndex: "action",
       key: "action",
       width: "15%",
+      align:'center',
       render: (text, record) => {
         return(
           <span>
-              <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:"#2ebc2e"}} >修改</a>
-              <Divider type="vertical" />
-              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-                <a href="javascript:;" style={{color:"#2ebc2e"}}>删除</a>
-              </Popconfirm>
+             <Button size="small" icon="edit" title="编辑" type="primary" onClick={() => { this.handleModify(record) }}></Button>
+             <Divider type="vertical" />
+             <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+               <Button size="small" icon="delete" title="删除" type="primary" ></Button>
+             </Popconfirm>
           </span>
         )
       },
@@ -315,11 +316,11 @@ class estimateGrade extends React.Component {
 				            extra={<Button type="primary" onClick={()=>{this.handleAdd()}} disabled={!selectedNode||selectedNode.id==='0'}>新增</Button>}
 				        >
 				            <Table 
-				                bordered
+				                size="middle"
 				                rowKey="id" 
 				                dataSource={dataSource} 
 				                columns={columns} 
-				                pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:["10","20","30","40","50","100","200"]}}
+				                pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:["10","20","30","40","50"]}}
 				            />
 				        </Card>      
                     </Col>
@@ -329,10 +330,10 @@ class estimateGrade extends React.Component {
 			            visible={modalFlag}
 			            onCancel={()=>{this.handleCancel()}}
 			            maskClosable={false}
-			            footer={null}
+			            onOk={this.handleSubmit}
 			            key={modalFlag}
 			          >
-			            <Form hideRequiredMark onSubmit={this.handleSubmit}>
+			            <Form>
 			              <Form.Item
 			                label="评估等级"
 			                {...formItemLayout}
@@ -354,7 +355,7 @@ class estimateGrade extends React.Component {
 			                  rules: [{ required: false, message: "请输入分值高范围" }],
 			                  initialValue:highScore,
 			                })(
-			                  <InputNumber min={0} />
+			                  <InputNumber min={0} style={{width:'100%'}}/>
 			                )}
 			              </Form.Item> 
 			              <Form.Item
@@ -366,7 +367,7 @@ class estimateGrade extends React.Component {
 			                  rules: [{ required: true, message: "请输入分值低范围" }],
 			                  initialValue:lowScore,
 			                })(
-			                  <InputNumber min={0} />
+			                  <InputNumber min={0}  style={{width:'100%'}}/>
 			                )}
 			              </Form.Item>
 			              
@@ -380,13 +381,10 @@ class estimateGrade extends React.Component {
 			                  initialValue: status===0?0:1,
 			                })(
 			                  <RadioGroup buttonStyle="solid">
-			                    <Radio.Button value={1}>使用</Radio.Button>
+			                    <Radio.Button value={1}>启用</Radio.Button>
 			                    <Radio.Button value={0}>禁用</Radio.Button>
 			                  </RadioGroup>
 			                )}
-			              </Form.Item>
-			              <Form.Item {...tailFormItemLayout}>
-			                <Button type="primary" htmlType="submit" loading={this.state.iconLoading} >确认提交</Button>
 			              </Form.Item>
 			            </Form>
 			          </Modal>

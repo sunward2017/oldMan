@@ -76,15 +76,6 @@ class CMT extends Component {
 		const {lifeSign,healthSign} = this.state;
 		this.props.form.validateFieldsAndScroll((err, fieldsValue) => {
 			if(!err) {
-			   if(lifeSign.length===0){
-			   	 message.error('生命体征没有制定计划');
-			   	 return;
-			   }
-			   
-			   if(healthSign.length===0){
-			   	  message.error('指标没有制定计划');
-			   	  return;
-			   }
 			   let values = {
 			   	  ...fieldsValue,
 			   	  content1:JSON.stringify(lifeSign),
@@ -179,7 +170,7 @@ class CMT extends Component {
 			    </Card>
 			    <Card title="委托发药" bordered={false}>
 			        <Form.Item label="服药护理方式" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}> 
-			          {getFieldDecorator('sendDrug', { rules: [{required: true, message: '请选择服药护理方式',}],initialValue:sendDrug.sendDrug })
+			          {getFieldDecorator('sendDrug', { rules: [{required: false, message: '请选择服药护理方式',}],initialValue:sendDrug.sendDrug||"a"})
 			          (
 			            <RadioGroup buttonStyle="solid">
 				            <Radio.Button value="a">服药自理</Radio.Button>
@@ -191,7 +182,7 @@ class CMT extends Component {
 				        )}
 			       </Form.Item>
 			       <Form.Item label="服务要求" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-				        {getFieldDecorator('memo', { rules: [{required: true, message: '请输入服务要求',}],initialValue: sendDrug.memo})
+				        {getFieldDecorator('memo', { rules: [{required: false, message: '请输入服务要求',}],initialValue: sendDrug.memo})
 				        (
 				          <TextArea rows={4} />
 				        )}

@@ -14,6 +14,8 @@ class RecordList extends React.Component {
         treeData:[],
         searchKey:{},
         chargeItemList:[],
+        meelObj:{},
+        gradeObj:{}
     };
     componentDidMount(){
         // console.log('list props:',this.props);
@@ -28,30 +30,70 @@ class RecordList extends React.Component {
         this.fetchElderlyRoomTree();
         this.getPayItemChild();
         this.fetchElderlyByKey();
-    }
+        this.getNursingGrade();
+	}
 
-    //关联收费项目选取
-  getPayItemChild(){
-    httpServer.selectPayItemChild({customerId:this.customerId}).then((res)=>{
-      if (res.code === 200) {
-        res.data?this.setState({chargeItemList:res.data}):this.setState({chargeItemList:[]});
-      } else {
-        if(res.message ==='Request failed with status code 500'){
-            console.log(res.message);
-         }else{
-            const args = {
-            message: '通信失败',
-            description: res.msg,
-            duration: 2,
-          };
-          notification.error(args);
-         }
-      }
-    }).catch((error)=>{
-      console.log(error);
-    });
-  }
+	//关联收费项目选取
+	getPayItemChild() {
+		httpServer.selectPayItemChild({
+			customerId: this.customerId
+		}).then((res) => {
+			if(res.code === 200) {
+				if(res.data){
+				   let obj = {};
+		         	res.data.forEach(k=>{
+		         		obj[k.itemCode]=k.name;
+		         	})
+		        	this.setState({
+		        		meelObj:obj
+		        	})
+		        }	
+			} else {
+				if(res.message === 'Request failed with status code 500') {
+					console.log(res.message);
+				} else {
+					const args = {
+						message: '通信失败',
+						description: res.msg,
+						duration: 2,
+					};
+					notification.error(args);
+				}
+			}
+		}).catch((error) => {
+			console.log(error);
+		});
+	}
+	getNursingGrade() {
+		httpServer.listNursingGrade().then((res) => {
+			if(res.code === 200) {
+			    if(res.data){
+			    	let obj = {};
+		         	res.data.forEach(k=>{
+		         		obj[k.nursingGradeCode]=k.nursingGradeName;
+		         	})
+		        	this.setState({
+		        		gradeObj:obj
+		        	})
+			    }
+			} else {
+				if(res.message === 'Request failed with status code 500') {
+					console.log(res.message);
+				} else {
+					const args = {
+						message: '通信失败',
+						description: res.msg,
+						duration: 2,
+					};
+					notification.error(args);
+				}
+			}
+		}).catch((error) => {
+			console.log(error);
+		});
+	}
 
+ 
     fetchElderlyRoomTree(){
         httpServer.listAreaInfo({customerId:this.customerId}).then(res => {
 //          console.log('room info:',res);
@@ -98,7 +140,7 @@ class RecordList extends React.Component {
         })
     };
     render() {
-        const { treeData, records, searchKey } = this.state;
+        const { treeData, records, searchKey,meelObj,gradeObj} = this.state;
         const  url  = this.props.location.pathname;
         return (
             <React.Fragment>
@@ -130,7 +172,13 @@ class RecordList extends React.Component {
                         {
                             records.length>0 ? records.map(r =>
                                 <Col xxl={4} xl={5} lg={8} md={12} key={r.id}>
-                                    <RecordItem data={r} baseUrl={url} onDel={() => this.onRecordDeleteHandler(r)} customerId={this.customerId} chargeItemList={this.state.chargeItemList}/>
+                                    <RecordItem data={r} baseUrl={url} 
+                                    onDel={() => this.onRecordDeleteHandler(r)} 
+                                    customerId={this.customerId} 
+                                    chargeItemList={this.state.chargeItemList}
+                                    meelObj={meelObj}
+                                    gradeObj={gradeObj}
+                                    />
                                 </Col>
                             ) : '无搜索结果'
                         }

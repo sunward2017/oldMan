@@ -9,7 +9,7 @@ import httpServer from '@/axios/';
 import DrugStock from './drugStock';
 
 const TreeNode = Tree.TreeNode;
-
+ 
 class Plan extends Component {
 	constructor(props) {
 		super(props);
@@ -105,7 +105,7 @@ class Plan extends Component {
 		        data,
 		      });
 		    }else{
-		    	const {dataSource} = this.state;
+		      const {dataSource} = this.state;
 		      this.setState({data:dataSource})
 		    }
 	}
@@ -158,12 +158,11 @@ class Plan extends Component {
 		      title: '操作',
 		      dataIndex: 'action',
 		      key: 'action',
-		      width:'15%',
+		      width:'10%',
+		      align:'center',
 		      render:(text,record)=>{
 		        return(
-		          <span>
-		            <a href="javascript:;" onClick={() => { this.handleLook(record) }} style={{color:'#2ebc2e'}}>查看库存</a>
-		          </span>
+		            <Button type="primary" icon="reconciliation" title="查看库存" onClick={() => { this.handleLook(record) }}></Button>
 		        )
 		      }
 		    }];
@@ -182,24 +181,26 @@ class Plan extends Component {
 				    </Card>  
 	            </Col>
 	            <Col  xs={{ span: 24}} lg={{ span: 20}}>
-	              <Input 
-                  placeholder="按老人姓名搜索" 
-                  style={{width:'40%',marginRight:'10px'}}
-                  ref={ele => this.searchInput = ele}
-                  value={this.state.searchText}
-                  onChange={this.handleInputChange}
-                  onPressEnter={this.handleSearch}
-                />
-                <Button type="primary" onClick={this.handleSearch}>搜索</Button>
-                <Button type="primary" onClick={this.handleReset}>刷新</Button>
-                <Divider/>
+                <Card extra={<span>
+                	 <Input 
+	                  placeholder="按老人姓名搜索" 
+	                  style={{width:'60%',marginRight:'10px'}}
+	                  ref={ele => this.searchInput = ele}
+	                  value={this.state.searchText}
+	                  onChange={this.handleInputChange}
+	                  onPressEnter={this.handleSearch}
+	                />
+	                <Button type="primary" icon="search" title="搜索" onClick={this.handleSearch}></Button>
+	                <Button type="primary" icon="reload" title="刷新" onClick={this.handleReset}></Button>
+                </span>}>
 		          <Table 
-		            bordered
+		            size="middle"
 		            rowKey='id' 
 		            dataSource={data} 
 		            columns={columns} 
-		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 		          />
+		        </Card>  
 	          </Col>
 	        </Row>
 	        {

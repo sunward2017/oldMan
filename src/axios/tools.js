@@ -6,6 +6,7 @@ import qs from 'qs';
 import { host } from './config';
 import {notification} from 'antd';
 
+
 axios.defaults.withCredentials=true
 axios.interceptors.request.use(function (config) {
     if (config.url.indexOf(host.api+'/Login') !== -1) {
@@ -57,6 +58,13 @@ export const post = ({url, data, msg = '接口异常', headers={headers: {'Conte
     });
 }
 
+export  const all = (urls,data,cb)=>{
+  let  arr =[];
+  urls.forEach(url=>arr.push(axios.post(host.api+url,data,{headers: {'Content-Type': 'application/x-www-form-urlencoded'}})));
+  axios.all(arr).then(axios.spread((...args)=>{
+      cb(args)
+  }));
+}
 /**
  * 特殊请求
  * @param url       接口地址

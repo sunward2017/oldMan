@@ -1,5 +1,5 @@
 import React ,{ Component } from 'react';
-import {Modal , Table ,Form ,InputNumber,DatePicker,Radio ,Input,Button,notification} from 'antd';
+import {Modal ,Form ,InputNumber,DatePicker,Radio ,Input,Button,notification} from 'antd';
 import httpServer from '@/axios';
 import DrugList from '@/common/drugList'
 import moment from 'moment'
@@ -11,7 +11,6 @@ class drugForm extends Component{
     super(props);
     this.state = {
       drugInfo:{},
-      drug:{}
     }
   }
   handleDrug=()=>{
@@ -19,8 +18,8 @@ class drugForm extends Component{
   	this.props.form.validateFieldsAndScroll((err, fieldsValue) => {
   		if(!err){
   			const {drug} = this.state;
-  			let values = {...fieldsValue, ...drug,minUbit:drug.minUnit,validityDate:fieldsValue['validityDate'].format('YYYY-MM-DD')}
-  			if(this.state.drugInfo.id)values.id= this.state.drugInfo.id;
+  			let values = {...fieldsValue,...fieldsValue['drugCode']};
+  			console.log(values)
   			that.props.handleDrug(values);
   		}
   	})
@@ -28,10 +27,7 @@ class drugForm extends Component{
   cancle=()=>{
   	 this.props.cancel(); 
   }
-  drugChange=(v)=>{ 
-  	this.setState({drug:v})
-  	 
-  }
+  
   componentDidMount(){
   	 const drugInfo = this.props.drugInfo;
      this.setState({drugInfo}) 	
@@ -71,7 +67,7 @@ class drugForm extends Component{
 	       	<Modal
 		        title="入库单信息"
 		        okText='确认'
-		        width="40%"
+		        width={400}
 		        visible={true}
 		        onOk={this.handleDrug}
 		        onCancel={this.cancle}
@@ -87,7 +83,7 @@ class drugForm extends Component{
                   rules: [{ required: true, message: '请选择药品'}],
                   initialValue:drugCode
                 })(
-                   <DrugList onChange={this.drugChange}/>
+                   <DrugList/>
                 )}
               </Form.Item>
               <Form.Item
@@ -100,19 +96,6 @@ class drugForm extends Component{
                   initialValue:quantity
                 })(
                     <InputNumber style={{width:'100%'}} placeHolder="请输入入库数量" min={1}/>
-                )}
-              </Form.Item>
-                
-               <Form.Item
-                label='有效期至'
-                {...formItemLayout}
-                style={{marginBottom:'4px'}}
-              >
-                {getFieldDecorator('validityDate', {
-                  rules: [{ required: true, message: '请输入单号'}],
-                  initialValue:validityDate?moment(validityDate):moment()
-                })(
-                    <DatePicker style={{width:'100%'}}/>
                 )}
               </Form.Item>
             </Form>

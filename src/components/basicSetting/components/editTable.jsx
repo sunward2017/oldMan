@@ -254,7 +254,6 @@ class EditableTable extends React.Component {
       <Table
         rowKey= {record => record.name} 
         components={components}
-        bordered
         dataSource={this.state.data}
         columns={columns}
         pagination={false}

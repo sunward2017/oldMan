@@ -51,7 +51,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('a', {
-		                rules: [{ required: true, message: '请输入进食能力评估' }],
+		                rules: [{ required: false, message: '请输入进食能力评估' }],
 		                initialValue:a
 		            })(
 		                <Input placeholder="进食能力评估"/>
@@ -63,7 +63,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('a1', {
-		                rules: [{ required: true, message: '请输入进食评估说明' }],
+		                rules: [{ required: false, message: '请输入进食评估说明' }],
 		                initialValue:a1
 		            })(
 		                <Input placeholder="进食能力评估说明"/>
@@ -79,7 +79,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('b', {
-		                rules: [{ required: true, message: '请输入梳洗能力评估' }],
+		                rules: [{ required: false, message: '请输入梳洗能力评估' }],
 		                initialValue:b
 		            })(
 		                <Input placeholder="梳洗能力评估"/>
@@ -91,7 +91,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('b1', {
-		                rules: [{ required: true, message: '请输入梳洗能力评估说明' }],
+		                rules: [{ required: false, message: '请输入梳洗能力评估说明' }],
 		                initialValue:b1
 		            })(
 		                <Input placeholder="梳洗能力评估说明"/>
@@ -107,7 +107,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('c', {
-		                rules: [{ required: true, message: '请输入洗澡能力评估' }],
+		                rules: [{ required: false, message: '请输入洗澡能力评估' }],
 		                initialValue:c
 		            })(
 		                <Input placeholder="洗澡能力评估"/>
@@ -119,7 +119,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('c1', {
-		                rules: [{ required: true, message: '请输入洗澡能力评估说明' }],
+		                rules: [{ required: false, message: '请输入洗澡能力评估说明' }],
 		                initialValue:c1
 		            })(
 		                <Input placeholder="洗澡能力评估说明"/>
@@ -135,7 +135,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('d', {
-		                rules: [{ required: true, message: '请输入洗脚能力评估' }],
+		                rules: [{ required: false, message: '请输入洗脚能力评估' }],
 		                initialValue:d,
 		            })(
 		                <Input placeholder="洗脚能力评估"/>
@@ -147,7 +147,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('d1', {
-		                rules: [{ required: true, message: '请输入洗脚能力评估说明' }],
+		                rules: [{ required: false, message: '请输入洗脚能力评估说明' }],
 		                initialValue:d1
 		            })(
 		                <Input placeholder="洗脚能力评估说明"/>
@@ -163,7 +163,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('e', {
-		                rules: [{ required: true, message: '请输入剪脚趾甲能力评估' }],
+		                rules: [{ required: false, message: '请输入剪脚趾甲能力评估' }],
 		                initialValue:e
 		            })(
 		                <Input placeholder="剪脚趾甲能力评估"/>
@@ -175,7 +175,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('e1', {
-		                rules: [{ required: true, message: '请输入剪脚趾甲能力说明' }],
+		                rules: [{ required: false, message: '请输入剪脚趾甲能力说明' }],
 		                initialValue:e1
 		            })(
 		                <Input placeholder="剪脚趾甲能力说明"/>
@@ -191,7 +191,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('f', {
-		                rules: [{ required: true, message: '求助能力评估' }],
+		                rules: [{ required: false, message: '求助能力评估' }],
 		                initialValue:f
 		            })(
 		                <Input placeholder="求助能力评估"/>
@@ -203,7 +203,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('f1', {
-		                rules: [{ required: true, message: '请输入求助能力说明' }],
+		                rules: [{ required: false, message: '请输入求助能力说明' }],
 		                initialValue:f1
 		            })(
 		                <Input placeholder="求助能力说明"/>
@@ -219,7 +219,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('g', {
-		                rules: [{ required: true, message: '请输入穿衣能力评估' }],
+		                rules: [{ required: false, message: '请输入穿衣能力评估' }],
 		                initialValue:g
 		            })(
 		                <Input placeholder="穿衣能力评估"/>
@@ -231,7 +231,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('g1', {
-		                rules: [{ required: true, message: '请输入穿衣能力说明' }],
+		                rules: [{ required: false, message: '请输入穿衣能力说明' }],
 		                initialValue:g1
 		            })(
 		                <Input placeholder="穿衣能力说明"/>
@@ -247,7 +247,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('h', {
-		                rules: [{ required: true, message: '请输入如厕能力评估' }],
+		                rules: [{ required: false, message: '请输入如厕能力评估' }],
 		                initialValue:h
 		            })(
 		                <Input placeholder="如厕能力评估"/>
@@ -259,7 +259,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('h1', {
-		                rules: [{ required: true, message: '请输入如厕能力说明' }],
+		                rules: [{ required: false, message: '请输入如厕能力说明' }],
 		                initialValue:h1
 		            })(
 		                <Input placeholder="如厕能力说明"/>
@@ -275,7 +275,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('i', {
-		                rules: [{ required: true, message: '请输入排泄能力评估' }],
+		                rules: [{ required: false, message: '请输入排泄能力评估' }],
 		                initialValue:i
 		            })(
 		                <Input placeholder="排泄能力评估"/>
@@ -287,7 +287,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('i1', {
-		                rules: [{ required: true, message: '请输入排泄能力说明' }],
+		                rules: [{ required: false, message: '请输入排泄能力说明' }],
 		                initialValue:i1
 		            })(
 		                <Input placeholder="排泄能力说明"/>
@@ -303,7 +303,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('j', {
-		                rules: [{ required: true, message: '请输入移动能力评估' }],
+		                rules: [{ required: false, message: '请输入移动能力评估' }],
 		                initialValue:j
 		            })(
 		                <Input placeholder="移动能力评估"/>
@@ -315,7 +315,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('j1', {
-		                rules: [{ required: true, message: '请输入移动能力说明' }],
+		                rules: [{ required: false, message: '请输入移动能力说明' }],
 		                initialValue:j1
 		            })(
 		                <Input placeholder="移动能力说明"/>
@@ -331,7 +331,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('k', {
-		                rules: [{ required: true, message: '请输入皮肤能力评估' }],
+		                rules: [{ required: false, message: '请输入皮肤能力评估' }],
 		                initialValue:k
 		            })(
 		                <Input placeholder="皮肤能力评估"/>
@@ -343,7 +343,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('k1', {
-		                rules: [{ required: true, message: '请输入皮肤能力说明' }],
+		                rules: [{ required: false, message: '请输入皮肤能力说明' }],
 		                initialValue:k1
 		            })(
 		                <Input placeholder="皮肤能力说明"/>
@@ -359,7 +359,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('l', {
-		                rules: [{ required: true, message: '请输入视觉能力评估' }],
+		                rules: [{ required: false, message: '请输入视觉能力评估' }],
 		                initialValue:l
 		            })(
 		                <Input placeholder="视觉能力评估"/>
@@ -371,7 +371,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('l1', {
-		                rules: [{ required: true, message: '请输入视觉能力评估说明' }],
+		                rules: [{ required: false, message: '请输入视觉能力评估说明' }],
 		                initialValue:l1
 		            })(
 		                <Input placeholder="视觉能力评估说明"/>
@@ -387,7 +387,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('m', {
-		                rules: [{ required: true, message: '请输入听觉能力评估' }],
+		                rules: [{ required: false, message: '请输入听觉能力评估' }],
 		                initialValue:m
 		            })(
 		                <Input placeholder="听觉能力评估"/>
@@ -399,7 +399,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('m1', {
-		                rules: [{ required: true, message: '请输入听觉能力评估说明' }],
+		                rules: [{ required: false, message: '请输入听觉能力评估说明' }],
 		                initialValue:m1
 		            })(
 		                <Input placeholder="听觉能力评估说明"/>
@@ -415,7 +415,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('n', {
-		                rules: [{ required: true, message: '请输入记忆能力评估' }],
+		                rules: [{ required: false, message: '请输入记忆能力评估' }],
 		                initialValue:n
 		            })(
 		                <Input placeholder="记忆能力评估"/>
@@ -427,7 +427,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('n1', {
-		                rules: [{ required: true, message: '请输入记忆能力说明' }],
+		                rules: [{ required: false, message: '请输入记忆能力说明' }],
 		                initialValue:n1
 		            })(
 		                <Input placeholder="记忆能力说明"/>
@@ -443,7 +443,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('o', {
-		                rules: [{ required: true, message: '请输入定向能力评估' }],
+		                rules: [{ required: false, message: '请输入定向能力评估' }],
 		                initialValue:o
 		            })(
 		                <Input placeholder="定向能力评估"/>
@@ -455,7 +455,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('o1', {
-		                rules: [{ required: true, message: '请输入定向能力说明' }],
+		                rules: [{ required: false, message: '请输入定向能力说明' }],
 		                initialValue:o1
 		            })(
 		                <Input placeholder="定向能力说明"/>
@@ -471,7 +471,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('p', {
-		                rules: [{ required: true, message: '请输入理解能力评估' }],
+		                rules: [{ required: false, message: '请输入理解能力评估' }],
 		                initialValue:p
 		            })(
 		                <Input placeholder="理解能力评估"/>
@@ -483,7 +483,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('p1', {
-		                rules: [{ required: true, message: '请输入理解能力说明!' }],
+		                rules: [{ required: false, message: '请输入理解能力说明!' }],
 		                initialValue:p1
 		            })(
 		                <Input placeholder="理解能力说明"/>
@@ -499,7 +499,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('q', {
-		                rules: [{ required: true, message: '请输入表达能力评估' }],
+		                rules: [{ required: false, message: '请输入表达能力评估' }],
 		                initialValue:q
 		            })(
 		                <Input placeholder="表达能力评估"/>
@@ -511,7 +511,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('q1', {
-		                rules: [{ required: true, message: '请输入表达能力说明' }],
+		                rules: [{ required: false, message: '请输入表达能力说明' }],
 		                initialValue:q1
 		            })(
 		                <Input placeholder="表达能力说明"/>
@@ -527,7 +527,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(30% - 12px)' }}
 			      >
 			        { getFieldDecorator('r', {
-		                rules: [{ required: true, message: '请输入行为能力评估' }],
+		                rules: [{ required: false, message: '请输入行为能力评估' }],
 		                initialValue:r
 		            })(
 		                <Input placeholder="行为能力评估"/>
@@ -539,7 +539,7 @@ class CMT extends Component {
 			        style={{ display: 'inline-block', width: 'calc(70% - 12px)' }}
 			      >
 			        { getFieldDecorator('r1', {
-		                rules: [{ required: true, message: '请输入行为能力说明' }],
+		                rules: [{ required: false, message: '请输入行为能力说明' }],
 		                initialValue:r1
 		            })(
 		                <Input placeholder="行为能力说明"/>

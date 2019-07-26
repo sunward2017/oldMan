@@ -1,11 +1,12 @@
 import React ,{ Component,Fragment } from 'react';
-import {Modal,Table ,Form ,InputNumber, Input,Button,DatePicker,Select,Radio,notification,Divider,Popconfirm,message} from 'antd';
+import {Modal , Table ,Form ,InputNumber, Input,Button,DatePicker,Select,Radio,notification,Divider,Popconfirm,message,Tag} from 'antd';
 import httpServer from '@/axios';
 import ElderlySelect from '@/common/elderlySelect'
 import DrugForm from './drugForm'
-import moment from 'moment'
+import moment from 'moment';
 import {host} from '@/axios/config'
-
+import ImportDrug from '../drugInStock/drugListByElderly'
+ 
 const RadioGroup = Radio.Group;
 const confirm = Modal.confirm;
 
@@ -21,60 +22,38 @@ class editForm extends Component{
       drugInfo:{},
       drugList:{}
     }
+    this.elderlyId=props.infoData?props.infoData.elderlyId:'';
   }
 
   handleTypes=()=>{
-  	 const {customerId} = JSON.parse(sessionStorage.getItem('auth'));
-  	 httpServer.listParam({type:14,customerId}).then(res=>{
+  	 httpServer.listParam({type:14}).then(res=>{
   	 	 const data = res.data?res.data:[]
   	   this.setState({receiptTypes:data})
   	 })
   }
   handleAddDrug=()=>{
-  	 if(!this.state.record.elderlyId){
+  	 if(!this.elderlyId){
   	 	message.error('请先选择老人');
   	 }else{
   	 	 this.setState({drugInfo:{},drugFlag:true})
   	 }
-  	
   }
   handleDrug=(drug)=>{
   	 let that = this;
   	 const {drugs} = this.state;
-  	 if(drug.id){
-  	 	 const index = drugs.findIndex(i=>(i.drugCode===drug.drugCode))
-		       drugs.splice(index,1,drug);
-		       that.setState({drugs,drugFlag:false});
-		return;       
-  	 }
   	 const isExist = drugs.some(i=>(i.drugCode===drug.drugCode))
   	 if(isExist){
-  	   confirm({
-		    title: '警告',
-		    content: '出库单中已存在相同的药品记录，你确定覆盖吗？',
-		    onOk() {
-		       const index = drugs.findIndex(i=>(i.drugCode===drug.drugCode))
-		       drugs.splice(index,1,drug);
-		       that.setState({drugs,drugFlag:false})
-		    },
-		    onCancel() {
-		    	return;
-		    },
-		  });
+		const index = drugs.findIndex(i=>(i.drugCode===drug.drugCode))
+		drugs.splice(index,1,drug);
+		that.setState({drugs,drugFlag:false})
   	 }else{
   	 	drugs.push(drug);
   	 	this.setState({drugs,drugFlag:false})
   	 }
-  	 
   }
   
   handleCancel=()=>{
   	this.props.cancle()
-  }
-  elderlyChange=(v)=>{
-  	const record = this.state.record;
-  	record.elderlyId =v;
-  	this.setState({record})
   }
   handleSubmit=()=>{
     let that = this;
@@ -87,7 +66,6 @@ class editForm extends Component{
   		if(!err){
   		  const {account,customerId} = this.props.auth;
   		  drugs = drugs.map(i=>({...i,elderlyId:fieldsValue.elderlyId,customerId}))
-  		      
   		        if(this.props.type==='audit'){
   		        	httpServer.saveDrugStockInfo({id:this.state.record.id,auditor:fieldsValue.auditor,auditTime:fieldsValue.auditTime.format('YYYY-MM-DD HH:mm:ss')}).then(res=>{
   		        	  if(res.code===200){
@@ -111,8 +89,8 @@ class editForm extends Component{
   		          let  values={...fieldsValue,'inOutTime':fieldsValue['inOutTime'].format('YYYY-MM-DD HH:mm:ss'),operator:account,customerId,type:2,tbDrugInOutDetails:drugs}
   		    
   		          if(this.state.record.id)values.id = this.state.record.id;
-  		          let url=values.id?'updateDrugInAndOut':'saveDrugInAndOut',
-  		            msg= values.id?'更新':'新增';
+  		          
+  		           const url= values.id?'updateDrugInAndOut':'saveDrugInAndOut', msg= values.id?'更新':'新增';
   		       
 			      let request = new Request(host.api+"/"+url, {
 				        body: JSON.stringify(values),
@@ -167,7 +145,7 @@ class editForm extends Component{
   }
   handleModify=(record)=>{
   	const drugList =this.state.drugList;
-  	this.setState({drugInfo:{...record,drugCode:{drugCode:record.drugCode,drugName:drugList[record.drugCode]}},drugFlag:true})
+  	this.setState({drugInfo:{...record,drugCode:{minUnit:record.minUbit,drugCode:record.drugCode,name:drugList[record.drugCode]}},drugFlag:true})
   }
   handleDelete=(drug)=>{
   	 const {drugs} = this.state;
@@ -175,7 +153,6 @@ class editForm extends Component{
 		   drugs.splice(index,1);
 		   this.setState({drugs,drugFlag:false}); 
   }
-  
   getDrugList(){
   	const {customerId} = this.props.auth;
     httpServer.listDrugInfoInfo({customerId}).then(res => {
@@ -188,64 +165,56 @@ class editForm extends Component{
        }
     })  
   }
-  bringDrugUse=()=>{
-  	const {customerId} = this.props.auth;
-  	const {elderlyId} = this.state.record;
-  	if(!elderlyId){
-  	 	message.error('请先选择老人');
-  	}else{
-  		httpServer.listElderlyUseDrugInfo({customerId,elderlyId}).then(res=>{
-  			if(res.code===200){
-  				if(res.data){
-  			    this.setState(state=>{
-  			    	let drugs = state.drugs.slice();
-  			    	const data = res.data?res.data.map(m=>({drugCode:m.drugCode,quantity:m.quantity,minUbit:m.tbDrugInfo?m.tbDrugInfo.minUnit:''})):[]
-  			    	drugs = [...drugs,...data];
-  			    	return{drugs} 
-  			    })
-  			    
-  			   }else{
-  			   	 message.error("没有该老人用药记录");
-  			   }
-  			}else{
-  				message.error("导入发生错误");
-  			}
-  		})
-  	}
+ 
+  elderlyChange=id=>{
+  	 this.elderlyId = id;
   }
-  
+  importDrug=drugs=>{
+  	this.setState(state=>{
+  		state.drugs=drugs;
+  		return state;
+  	})
+  }
   render(){
     const {
-			getFieldDecorator
+	      getFieldDecorator
 		} = this.props.form;
     const {type} = this.props;		
 	const {receiptTypes,drugs,drugFlag,units} = this.state; 
-	const {inOutTime,elderlyId,receiptType,docNo} = this.state.record;
+	const {inOutTime,elderlyId,receiptType,docNo,auditTime,auditor} = this.state.record;
 	const columns=[{
 	      title: '药品名称',
 	      dataIndex: 'drugCode',
 	      key: 'drugCode',
+	      width:'15%',
 	      render:(t,r)=>{
 	      	const drugList = this.state.drugList;
 	      	return drugList[t]?drugList[t]:t;
 	      }
 	    }, {
-	      title: '出库数量',
+	      title: '数量',
 	      dataIndex: 'quantity',
 	      key: 'quantity',
+	      align:'center',
+	      width:'10%'
 	    },{
 	      title:'最小单位',
 	      dataIndex:'minUbit',
 	      key:'minUbit',
-	      width:'15%'
+	      align:'center',
+	      width:'8%',
+	      render:(t,r)=>{
+	      	return <Tag color="cyan">{t}</Tag>
+	      }
 	    },{
     	    title: '操作',
 			dataIndex: 'action',
 			key: 'action',
 			width: '15%',
+			align:'center',
 			render: (text, record) => {
-				if(type==='edit'){
 					return(
+						type==="read"?null:
 						<span>
 			              <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
 			              <Divider type="vertical" />
@@ -254,10 +223,9 @@ class editForm extends Component{
 			              </Popconfirm>
 			            </span>
 					)
-				}
 			}
         }];
-	 
+	   
     const formItemLayout = {
       labelCol: {
         xs: { span: 24 },
@@ -283,12 +251,11 @@ class editForm extends Component{
    
     return (
       <Modal
-        title="药品出库"
-        okText='提交'
-        width="60%"
+        title="药品出库单"
+        width={800}
         visible={true}
-        onOk={this.handleSubmit}
         onCancel={this.handleCancel}
+        footer={type==="read"?null:[<Button key="cancel" onClick={this.handleCancel}>取消</Button>,<Button key="sub" type="primary" onClick={this.handleSubmit}>提交</Button>]}
         maskClosable={false}
       >
         <Form hideRequiredMark onSubmit={this.handleSubmit}>
@@ -301,7 +268,7 @@ class editForm extends Component{
                   rules: [{ required: true, message: '请选择老人'}],
                   initialValue:elderlyId
                 })(
-                   <ElderlySelect listStatus="3" onChange={this.elderlyChange}/>
+                   <ElderlySelect listStatus="3" onChange={this.elderlyChange} />
                 )}
               </Form.Item>
               <Form.Item
@@ -310,7 +277,7 @@ class editForm extends Component{
                 style={{marginBottom:'4px'}}
               >
                 {getFieldDecorator('docNo', {
-                  rules: [{ required: false, message: '请输出单号'}],
+                  rules: [{ required: false, message: '请输入单号'}],
                   initialValue:docNo
                 })(
                     <Input placeholder="自动生成" disabled/>
@@ -323,9 +290,9 @@ class editForm extends Component{
               >
                 {getFieldDecorator('receiptType', {
                   rules: [{ required: true, message: '请选择类别'}],
-                  initialValue:receiptType
+                  initialValue:receiptType||receiptTypes[0]&&receiptTypes[0].value
                 })(
-                  <RadioGroup buttonStyle="solid" disabled={type==="audit"}>
+                  <RadioGroup buttonStyle="solid" disabled={type==="audit"||type==="read"}>
 					    {receiptTypes.map(i=>{
                 		    return <Radio.Button value={i.value} key={i.id}>{i.value}</Radio.Button>
                 	    })}
@@ -341,10 +308,10 @@ class editForm extends Component{
                   rules: [{ required: true, message: '请选择出库时间'}],
                   initialValue:inOutTime?moment(inOutTime):moment()
                 })(
-                   <DatePicker showTime disabled={type==="audit"}/>
+                   <DatePicker showTime disabled={type==="audit"||type==="read"}/>
                 )}
               </Form.Item>
-              {type==='audit'?
+              {type==='audit'||type==="read"?
 	            <Fragment>
 	              	<Form.Item
 	                label='审核人'
@@ -352,9 +319,9 @@ class editForm extends Component{
 	                style={{marginBottom:'4px'}}
 	              >
 	                {getFieldDecorator('auditor', {
-	                  rules: [{ required: true, message: '请输出审核人'}],
+	                  rules: [{ required: true, message: '请输入审核人'}],
 	                })(
-	                    <Input placeholder="审核人" />
+	                    <Input placeholder="审核人" disabled={type==='read'}/>
 	                )}
 	              </Form.Item>
 	              	<Form.Item
@@ -364,28 +331,29 @@ class editForm extends Component{
 	              >
 	                {getFieldDecorator('auditTime', {
 	                  rules: [{ required: true, message: '请选择审核时间'}],
-	                  initialValue:moment()
+	                  initialValue:moment(auditTime)||moment()
 	                })(
-	                   <DatePicker showTime />
+	                   <DatePicker showTime disabled={type==="read"} />
 	                )}
 	              </Form.Item>
 	            </Fragment>:null
               }
           </Form>
           <Table 
+               size="middle"
 	           columns={columns} 
 	           dataSource={drugs} 
 	           rowKey={record => record.drugCode}
 	       />
-	       { type==="audit"?null:
-	         <span>
-		       	 <Button icon="plus" onClick={this.handleAddDrug}></Button>
-		         <Button type="primary" onClick={this.bringDrugUse}>导入</Button>
-	         </span>
-	       }
-	       
 	       {
-	       	 drugFlag?<DrugForm handleDrug={this.handleDrug} elderlyId={elderlyId}  units={units} cancel={this.cancel} drugInfo={this.state.drugInfo}/>:null
+	       	type==="audit"||type==="read"?null:
+	       	  <span>
+	            <Button icon="plus" onClick={this.handleAddDrug}></Button>
+	            <ImportDrug elderlyId={this.elderlyId} importDrug={this.importDrug}/>
+	          </span> 
+	       }
+	       {
+	       	 drugFlag?<DrugForm handleDrug={this.handleDrug} elderlyId={this.elderlyId} units={units} cancel={this.cancel} drugInfo={this.state.drugInfo}/>:null
 	       }
       </Modal>
     )

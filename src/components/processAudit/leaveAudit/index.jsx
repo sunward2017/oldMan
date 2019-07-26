@@ -1,5 +1,5 @@
 import React from 'react';
-import { Row, Col, Card, notification, Tag, Button, Steps, Collapse,Spin } from 'antd';
+import { Row, Col, Card, notification, Tag, Button, Steps, Collapse,Spin,Tooltip } from 'antd';
 // import moment from 'moment';
 import httpServer from '../../../axios/index';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
@@ -18,8 +18,7 @@ export default class LeaveAudit extends React.Component {
     }
     
     fetchElderlyList(){
-        const { customerId } = this.props.auth;
-        httpServer.listElderlyInfo({customerId, launchFlag:1, listStatus:"3"}).then(res => {
+        httpServer.listElderlyInfo({launchFlag:1, listStatus:"3"}).then(res => {
             const list = res.data || [];
             this.setState({list, activeKey:list[0] && list[0].id.toString() });
             list.length>0 && this.fetchOneAudit(list[0]);
@@ -80,8 +79,11 @@ export default class LeaveAudit extends React.Component {
                                 list.map(item => (
                                     <Panel
                                         header={<div>
-                                            <Tag color="#108ee9">{item.name}</Tag> -- {item.age}岁 -- {item.roomName}房间
-                                            <span className="pull-right">出院申请日期:{item.requestTime}</span>
+                                            <Tag color="#108ee9">{item.name}</Tag> -- {item.age}岁 -- {item.roomName}房间-- 
+                                            <Tooltip placement="right" title={item.reason}>
+										        <Tag color="geekblue">出院原因</Tag>
+										    </Tooltip>
+                                            <span className="pull-right">出院申请日期:&nbsp;{item.requestTime.substr(0,10)}</span>
                                         </div>}
                                         key={item.id}
                                     >
@@ -90,11 +92,11 @@ export default class LeaveAudit extends React.Component {
                                             {
                                                audits.map(s =>
                                                     <Step key={s.id}
-                                                         description={s.status? "审核完成"
+                                                        description={s.status?<span>审核人:&nbsp;<Tag color="cyan">{s.optName}</Tag></span>
                                                              : (s.memo.includes(auth.id.toString())?
                                                                 <Button
                                                                     type="primary"
-                                                                    size="small"
+                                                                    icon="audit"
                                                                     onClick={() => this.onCheckOutHandler(item,s)}
                                                                 >审核确认</Button>: "待审核")}
                                                          status={s.status ? "finish" : "wait"}

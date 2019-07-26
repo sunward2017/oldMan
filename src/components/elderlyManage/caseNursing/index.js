@@ -3,7 +3,7 @@ import React, {
 	Fragment
 } from 'react';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
-import { Row, Col, Table, notification, Button, Input, Tabs, Card, TreeSelect, Tag, Avatar, Divider, Calendar ,Badge} from 'antd';
+import { Row, Col, Table, notification, Button, Input, Tabs, Card, TreeSelect, Tag, Avatar, Divider, Calendar ,Badge,Tooltip} from 'antd';
 import httpServer from '../../../axios';
 import PersonInfo from './personInfo';
 import HealthCarePlan from './healthCarePlan';
@@ -18,9 +18,7 @@ const TabPane = Tabs.TabPane;
 const SHOW_PARENT = TreeSelect.SHOW_PARENT;
 const TreeNode = TreeSelect.TreeNode;
 const Search = Input.Search;
-const {
-	Meta
-} = Card;
+const {Meta} = Card;
 class CarePlan extends Component {
 	constructor(props) {
 		super(props);
@@ -28,12 +26,13 @@ class CarePlan extends Component {
 			oldManList: [], //老人列表数据
 			elderlyListFlag: true, //列表开关
 			eldlerlyInfo: {},
-			nursingScheduledId: '',
+			nursingScheduledId: '', //护理计划id
 			elderlyCasePlans: {}, //老人对应的护理计划列表
 			activeKey: '1',
 			treeData: [],
 			nursingGradeList: [], //护理等级
 			casePlan: {}, //个案详情
+			tabFlag:true,
 		}
 	}
 
@@ -145,13 +144,13 @@ class CarePlan extends Component {
 			elderlyListFlag: true,
 		});
 	}
-
+    
 	setNursingScheduledId(id) { //获取nursingScheduledId
 		this.setState({
 			nursingScheduledId: id
 		});
 	}
-  
+	
 	tabsChange = (v) => {
 		this.setState({
 			activeKey: v
@@ -194,6 +193,7 @@ class CarePlan extends Component {
 			});
 		})
 	}
+	
 	renderTreeNodes = data => data.map(item => {
 		if(item.children) {
 			return(
@@ -337,13 +337,14 @@ class CarePlan extends Component {
 			treeData,
 			tabFlag,
 			nursingGradeList,
-			casePlan
+			casePlan,
+			nursingScheduledId
 		} = this.state;
 		const columns = [{
 			title: '序号',
 			render: (text, record, index) => `${index+1}`,
 			key: 'serialNumber',
-			width: '10%'
+			width: '8%'
 		}, {
 			title: '入院编号',
 			dataIndex: 'elderlyNo',
@@ -358,7 +359,19 @@ class CarePlan extends Component {
 			title: '住址',
 			dataIndex: 'address',
 			key: 'address',
-			width: '20%'
+			width: '20%',
+			onCell: () => {
+	        return {
+	          style: {
+	            maxWidth: 150,
+	            overflow: 'hidden',
+	            whiteSpace: 'nowrap',
+	            textOverflow:'ellipsis',
+	            cursor:'pointer'
+	          }
+	        }
+	      },
+	      render: (text) => <Tooltip placement="topLeft" title={text}>{text}</Tooltip>
 		}, {
 			title: '房间名称',
 			dataIndex: 'roomName',
@@ -381,14 +394,15 @@ class CarePlan extends Component {
 			title: '操作',
 			dataIndex: 'action',
 			key: 'action',
+			align:'center',
 			render: (text, record) => {
-				return <Button size="small" type="primary" onClick={()=>this.hangdleCheck(record)}>个案护理</Button>
+				return <Button size="small" icon="solution" type="primary" title="个案护理" onClick={()=>this.hangdleCheck(record)}></Button>
 			}
 		}];
 
 		return(
 	    <Fragment>
-        <BreadcrumbCustom first="医护管理" second="护理计划" />
+        <BreadcrumbCustom first="医护管理" second="个案护理" />
         {
           elderlyListFlag?
                <Row>
@@ -417,25 +431,25 @@ class CarePlan extends Component {
                       <Row>
                         <Card bordered={false} title="老人列表">
                           <Table 
-                            bordered
+                            size="small"
                             dataSource={oldManList} 
                             columns={columns} 
-                            pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                            pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
                             rowKey={record => record.id}
                           />
                         </Card>
                       </Row>
                 </Row>:
-            <Card title="个案计划"  extra={<Button type="primary" onClick={this.rebackList} size="small">回退</Button>}>
+            <Card title="个案计划"  extra={<Button type="primary" onClick={this.rebackList} size="small" title="返回" icon="rollback"></Button>}>
                 <Row gutter={16}>
                    <Col xs={24} md={24} sm={24}>
                    	  <Card 
                    	     bordered
-		              > <h4>
+		              > <h4 style={{color:"#333333"}}>
 		                  姓名:&emsp;<Tag color="blue">{elderlyInfo.name}</Tag>&emsp; 性别:&emsp;<Tag color="geekblue">{elderlyInfo.sex===1?'男':'女'}</Tag>&emsp;
-		                   年龄:&emsp;<Tag color="purple">{elderlyInfo.age}岁</Tag>
+		                    年龄:&emsp;<Tag color="purple">{elderlyInfo.age}岁</Tag>
 		                  护理等级:&emsp;<Tag color="blue">{nursingGradeList.find(item=>(item.nursingGradeCode===elderlyInfo.nursingGradeCode)).nursingGradeName}</Tag>&emsp; 
-		                    房号:&emsp;<Tag color="geekblue">{elderlyInfo.roomName}</Tag>&emsp;床号:&emsp;<Tag color="purple">{elderlyInfo.bedNumber}</Tag>
+		                     房号:&emsp;<Tag color="geekblue">{elderlyInfo.roomName}</Tag>&emsp;床号:&emsp;<Tag color="purple">{elderlyInfo.bedNumber}</Tag>
 		                </h4>
 		                
 		              </Card>
@@ -457,27 +471,27 @@ class CarePlan extends Component {
 		                     saveCasePlan={this.saveCasePlan} 
 		                    />
 		                  </TabPane>
-		                  <TabPane tab="日常生活能力评估" key="2" disabled={tabFlag}>
-		                    <Evaluate saveEvaluate={this.saveEvaluate} tbScheduledOne={casePlan['tbNursingScheduledOne']||{}}/>
+		                  <TabPane tab="日常生活能力评估" key="2" disabled={tabFlag&&!nursingScheduledId}>
+		                    <Evaluate key={casePlan['tbNursingScheduledOne']?casePlan['tbNursingScheduledOne'].id:''} saveEvaluate={this.saveEvaluate} tbScheduledOne={casePlan['tbNursingScheduledOne']||{}}/>
 		                  </TabPane>
-		                  <TabPane tab="健康护理计划" key="3" disabled={tabFlag}>
+		                  <TabPane tab="健康护理计划" key="3" disabled={tabFlag&&!nursingScheduledId}>
 		                    <HealthCarePlan
 		                      key = {casePlan['tbNursingScheduledTwos']?casePlan['tbNursingScheduledTwos'].id:''}
 		                      healthInfo = {casePlan['tbNursingScheduledTwos']||{}} 
 		                      saveCasePlan={this.saveCasePlan}
 		                    />
 		                  </TabPane>
-		                  <TabPane tab="个案工作计划" key="4" disabled={tabFlag}>
+		                  <TabPane tab="个案工作计划" key="4" disabled={tabFlag&&!nursingScheduledId}>
 		                    <CaseCare 
 		                      key = {casePlan['tbNursingScheduledThree']?casePlan['tbNursingScheduledThree'].id:''}
 		                      work = {casePlan['tbNursingScheduledThree']||{}}
 		                      saveCasePlan={this.saveCasePlan}
 		                    />
 		                  </TabPane>
-		                  <TabPane tab="个案护理记录" key="5" disabled={tabFlag}>
+		                  <TabPane tab="个案护理记录" key="5" disabled={tabFlag&&!nursingScheduledId}>
 		                    <NursingRecord  saveCasePlan={this.saveCasePlan} record={casePlan['tbNursingRecoder']||{}}    key = {casePlan['tbNursingRecoder']?casePlan['tbNursingRecoder'].id:''}/>
 		                  </TabPane>
-		                  <TabPane tab="7日评估及初步护理计划" key="6" disabled={tabFlag}>
+		                  <TabPane tab="7日评估及初步护理计划" key="6" disabled={tabFlag&&!nursingScheduledId}>
 		                    <Tentative 
 		                     key = {casePlan['tbNursingScheduled7day']?casePlan['tbNursingScheduled7day'].id:''}
 		                     saveCasePlan={this.saveCasePlan} 

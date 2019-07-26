@@ -5,17 +5,15 @@ import React, {
 import { connect } from 'react-redux'
 import { Table, Tag,Tree,Row,Col,notification,Card,Icon,Modal,Empty,Divider,message,Button,Input} from 'antd';
 import { Link } from 'react-router-dom';
-
 import BreadcrumbCustom from '../components/BreadcrumbCustom';
 import httpServer from '@/axios/index';
 import { drugElderlyInfo } from '@/action';
-import ChangeNursingGrade from '../components/elderlyManage/changeNursingGrade';
 import ChangeRoom from '../components/elderlyManage/changeRoom';
-import ChangeProportion from '../components/elderlyManage/changeProportion';
 import healthRecord from '../components/medicalCare/healthRecord';
+import {HistoryChangeRoom,HistoryChangeNursingGrade} from './table'
 
 
-
+const Search = Input.Search;
 const TreeNode = Tree.TreeNode;
 const {Meta} = Card;
 class Plan extends Component {
@@ -55,11 +53,14 @@ class Plan extends Component {
 		 
 		this.setState({second,customerId:auth.customerId,operator:auth.account},function(){
 			this.getNursingGradeList()
-			this.AreaTree()
+			this.getAreaTree();
+			if(second !== '用药计划'){
+			  this.fetchElderly()	
+			}
 		})
 		 
 	}
-	AreaTree=()=>{
+	getAreaTree=()=>{
 		const customerId = this.state.customerId;
 		httpServer.listAreaInfo({customerId}).then(res=>{
 			if(res.code===200){
@@ -76,32 +77,32 @@ class Plan extends Component {
 		})
 	}
 	/*添加按钮*/
-	handleAdd(r) {
+	handleAdd=(r)=>{
 		this.props.dispatch(drugElderlyInfo(r));
 		const url= this.props.location.pathname;
 		this.props.history.replace(url+'/edit');
 	}
 	
 	renderTreeNodes = data => data.map((item) => {
-	 
 	    if (item.children) {
 	      return (
 	        <TreeNode title={item.areaName} key={item.areaCode} >
-                 {this.renderTreeNodes(item.children)}
+                {this.renderTreeNodes(item.children)}
             </TreeNode>
 	      );
 	    }
 	    return <TreeNode {...item} />;
 	})
     onTreeSelectChangeHandler = (value) => {
-        this.setState({areaCode:value[0]},function(){
-        	this.fetchElderly();
-        })
+    	sessionStorage['areaCode']= value[0];
+        this.fetchElderly(); 
     }
    
     fetchElderly=()=>{
-    	const { areaCode } = this.state;
-    	httpServer.listElderlyInfo({listStatus:'3', launchFlag:0, areaCode}).then(res => {
+    	const areaCode = sessionStorage.getItem('areaCode');
+    	const {second} = this.state;
+    	const Url = second==="用药计划"?"listElderlyDrugScheduledInfo":"listElderlyInfo";
+    	httpServer[Url]({listStatus:'3', launchFlag:0, areaCode}).then(res => {
         	if(res.code===200){
         	   const data = res.data||[];
         	   this.setState({dataSource:data,data})	
@@ -120,26 +121,14 @@ class Plan extends Component {
             duration:2
         })
     }
-    handleChange=(r,type)=>{
-    	this.setState({visible:true,elderlyInfo:r,type});
-    }
-    registerComponent=()=>{
-    	const {elderlyInfo,Grades,type} = this.state;
-    	if(this.state.second==='换房处理'){
-    		return <ChangeRoom elderlyInfo={elderlyInfo} close={this.cancel} auth={this.props.auth} type={type}/>
-    	}else if(this.state.second==='护理等级变更'){
-    		return <ChangeNursingGrade elderlyInfo={elderlyInfo}  close={this.cancel} auth={this.props.auth} grades={Grades} type={type}/>
-    	}else{
-    		return <ChangeProportion elderlyInfo={elderlyInfo} close={this.cancel} type={type}/>
-    	}
-    }
+   
+  
     cancel=()=>{
 	    this.setState({visible:false},()=>{
 	    	this.fetchElderly();
 	    })
     }
-    getNursingGradeList(){
-	    
+    getNursingGradeList=()=>{
 	    httpServer.listNursingGrade({}).then((res)=>{
 	       if (res.code === 200) {
 	           let nursingGrade = {};
@@ -157,23 +146,32 @@ class Plan extends Component {
     handleInputChange=(e) =>{ //老人姓名搜索框发生变化
 	    this.setState({ searchText: e.target.value });
 	}
-    handleSearchElderly=()=>{
-    const { searchText } = this.state;
-	    if(searchText){
-	      const reg = new RegExp(searchText, 'gi');
-	      const data = this.state.dataSource.filter((record) =>record.name && record.name.match(reg));
-	      this.setState({
-	        data,
-	      });
-	    }else{
-	      const args = {
-	        message: '友情提示',
-	        description: "请先输入老人姓名",
-	        duration: 2,
-	      };
-	      notification.info(args);
-	    }
+    handleSearchElderly=(value)=>{
+        /\S+/.test(value) && this.getListElderlyInfo({
+			name: value.trim()
+		});
     }
+    getListElderlyInfo = (searchKey) => {
+		httpServer.listElderlyInfo({
+			listStatus: "3",
+			launchFlag: 0,
+			...searchKey
+		}).then((res) => {
+			if(res.code === 200) {
+				const data = res.data?res.data:[];
+				this.setState({data})
+			} else {
+				const args = {
+					message: '通信失败',
+					description: res.msg,
+					duration: 2,
+				};
+				notification.error(args);
+			}
+		}).catch((error) => {
+			console.log(error);
+		});
+	}
     handleReset = ()=>{
     	const {data,dataSource} = this.state;
     	this.setState({data:dataSource,searchText:''})
@@ -190,17 +188,19 @@ class Plan extends Component {
 		      title: '序号',
 		      render:(text,record,index)=>`${index+1}`,
 		      key:'serialNumber',
-		      width:'5%'
-		    },{
-		      title:'入院编号',
-		      dataIndex: 'elderlyNo',
-		      key: 'elderlyNo',
-		      width:'10%'
+		      width:'5%',
+		      align:'center'
 		    },{
 		      title: '老人姓名',
 		      dataIndex: 'name',
 		      key: 'name',
 		      width:'10%'
+		    },{
+		      title: '房间名称',
+		      dataIndex: 'roomName',
+		      width:'10%',
+		      defaultSortOrder: 'descend',
+              sorter: (a, b) => a.roomName - b.roomName,
 		    },{
 		      title: '年龄',
 		      dataIndex: 'age',
@@ -212,13 +212,8 @@ class Plan extends Component {
 		      key: 'sex',
 		      width:'10%',
 		      render:(text)=>{
-		      	 return text===1?<Tag color="#87d068">男</Tag>:<Tag color="#2db7f5">女</Tag>
+		      	 return text===1?<Tag color="#337Ab7">男</Tag>:<Tag color="#F00">女</Tag>
 		      }
-		    },{
-		      title: '房间名称',
-		      dataIndex: 'roomName',
-		      key: 'roomName',
-		      width:'10%'
 		    },{
 		      title:'护理等级',
 		      dataIndex: 'nursingGradeCode',
@@ -232,40 +227,24 @@ class Plan extends Component {
 		      dataIndex: 'action',
 		      key: 'action',
 		      width:'15%',
+		      align:'center',
 		      render:(text,record)=>{
 		      	const  url  = this.props.location.pathname;
+		      	const {nursingGrade} = this.state;
 		      	switch(this.state.second){
-		      		case '用药计划': return(
-								        <span>
-								           <a href="javascript:;" onClick={() => { this.handleAdd(record) }} style={{color:'#2ebc2e'}}>用药计划</a>
-								        </span>
-							        );
-                    
+		      		case '用药计划': return( <Button type="primary" size="small" icon="idcard" title="用药计划" onClick={() => { this.handleAdd(record) }}></Button>);
+                    case '健康档案': return(<Link to={{ pathname: `${url}/${record.id}/${record.name}/edit`,state:record}}>
+                    	                   <Button type="primary" size="small" icon="project" title="健康档案"></Button>
+		      	                           </Link>
+                    	                 )
                     case '换房处理': return(
                     	               <span className="manual"> 
-                    	               		<span onClick={() => { this.handleChange(record,'edit') }} style={{color:'#2ebc2e'}}>换房申请</span><Divider type="vertical" />
-                    	               		<span onClick={() => { this.handleChange(record,'read') }} style={{color:'#2ebc2e'}}>换房记录</span>
-                    	               </span>
-                                   )
-                    
-                    case '护理等级变更':return(
-				                    	<span className="manual">
-					                    	<span onClick={() => { this.handleChange(record,'edit') }} style={{color:'#2ebc2e'}}>护理等级变更</span><Divider type="vertical" />
-					                    	<span onClick={() => { this.handleChange(record,'read') }} style={{color:'#2ebc2e'}}>变更记录</span>
-				                     	</span>
-				                        )
-                    case '水电比例变更': return(
-					                    	<span className="manual">
-						                    	<span onClick={() => { this.handleChange(record,'edit') }} style={{color:'#2ebc2e'}}>水电比例变更</span><Divider type="vertical" />
-					                     	</span>
-					                    )
-                    
-                    case '健康档案': return(
-                    	                <span>
-                    	                   <Link to={{ pathname: `${url}/${record.id}/${record.name}/edit`,state:record}}>健康档案</Link>
-                    	                </span>
-                    	
-                    )
+                    	                     <ChangeRoom elderlyInfo={record} auth={this.props.auth}/>
+                    	               		 <Divider type="vertical"/>
+                    	               		 <HistoryChangeRoom elderlyInfo={record}/>
+                    	               		 <Divider type="vertical"/>
+                    	               		 <HistoryChangeNursingGrade nursingGrades={nursingGrade}  elderlyInfo={record}/>
+                    	               </span>)
                     case '护理记录': return(
                     	                <span>
                     	                   <Link to={{ pathname: `${url}/list`,state:record}}>护理记录</Link>
@@ -290,35 +269,33 @@ class Plan extends Component {
 				    </Card>  
 	            </Col>
 	            <Col  xs={{ span: 24}} lg={{ span: 20}} style={{background:'#fff'}}>
-	             <div className="search">
-	                <Input 
-	                  placeholder="按老人姓名搜索" 
-	                  style={{width:'40%',marginRight:'10px'}}
-	                  ref={ele => this.searchInput = ele}
-	                  value={this.state.searchText}
-	                  onChange={this.handleInputChange}
-	                  onPressEnter={this.handleSearchElderly}
-	                />
-	                <Button type="primary" onClick={this.handleSearchElderly}>开始搜索</Button>
-	                <Button type="primary" onClick={this.handleReset}>刷新</Button>
+	             <div className="search" >
+	                <Search
+					    placeholder="请输入老人全名"
+			 	        onChange={this.handleInputChange}
+		 		        value={this.state.searchText}
+	  			        onSearch={this.handleSearchElderly}
+			 	        style={{ width: 200 }}
+			 	        enterButton
+					    />
 	             </div>   
 	             <Divider/>
 		          <Table 
-		            bordered
+		            size="middle"
 		            rowKey='id' 
 		            dataSource={data} 
 		            columns={columns} 
-		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 		          />
 	            </Col>
 	        </Row>
 	         
-	        {
-	        	visible?this.registerComponent():null
-	        }
+	        
+	       
 	        <style>{`
 	        	    .search{
 	        	    	padding-top:30px;
+	        	    	text-align:right;
 	        	    }
 			        .manual>span{
 					   cursor:pointer;

@@ -129,11 +129,12 @@ class ModalInfo1 extends Component{
       <Modal 
         title="护理等级"
         visible={true}
+        onOk={this.handleSubmit}
         onCancel={handleCancel}
         maskClosable = {false}//点击遮罩层不允许关闭
-        footer = {null}
+         
       >
-        <Form hideRequiredMark onSubmit={this.handleSubmit}>
+        <Form>
           <Form.Item
             label='等级名称'
             {...formItemLayout}
@@ -155,7 +156,7 @@ class ModalInfo1 extends Component{
               rules: [{ required: true, message: '请输入费用!' },],
               initialValue:money,
             })(
-              <InputNumber disabled={disFlag}/>
+              <InputNumber  style={{width:'100%'}} disabled={disFlag}/>
             )}
           </Form.Item>
           <Form.Item
@@ -169,7 +170,7 @@ class ModalInfo1 extends Component{
               }],
               initialValue:days,
             })(
-              <InputNumber disabled={disFlag}/>
+              <InputNumber style={{width:'100%'}} disabled={disFlag}/>
             )}
           </Form.Item>
           <Form.Item
@@ -182,14 +183,11 @@ class ModalInfo1 extends Component{
               initialValue:state,
             })(
               <RadioGroup buttonStyle="solid" disabled={disFlag}>
-                <Radio.Button value={1}>正常</Radio.Button>
-                <Radio.Button value={0}>失效</Radio.Button>
+                <Radio.Button value={1}>启用</Radio.Button>
+                <Radio.Button value={0}>禁用</Radio.Button>
               </RadioGroup>
             )}
-          </Form.Item>
-          <Form.Item style={{textAlign:'center'}}>
-            <Button type="primary" htmlType="submit">确认</Button>
-          </Form.Item>
+          </Form.Item>   
         </Form>
       </Modal>
     )

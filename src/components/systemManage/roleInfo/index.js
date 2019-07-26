@@ -242,7 +242,7 @@ export default class RoleInfo extends React.Component {
           </Col>
           <Col  md={16} lg={18}>
             <Card title="角色信息" extra={<Button type='primary' onClick={this.handleAdd}>新增角色</Button>}>
-            <Table dataSource={listData} columns={columns} rowKey={record => record.id} onRow={(record) => this.handleOnRow(record)} bordered/>
+            <Table dataSource={listData} columns={columns} rowKey={record => record.id} onRow={(record) => this.handleOnRow(record)}/>
             </Card>
           </Col>
           

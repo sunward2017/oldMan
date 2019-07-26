@@ -81,7 +81,7 @@ export default ({data}) => {
     return (
         <ReactEcharts
             option={option}
-            style={{height: '230px', width: '100%'}}
+            style={{height: '245px', width: '100%',borderRadius:'5px'}}
             className={'react_for_echarts'}
         />
     );

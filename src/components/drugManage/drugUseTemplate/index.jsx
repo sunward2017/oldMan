@@ -2,7 +2,7 @@ import React, {
 	Component,
 	Fragment
 } from 'react';
-import { Table,Card,Tag, Divider, Popconfirm, Button, Modal, Form, Input, DatePicker, Radio, Select,notification,Checkbox} from 'antd';
+import { Table,Card,Tag, Divider, Popconfirm, Button, Modal, Form, Input, DatePicker, Radio, Select,notification,Checkbox,Tooltip} from 'antd';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import moment from 'moment';
 import httpServer from '@/axios/index';
@@ -222,11 +222,6 @@ class CMT extends Component {
 			key: 'name',
 			width: '10%'
 		}, {
-			title: '排序号',
-			dataIndex: 'orderId',
-			key: 'orderId',
-			width: '10%'
-		}, {
 			title:'类型',
 			dataIndex:'type',
 			key:'type',
@@ -245,33 +240,41 @@ class CMT extends Component {
 			key: 'days',
 			width: '10%'
 		}, {
-			title: '时长(分)',
-			dataIndex: 'longTime',
-			key: 'longTime',
-			width: '8%',
-		}, {
 			title: '语音提示',
 			dataIndex: 'hint',
 			key: 'hint',
 			width: '15%'
 		}, {
-			title: '注意事项',
+			title: '备注',
 			dataIndex: 'describes',
 			key: 'describes',
+			onCell: () => {
+	        return {
+	          style: {
+	            maxWidth: 150,
+	            overflow: 'hidden',
+	            whiteSpace: 'nowrap',
+	            textOverflow:'ellipsis',
+	            cursor:'pointer'
+	          }
+	        }
+	      },
+	      render: (text) => <Tooltip placement="topLeft" title={text}>{text}</Tooltip>
 		}, {
 			title: '操作',
 			dataIndex: 'action',
 			key: 'action',
 			width: '12%',
+			align:'center',
 			render: (text, record) => {
 				return(
 					<span>
-            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
-              <Divider type="vertical" />
-              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
-              </Popconfirm>
-          </span>
+			            <Button onClick={() => { this.handleModify(record) }} size="small" type="primary" title="修改" icon="edit"></Button>
+			              <Divider type="vertical" />
+			              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+			                 <Button type="primary" title="删除" size="small" icon="delete"></Button>
+			              </Popconfirm>
+			        </span>
 				)
 			},
 		}];
@@ -283,11 +286,11 @@ class CMT extends Component {
           extra={<Button type="primary" onClick={this.handleAdd} >新建模板</Button>}
         >
           <Table 
-            bordered
+            size="middle"
             rowKey='id' 
             dataSource={dataSource} 
             columns={columns} 
-            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
           />
         </Card>
        
@@ -400,12 +403,12 @@ class CMT extends Component {
               }
                
               <Form.Item
-                label='描述'
+                label='备注'
                 {...formItemLayout}
                 style={{marginBottom:'4px'}}
               >
                 {getFieldDecorator('describes', {
-                  rules: [{ required: false, message: '请输入简要描述信息!' }],
+                  rules: [{ required: false, message: '请输入简要信息!' }],
                   initialValue:describes,
                 })(
                   <Input />
@@ -417,7 +420,7 @@ class CMT extends Component {
                 style={{marginBottom:'4px'}}
               >
                 {getFieldDecorator('hint', {
-                  rules: [{ required: true, message: '请输入语音模板!' }],
+                  rules: [{ required: false, message: '请输入语音模板!' }],
                   initialValue:hint,
                 })(
                   <Input />

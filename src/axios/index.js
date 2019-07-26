@@ -1,4 +1,4 @@
-import { post } from './tools';
+import { post,all} from './tools';
 import urls from './config';
 
 // 访问获取
@@ -13,3 +13,9 @@ Object.keys(urls).forEach(item => {
     }
 });
 export default obj;
+
+export const fetchAll=(urls,data)=>{
+	return new Promise((resolve,reject)=>{
+		all(urls,data,(res)=>resolve(res.map(_=>_.data)))
+	})
+}

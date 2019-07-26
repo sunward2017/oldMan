@@ -3,8 +3,11 @@ import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '../../../axios';
 import {Row,Popconfirm,notification,Col,Input,Button,Table,Divider,Tag,Card,Avatar,Modal,DatePicker} from 'antd';
 import OldManInfo from './oldManInfo';
+import OutHome from './outHome'
 import moment from 'moment'
 
+
+const Search = Input.Search;
 const { Meta } = Card;
 class OldManAdmission extends Component{
   constructor(props){
@@ -14,11 +17,10 @@ class OldManAdmission extends Component{
       customerId:'',
       oldManList:[],//老人列表数据
       oldManList_copy:[],//老人列表数据拷贝
-      searchText:'',
       oldManInfoList:{},
       tab2Flag:false,
       roomDisflag:false,
-      editFlag:false,
+      editFlag:'add',
       btnSubmitFlag:false,
       estimateGradeLists:[],//评估等级列表
       nursingGradeLists:[],
@@ -28,28 +30,30 @@ class OldManAdmission extends Component{
       outFlag:false,
       outDay:moment(), 
       outElderlyId:'',
+      searchTxt:'',
     }
-    this.handleInputChange = this.handleInputChange.bind(this);//老人信息搜索框发生变化
-    this.handleSearchElderly = this.handleSearchElderly.bind(this);//搜索老人信息
-    this.handleClickReset = this.handleClickReset.bind(this);//清楚搜索条件
+ 
     this.handleAddOldMan = this.handleAddOldMan.bind(this);
     this.elderlyListFlagToTrue = this.elderlyListFlagToTrue.bind(this);//返回
     this.handleCancel = this.handleCancel.bind(this);//关闭弹出框
     this.handleOk = this.handleOk.bind(this);//下载二维码
   }
   componentDidMount(){
-    //获取入院老人信息列表
     this.getListElderlyInfo();
-    //this.getListEstimateGrade();
     this.getListNursingGrade();
   }
   //获取入院老人信息列表
   getListElderlyInfo(){
     const {customerId} = this.props.auth;
     this.setState({customerId});
+    
     httpServer.listElderlyInfo({listStatus:"1,2,3",customerId,launchFlag:0}).then((res) => {
       if (res.code === 200) {
-        res.data?this.setState({oldManList:res.data,oldManList_copy:res.data}):this.setState({oldManList:[],oldManList_copy:[]});
+      	  const {searchTxt} = this.state;
+      	  const data = res.data.map((i,k)=>({...i,orderId:k}))||[];
+      		this.setState({oldManList:data},()=>{
+      			  this.handleSearchElderly(searchTxt)
+      		});
       } else {
         if(res.message ==='Request failed with status code 500'){
             console.log(res.message);
@@ -112,13 +116,8 @@ class OldManAdmission extends Component{
       console.log(error);
     });
   }
-
-  //搜索老人信息相关操作
-  handleInputChange(e){ //搜索框数据发生变化
-    this.setState({searchText:e.target.value});
-  }
-  handleSearchElderly(){//搜索老人信息
-    const { searchText } = this.state;
+  
+  handleSearchElderly=(searchText)=>{//搜索老人信息
     if(searchText){
       const reg = new RegExp(searchText, 'gi');
       this.setState({
@@ -131,50 +130,31 @@ class OldManAdmission extends Component{
         }).filter(record => !!record),
       });
     }else{
-      const args = {
-        message: '友情提示',
-        description: "请先输入老人姓名",
-        duration: 2,
-      };
-      notification.info(args);
+       this.setState(state=>{
+       	  state.oldManList_copy = state.oldManList;
+       	  return state;
+       })
     }
   }
-  handleClickReset(){//清楚搜索条件
-    this.setState({
-      oldManList_copy:this.state.oldManList,
-      searchText:'',
-    });
-  }
-
   //返回
   elderlyListFlagToTrue(){
-  this.setState({pageFlag:true});
-  this.getListElderlyInfo();
+    this.setState({pageFlag:true});
+    this.getListElderlyInfo();
   }
   //老人信息新增、查看、修改、删除相关操作
   handleClickRead(r){
     const {id} = r;
-    // const {account} = this.props.auth;
-    // if(!record.opetator){
-    //   record.opetator = account;
-    // }
     const record = {...r,bedInfo:{roomName:r.roomName,roomCode:r.roomCode,bedNumber:r.bedNumber}};
-    this.setState({pageFlag:false,oldManInfoList:record,tab2Flag:false,elderlyId:id,roomDisflag:true,editFlag:true,btnSubmitFlag:false});
+    this.setState({pageFlag:false,oldManInfoList:record,tab2Flag:false,elderlyId:id,roomDisflag:true,editFlag:"read",btnSubmitFlag:false});
   }
   handleAddOldMan(){
-    //const {account} = this.props.auth;
-    //opetator:account,
-    this.setState({pageFlag:false,oldManInfoList:{shareProportionWater:50,shareProportionPower:50},tab2Flag:true,elderlyId:'',roomDisflag:false,editFlag:false,btnSubmitFlag:false,});
+    this.setState({pageFlag:false,oldManInfoList:{},tab2Flag:true,elderlyId:'',roomDisflag:false,editFlag:'add',btnSubmitFlag:false});
   }
 
   handleClickModify(r){
     const {id} = r;
-    // const {account} = this.props.auth;
-    // if(!record.opetator){
-    //   record.opetator = account;
-    // }
     const record = {...r,bedInfo:{roomName:r.roomName,roomCode:r.roomCode,bedNumber:r.bedNumber}};
-    this.setState({pageFlag:false,oldManInfoList:record,tab2Flag:false,elderlyId:id,roomDisflag:record.status && record.status === 3?true:false,editFlag:false,btnSubmitFlag:false});
+    this.setState({pageFlag:false,oldManInfoList:record,tab2Flag:false,elderlyId:id,roomDisflag:record.status && record.status === 3?true:false,editFlag:'edit',btnSubmitFlag:false});
   }
 
   handleRowDelete(record){
@@ -205,39 +185,7 @@ class OldManAdmission extends Component{
       console.log(error);
     });
   }
-  handleOutHome(r){
-  	 this.setState({outFlag:true,outElderlyId:r.id}); 
-  }
-  handleOut=()=>{//出院申请
-    const {outDay,outElderlyId}= this.state;
-    if(!outDay)return;
-    
-    httpServer.outHomeInfo({id:outElderlyId,outDay:outDay.format('YYYY-MM-DD HH:mm:ss')}).then((res) => {
-    	this.hideModal();
-      if (res.code === 200) {
-        const args = {
-            message: '通信成功',
-            description: res.msg,
-            duration: 2,
-          };
-          notification.success(args);
-          this.getListElderlyInfo();
-      } else {
-        if(res.message ==='Request failed with status code 500'){
-            console.log(res.message);
-         }else{
-             const args = {
-            message: '通信失败',
-            description: res.msg,
-            duration: 2,
-          };
-          notification.error(args);
-         }
-      }
-    }).catch((error) => {
-      console.log(error);
-    });
-  }
+  
   //二维码相关
   handleGetQrCode(record){
     const {id} = record;
@@ -280,94 +228,98 @@ class OldManAdmission extends Component{
     iframeNode.contentWindow.focus();
     iframeNode.contentWindow.print();   
   }
-  hideModal = () => {
-    this.setState({
-      outFlag:false,
-    });
-  };
-  
-  changeOutDay=(v)=>{
-  	this.setState({outDay:v})
+ 
+  onChangeTxt=(e)=>{
+     this.setState({searchTxt:e.target.value})
   }
   render(){
-    const {pageFlag,oldManList_copy,customerId,oldManInfoList,modalFlag,recordInfo,imgSrc,outFlag,outDay} = this.state;
+    const {pageFlag,oldManList_copy,customerId,oldManInfoList,modalFlag,recordInfo,imgSrc,outFlag,outDay,searchTxt,editFlag} = this.state;
     const columns = [{
       title: '序号',
-      render:(text,record,index)=>`${index+1}`,
-      key:'serialNumber',
-      width:'6%'
+      dataIndex:'orderId',
+      width:'6%',
+      align:'center',
+      render:(text,record,index)=>`${text+1}`,
     },{
-      title:'入院编号',
-      dataIndex: 'elderlyNo',
-      key: 'elderlyNo',
-      width:'10%'
+    	 title:'入院编号',
+    	 dataIndex:'elderlyNo',
+    	 width:'10%',
+    	 align:'center',
     },{
       title: '老人姓名',
       dataIndex: 'name',
       key: 'name',
-      width:'10%'
+      width:'10%',
+      align:'center'
     },{
-      title:'联系电话',
-      dataIndex: 'phone',
-      key: 'phone',
-      width:'12%'
+    	title: '性别',
+		  dataIndex: 'sex',
+		  key: 'sex',
+		  width:'6%',
+		  align:'center',
+		  render:(text)=>{
+	   	  return text===1?<Tag color="#337AB7">男</Tag>:<Tag color="#F00">女</Tag>
+		  }
     },{
       title: '房间名称',
       dataIndex: 'roomName',
       key: 'roomName',
-      width:'12%'
+      width:'12%',
+      align:'center'
     },{
       title:'入院时间',
       dataIndex: 'checkInDate',
       key: 'checkInDate',
+      align:'center',
+      width:'12%',
       render:(text,record)=>{
         return record.checkInDate && record.checkInDate.substr(0,10)
-      },
-      width:'12%'
+      }
     },{
       title:'状态',
       dataIndex: 'status',
       key: 'status',
+      align:'center',
+      width:"5%",
       render:(text,record)=>{
         if(record.status === 1){
-          return <Tag color="#f50">预约</Tag>
+          return <Tag color="#36ba4a">预约</Tag>
         }
         if(record.status === 2){
           return <Tag color="#2db7f5">临时</Tag>
         }
         if(record.status === 3){
-          return <Tag color="#87d068">入住</Tag>
+          return <Tag color="#05a0a5">入住</Tag>
         }
       },
-      width:'12%'
     },{
-      title: '获取二维码',
+      title: '识别二维码',
       dataIndex: 'qrCode',
       key: 'qrCode',
-      width:'10%',
+      width:'5%',
+      align:'center',
       render:(text,record)=>{
-        return <Avatar size="large" icon="qrcode" onClick={()=>this.handleGetQrCode(record)}/>
+        return <Avatar size="small" icon="qrcode" onClick={()=>this.handleGetQrCode(record)}/>
       }
     },{
       title: '操作',
       dataIndex: 'action',
       key: 'action',
+      width:'15%',
+			align:'center',
       render:(text,record)=>{
         return(
           <span>
-            <a href="javascript:;" onClick={() => { this.handleClickRead(record) }} style={{color:'#2ebc2e'}}>查看</a>
+            <Button type="primary"  onClick={() => { this.handleClickRead(record) }} title="查看" icon="read" size="small"></Button>
             <Divider type="vertical" />
-            <a href="javascript:;" onClick={() => { this.handleClickModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+            <Button type="primary" title="修改" icon="edit" size="small"  onClick={() => { this.handleClickModify(record) }}></Button>
             <Divider type="vertical" />
-            <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record)}>
-              <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
-            </Popconfirm>
+            {record.status!==3?<Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record)}>
+               <Button type="primary" title="删除" icon="delete" size="small"></Button>
+            </Popconfirm>:null}
             <Divider type="vertical" />
             {
-              record.status === 3?
-                <Popconfirm title="是否发起出院申请?" onConfirm={() => this.handleOutHome(record)}>
-                  <a href="javascript:;" style={{color:'#2ebc2e'}}>出院申请</a>
-                </Popconfirm>:null
+              record.status === 3?<OutHome elderlyId={record.id} refresh={()=>{this.getListElderlyInfo()}}/>:null
             }    
           </span>
         )
@@ -379,30 +331,26 @@ class OldManAdmission extends Component{
         {
           pageFlag?
           <Row>
-            <Card bordered={false} style={{marginBottom:10}}>
-                <Row gutter={16}>
-                  <Col md={4}>
-                    <Input 
-                      placeholder="按老人姓名搜索"  
-                      value={this.state.searchText}
-                      onChange={this.handleInputChange}
-                      onPressEnter={this.handleSearchElderly}
-                    />
-                  </Col>                
-                    <Button onClick={this.handleSearchElderly} type="primary">搜索</Button>
-                    <Button onClick={this.handleClickReset} type="primary">刷新</Button>
-                </Row>
-            </Card>
-              <Card title="老人列表" bordered={false} extra={<Button onClick={this.handleAddOldMan} type="primary">新增入院老人</Button>}>
+              <Card title="老人列表" bordered={false} extra={<span>
+              	  <Search
+							      placeholder="请输入关键字"
+							      onChange={this.onChangeTxt}
+							      value={searchTxt}
+							      onSearch={this.handleSearchElderly}
+							      style={{ width: 200 }}
+							      enterButton
+							    />&emsp;
+              	  <Button onClick={this.handleAddOldMan} type="primary" icon="plus"></Button>
+              	</span>}>
                 <Table 
-                  bordered
+                  size="middle"
                   dataSource={oldManList_copy} 
                   columns={columns} 
-                  pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                  pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
                   rowKey={record => record.id}
                 />
               </Card>
-          </Row>:<OldManInfo customerId={customerId} oldManInfoList ={oldManInfoList} tab2Flag={this.state.tab2Flag} elderlyId={this.state.elderlyId} roomDisflag={this.state.roomDisflag} editFlag={this.state.editFlag} elderlyListFlagToTrue={this.elderlyListFlagToTrue} nursingGradeLists={this.state.nursingGradeLists} estimateGradeLists={this.state.estimateGradeLists}/>
+          </Row>:<OldManInfo customerId={customerId} oldManInfoList ={oldManInfoList} tab2Flag={this.state.tab2Flag} elderlyId={this.state.elderlyId} roomDisflag={this.state.roomDisflag} editFlag={editFlag} elderlyListFlagToTrue={this.elderlyListFlagToTrue} nursingGradeLists={this.state.nursingGradeLists} estimateGradeLists={this.state.estimateGradeLists}/>
         }
         {
           modalFlag?
@@ -431,16 +379,7 @@ class OldManAdmission extends Component{
                 
             </Modal>:null
         }
-         <Modal
-          title="日期输入"
-          visible={outFlag}
-          onOk={this.handleOut}
-          onCancel={this.hideModal}
-          okText="确认"
-          cancelText="取消"
-        >
-          离院结算日期:&emsp;<DatePicker  value={outDay} onChange={this.changeOutDay}/>
-        </Modal>
+        
       </Fragment>
     )
   }

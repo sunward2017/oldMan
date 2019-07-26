@@ -3,7 +3,7 @@
  */
 export const host = (() => {
     switch (process.env.NODE_ENV) {
-        case "development": return { api: 'http://192.168.10.235:8080' };
+        //case "development": return { api: 'http://192.168.10.235:8080' };
         default: return { api: 'http://120.55.240.188:9803' };
     }
 
@@ -55,6 +55,7 @@ export default {
     listEestimateLibDetail:host.api + '/listEestimateLibDetail',
     saveEestimateLibDetail:host.api + '/saveEestimateLibDetail',
     updateEestimateLibDetail:host.api + '/updateEestimateLibDetail',
+    
     //评估等级
     listEstimateGrade:host.api + '/listEstimateGrade',           
     saveEstimateGrade:host.api+'/saveEstimateGrade',               
@@ -361,4 +362,22 @@ export default {
     saveImmediateFee:host.api+'/saveImmediateFee',
     updateImmediateFee:host.api+'/updateImmediateFee',
     delImmediateFee:host.api+'/delImmediateFee',
+    
+    //日报
+    listRecvReportDay:host.api+'/listRecvReportDay',
+    
+    //探访
+    saveVisitOldMan:host.api+'/saveVisitOldMan',
+    detailVisitOldMan:host.api+'/detailVisitOldMan',
+    againInHomeInfo:host.api+'/againInHomeInfo',
+    //月报
+    listSettlementInfo:host.api+'/listSettlementInfo',
+    
+    listOldManDrugInfo:host.api+'/listOldManDrugInfo',
+    listElderlyDrugScheduledInfo:host.api+'/listElderlyDrugScheduledInfo',  
+    
+    listEmployeeInfo:host.api+'/listEmployeeInfo',
+    addEmployeeInfo:host.api+'/saveEmployeeInfo',
+    updateEmployeeInfo:host.api+'/updateEmployeeInfo',
+    deleteEmployeeInfo:host.api+'/deleteEmployeeInfo',
 }

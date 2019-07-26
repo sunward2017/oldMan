@@ -12,72 +12,17 @@ class ElderlyInfo extends React.Component {
     super(props);
     this.state = {
        modalFlag:false,
-       gradeObj:{},
-       meelObj:{},
     }
-   
   }
-  componentDidMount() {
-    this.getNursingGrade();
-    this.getPayItemChild()
-    
+  componentDidMount() { 
   }
-  getPayItemChild(){
-     
-    httpServer.selectPayItemChild().then((res)=>{
-      if (res.code === 200) {
-         if(res.data){
-        	this.setState({
-        		meelObj:res.data.reduce((p,c)=>[p[c.itemCode]=c.name,p][1],{})
-        	})
-        }
-      } else {
-        if(res.message ==='Request failed with status code 500'){
-            console.log(res.message);
-         }else{
-            const args = {
-            message: '通信失败',
-            description: res.msg,
-            duration: 2,
-          };
-          notification.error(args);
-         }
-      }
-    }).catch((error)=>{
-      console.log(error);
-    });
-  }
+  
   handleCancel=()=>{
     this.props.close();
   }
   
-  getNursingGrade(){
-    httpServer.listNursingGrade().then((res) => {
-      if (res.code === 200) {
-        if(res.data){
-        	this.setState({
-        		gradeObj:res.data.reduce((p,c)=>[p[c.nursingGradeCode]=c.nursingGradeName,p][1],{})
-        	})
-        }
-      } else {
-        if(res.message ==='Request failed with status code 500'){
-            console.log(res.message);
-         }else{
-             const args = {
-            message: '通信失败',
-            description: res.msg,
-            duration: 2,
-          };
-          notification.error(args);
-         }
-      }
-    }).catch((error) => {
-      console.log(error);
-    });
-  }
   render() {
-  	const {data,visible} = this.props;
-  	const {gradeObj,meelObj} = this.state;
+  	const {data,visible,meelObj,gradeObj} = this.props;
     const {
       name,    //老人姓名
       age,//年龄
@@ -103,6 +48,10 @@ class ElderlyInfo extends React.Component {
       shareProportionWater,//水费承担比例
       shareProportionPower,//电费承担比例
       memo,//备注
+      noPayFee,
+      waterKwhStatus,
+      monthlyPayment,
+      tbBedInfo
     } = data;
     
     const layout = {
@@ -212,34 +161,52 @@ class ElderlyInfo extends React.Component {
 	                 <Col {...layout.content}>{roomName}</Col>
 	              </Col>
 	              <Col md={8} sm={24}>
-	                 <Col {...layout.label}>水费对应项:</Col>
-	                 <Col {...layout.content}>{meelObj[itemCodeWater]}</Col>
-	              </Col>
-	              <Col md={8} sm={24}>
-	                 <Col {...layout.label}>电费对应项:</Col>
-	                 <Col {...layout.content}>{meelObj[itemCodeKwh]}</Col>
-	              </Col>
-	              <Col md={8} sm={24}>
-	                 <Col {...layout.label}>餐费对应项:</Col>
-	                 <Col {...layout.content}>{meelObj[itemCodeMeal]}</Col>
-	              </Col>
-	               <Col md={8} sm={24}>
-	                 <Col {...layout.label}>水费承当比例:</Col>
-	                 <Col {...layout.content}>{shareProportionWater}%</Col>
-	              </Col>
-	              <Col md={8} sm={24}>
-	                 <Col {...layout.label}>电费承当比例:</Col>
-	                 <Col {...layout.content}>{shareProportionPower}%</Col>
-	              </Col>
-	              <Col md={8} sm={24}>
 	                 <Col {...layout.label}>护理费:</Col>
 	                 <Col {...layout.content}>{nursingMoney}</Col>
 	              </Col>
-	               <Col md={8} sm={24}>
-	                 <Col {...layout.label}>调整日期:</Col>
-	                 <Col {...layout.content}>{changeNursingFeeDate&&changeNursingFeeDate.substr(0,10)}</Col>
+	              <Col md={8} sm={24}>
+	                 <Col {...layout.label}>房费:</Col>
+	                 <Col {...layout.content}>{tbBedInfo&&tbBedInfo.money||0}</Col>
 	              </Col>
-	               
+	              {
+	                noPayFee===1?
+	                <Col md={8} sm={24}>
+	                  <Col {...layout.label}>收费类型</Col>
+	                  <Col {...layout.content}>免费</Col>
+	                </Col>:
+	                <div>
+	                  {
+	                  	waterKwhStatus==1?
+	                  	 <Col md={8} sm={24}>
+			                 <Col {...layout.label}>水电包月费</Col>
+			                 <Col {...layout.content}>{monthlyPayment}</Col>
+			              </Col>
+	                  	:
+	                  	<Fragment>
+	                  	   <Col md={8} sm={24}>
+			                 <Col {...layout.label}>水费对应项:</Col>
+			                 <Col {...layout.content}>{meelObj[itemCodeWater]}</Col>
+			               </Col>
+			               <Col md={8} sm={24}>
+			                 <Col {...layout.label}>电费对应项:</Col>
+			                 <Col {...layout.content}>{meelObj[itemCodeKwh]}</Col>
+			               </Col>
+			               <Col md={8} sm={24}>
+			                 <Col {...layout.label}>餐费对应项:</Col>
+			                 <Col {...layout.content}>{meelObj[itemCodeMeal]}</Col>
+			               </Col>
+			               <Col md={8} sm={24}>
+			                 <Col {...layout.label}>水费承当比例:</Col>
+			                 <Col {...layout.content}>{shareProportionWater}%</Col>
+			               </Col>
+			               <Col md={8} sm={24}>
+			                 <Col {...layout.label}>电费承当比例:</Col>
+			                 <Col {...layout.content}>{shareProportionPower}%</Col>
+			               </Col>
+	                  	</Fragment>
+	                  }
+	                </div>
+	              }
 	           </Row>  
 	        </Card>
 	    </Modal>    

@@ -8,6 +8,7 @@ import moment from 'moment';
 import httpServer from '@/axios/index';
 import reqwest from 'reqwest'
 import {host} from '@/axios/config'
+import { Link } from 'react-router-dom';
 
 const RadioGroup = Radio.Group;
 const Dragger = Upload.Dragger;
@@ -274,14 +275,13 @@ class CMT extends Component {
             <Card 
 		        title="历史档案" 
 		        bordered={false} 
-		        extra={<Button type="primary" onClick={()=>{this.handleAdd()}} >新建档案</Button>}
+		        extra={<span> <Link to={{ pathname: `/app/pension-agency/medicalCare/healthRecord`,state:record}}><Button title="返回" type="primary" icon="rollback"></Button></Link>&emsp;<Button title="新增" type="primary" onClick={()=>{this.handleAdd()}} icon="plus"></Button></span>}
 		    >
 	          <Table 
-	            bordered
 	            rowKey='id' 
 	            dataSource={dataSource} 
 	            columns={columns} 
-	            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+	            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 	          />
           </Card>
         {

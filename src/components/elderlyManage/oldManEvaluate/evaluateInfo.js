@@ -2,12 +2,14 @@ import React, {
 	Component,
 	Fragment
 } from 'react';
-import { Row, Col, Input, Button, message, Modal, Divider, Popconfirm, Table, Form, Radio, notification, Tag, InputNumber, Card, Tabs, List, Select } from 'antd';
+import { Row, Col, Input, Button, message, Modal, Divider, Popconfirm, Table, Form, Radio, notification, Tag, InputNumber, Card, Tabs, List, Select,Avatar } from 'antd';
 import httpServer from '@/axios';
 import { host } from '@/axios/config'
 import EvaItem from './evaItem'
 import moment from 'moment'
+import img from '@/style/imgs/smile.jpg'
 
+const { Meta} = Card;
 const RadioGroup = Radio.Group;
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -60,7 +62,7 @@ class EvaluateInfo extends Component {
 		})
 	}
 	getListElderlyInfo() {
-		const listStatus = this.props.isRegular ? '3' : '0,1,2';
+		const listStatus = this.props.isRegular ? '3' : '0,1,2,3';
 		httpServer.listElderlyInfo({
 			listStatus
 		}).then((res) => {
@@ -170,12 +172,9 @@ class EvaluateInfo extends Component {
 				dataSource_copy: data
 			});
 		} else {
-			const args = {
-				message: '友情提示',
-				description: "请先输入老人姓名",
-				duration: 2,
-			};
-			notification.info(args);
+		  this.setState(state=>{
+		  	state.dataSource_copy = state.dataSource;
+		  })
 		}
 	}
 
@@ -217,7 +216,7 @@ class EvaluateInfo extends Component {
 			}
 		})
 	}
-	changeResult = (typeId,result,) => {
+	changeResult = (typeId,result) => {
 		let {
 			evaluateLib,
 			itemResult
@@ -340,7 +339,7 @@ class EvaluateInfo extends Component {
 			title: '序号',
 			render: (text, record, index) => `${index+1}`,
 			key: 'serialNumber',
-			width: '25%'
+			width: '10%'
 		}, {
 			title: '姓名',
 			dataIndex: 'name',
@@ -350,11 +349,13 @@ class EvaluateInfo extends Component {
 			title: '年龄',
 			dataIndex: 'age',
 			key: 'age',
+			align:'center',
 			width: '25%'
 		}, {
 			title: '性别',
 			dataIndex: 'sex',
 			key: 'sex',
+			align:'center',
 			render: (text, record) => {
 				return record.sex === 1 ? < Tag color = "green" > 男 < /Tag>:<Tag color="red">女</Tag >
 			},
@@ -362,34 +363,41 @@ class EvaluateInfo extends Component {
 		return(
 			<Fragment>
         <Row gutter={16}>
+           
+           <Col xs={24} sm={18}>
+              
+	              <Tabs type="card">
+				          {
+				            evaluateLib.length>0&&evaluateLib.map((item,index)=>(
+				          	  <TabPane tab={item.typeName} key={item.id}>
+				          	      {elderlyEvaluate[item.id]?<EvaItem key={item.id} evaItem={item.tbEstimateLibraries} elderlyEvaluate={elderlyEvaluate[item.id]} changeGrade={this.changeResult}/>:<EvaItem key={index} evaItem={item.tbEstimateLibraries} changeGrade={this.changeResult}/>}
+				          	  </TabPane>
+				            ))
+				          }
+				        </Tabs>
+			         
+           </Col>
            <Col xs={24} sm={6}>
-                <Card 
-		        	title="老人基础信息"
-		        	extra={<Button type="primary" onClick={this.handleSearch}>评估老人</Button>}
-		        	>{
-		        		estimateElderly.id?
-		        		  <div>
-		        		    <h4>
-		        	           姓名:&emsp;<Tag color="blue">{estimateElderly.name}</Tag>
-		        	        </h4>
-		        	        <h4>
-		        	            性别:&emsp;<Tag color="geekblue">{estimateElderly.sex===1?'男':'女'}</Tag>
-		        	        </h4>
-		        	        <h4>
-		        	            年龄:&emsp;<Tag color="purple">{estimateElderly.age}岁</Tag>
-		        	        </h4>
-		               
-		              </div>  
-		                :null
-		               }
-		        	
-		        </Card>
+		         <Card
+			        title="老人基础信息"
+			        extra={<span>
+			        	     <Button type="primary" onClick={this.props.reback} title="返回" icon="rollback"></Button>
+				             <Button type="primary" onClick={this.handleSearch} title="搜索老人" icon="search"></Button>
+				           </span>  
+				          }
+			        >
+			           <Meta
+			                avatar={<Avatar src={img} />}
+			                title={estimateElderly.name?`${estimateElderly.name} -- ${estimateElderly.age}岁`:null}
+			                description={estimateElderly.sex?<span>性别:&emsp;<Tag color="#108ee9">{estimateElderly.sex===1?'男':'女'}</Tag></span>:null}
+			            />
+			     </Card>
 		        <Divider/>
 		        <List
 					size="small"
 					bordered
 		            header={<div>评估报告</div>}
-					footer={<div style={{textAlign:'center'}}><Button type="primary" onClick={this.props.reback}>返回</Button>&emsp;&emsp;<Button type="primary" onClick={this.saveEstimate} loading={subLoading}>保存</Button></div>}
+					footer={<div style={{textAlign:'right'}}><Button type="primary" onClick={this.saveEstimate} loading={subLoading}>提交</Button></div>}
 				    dataSource={Object.keys(itemResult)}
 					renderItem={item => (<List.Item><Col span={10}>{itemResult[item].type.typeName}:&nbsp;</Col><Col span={14}><Tag color="purple">{itemResult[item].result.estimateGradeName}</Tag></Col></List.Item>)}
 				>
@@ -406,20 +414,6 @@ class EvaluateInfo extends Component {
 					</List.Item>				      
 			</List>
            </Col>
-           <Col xs={24} sm={18}>
-              <Card title="评估">
-	              <Tabs>
-				          {
-				            evaluateLib.length>0&&evaluateLib.map((item,index)=>(
-				          	  <TabPane tab={item.typeName} key={item.id}>
-				          	      {elderlyEvaluate[item.id]?<EvaItem key={item.id} evaItem={item.tbEstimateLibraries} elderlyEvaluate={elderlyEvaluate[item.id]} changeGrade={this.changeResult}/>:<EvaItem key={index} evaItem={item.tbEstimateLibraries} changeGrade={this.changeResult}/>}
-				          	  </TabPane>
-				            ))
-				          }
-				        </Tabs>
-			        </Card>  
-           </Col>
-          
         </Row>
        
        
@@ -430,7 +424,7 @@ class EvaluateInfo extends Component {
               footer={null}
               maskClosable={false}
             >
-	            <div style={{marginBottom:"20px"}}>
+	           
 	                <Modal
 						title="老人信息"
 						visible={infoFlag}
@@ -469,7 +463,7 @@ class EvaluateInfo extends Component {
                       </Form.Item>
                     </Form>
                 </Modal>
-              </div>
+             
               <div style={{marginBottom:"20px"}}>
                 <Input 
                   placeholder="按老人姓名搜索" 
@@ -484,10 +478,10 @@ class EvaluateInfo extends Component {
                 {isRegular?null:<Button type="primary" onClick={this.handleAdd}>临时新增</Button>}
               </div>
               <Table 
-                bordered
+                size="middle"
                 dataSource={dataSource_copy} 
                 columns={columns} 
-                pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
                 rowKey={record => record.id}
                 onRow={(record) => {
                   return {

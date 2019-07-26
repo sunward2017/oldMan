@@ -1,24 +1,24 @@
 import React, {
 	Component,
 } from 'react';
-import { Table, Card,Tag, Divider, Popconfirm, Button, Modal, Form, Input, DatePicker, Radio, Select,notification} from 'antd';
+import { Table, Card,Tag, Divider, Popconfirm, Button, Modal, Form, Input, DatePicker, Radio, Select,notification,Row,Col} from 'antd';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import moment from 'moment';
 import httpServer from '@/axios/index';
 import ElderlySelect from '@/common/elderlySelect';
+import Visited from '@/common/visited'
 
-
+const {Search} = Input;
 const RadioGroup = Radio.Group;
 const { TextArea } = Input;
 const  Option  = Select.Option;
-
-
 
 class CMT extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
 			dataSource: [],
+			filterData:[],
 			modalFlag: false,
 			record: '',
 			elderlys:{},
@@ -44,16 +44,15 @@ class CMT extends Component {
 	}
 	 
 	List() {
-		const {customerId} = this.props.auth;
-		httpServer.listAskForLeave({
-			customerId
-		}).then(res => {
+		httpServer.listAskForLeave().then(res => {
+			const {elderlys} = this.state;
 			if(res.code===200&&res.data) {
 				this.setState({
-					dataSource: res.data
+					dataSource: res.data.map(i=>({...i,name:elderlys[i.elderlyId]?elderlys[i.elderlyId].name:''})),
+					filterData: res.data.map(i=>({...i,name:elderlys[i.elderlyId]?elderlys[i.elderlyId].name:''})),
 				})
 			}else{
-				this.setState({dataSource:[]})
+				this.setState({dataSource:[],filterData:[]})
 			}
 		})
 	}
@@ -99,15 +98,6 @@ class CMT extends Component {
 	}
 	
 	listByExamine=(customerId)=>{
-//		httpServer.listCheckItemAll({customerId}).then(res=>{
-//			if(res.code===200&&res.data) {
-//				this.setState({
-//					examines: res.data.map(item=>({itemCode:item.itemCode,name:item.name,price:item.price}))
-//				})
-//			}else{
-//				this.setState({examines:[]})
-//			}
-//		})
         const pid = this.props.auth.deptId;
 	        httpServer.listCheckItemChild({pid}).then(res => {
 	        if(res.code===200){	
@@ -184,7 +174,6 @@ class CMT extends Component {
 		this.setState({ loading: true });
 		e.preventDefault();
 		let _this = this;
-		setTimeout(()=>{
 		 _this.props.form.validateFieldsAndScroll({force:true},(err,fieldsValue) => {
 			if(!err) {
 			 this.setState({ loading: false });
@@ -202,9 +191,8 @@ class CMT extends Component {
 			  };
 			  values.days = moment(values.endTime).diff(moment(values.startTime),'days');
 			  const { id }= this.state.record;
-			  
-              if(id){
-              	    values.id = id;
+          if(id){
+          values.id = id;
 					httpServer.updateAskForLeave(values).then((res)=>{
 			   	    	const args = {
 							message: '提示',
@@ -239,7 +227,7 @@ class CMT extends Component {
 				this.setState({ loading: false });
 			}
 		  });
-		},0)
+		 
 	}
 	handleRebackSubmit=(e)=>{
 		this.setState({ loading: true });
@@ -279,7 +267,7 @@ class CMT extends Component {
 	}
     validateIdentityCard(rule,value,callback){
     	if(value&&!(/^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/).test(value)){
-    		callback('省份证输入错误')
+    		callback('身份证输入错误')
     	}else{
     		callback()
     	}
@@ -292,10 +280,7 @@ class CMT extends Component {
 			callback();
 		}
 	}
-    disabledDate(current) {
-	  // Can not select days before today and today
-	  return  current < moment().endOf('day');
-	}
+    
     disabledEndDate=(current)=>{
        const startTime = this.state.startTime;
        return current < moment(startTime).endOf('day');
@@ -321,13 +306,35 @@ class CMT extends Component {
     	 this.setState({clearDays})	
     	}
     }
+    changeState=(e)=>{
+    	const {dataSource} = this.state;
+    	let filterData=[];
+    	switch(e.target.value){
+    		case '2':   filterData = dataSource.filter(i=>(!i.returnTime));this.setState({filterData}); break
+    		case '3':   filterData = dataSource.filter(i=>i.returnTime);this.setState({filterData});break
+    		default: this.setState({filterData:dataSource});
+    	}
+    }
+    handleSearchElderly=(v)=>{
+        if(v&&v!==""){
+	      const reg = new RegExp(v, 'gi');
+	      const data = this.state.dataSource.filter((record) =>record.name && record.name.match(reg));
+	      this.setState({
+	        filterData:data,
+	      });
+	    }else{
+	       const {dataSource} = this.state;
+	       this.setState({filterData:dataSource})
+	    } 
+    }
+    
 	render() {
 		const {
 			getFieldDecorator,
 			getFieldValue,
 		} = this.props.form;
 		const {
-			dataSource,
+			filterData,
 			modalFlag,
 			workers,
 			examines,
@@ -350,6 +357,7 @@ class CMT extends Component {
               startTime,
               workerId,
               itemCode,
+              returnTime
 		} = this.state.record;
 		const formItemLayout = {
 			labelCol: {
@@ -385,29 +393,31 @@ class CMT extends Component {
 		const columns = [{
 			title: '序号',
 			render: (text, record, index) => `${index+1}`,
-			width: '5%',
-			key:'index'
+			width:80,
+			key:'index',
+			align:'center'
 		},{
 	      title: '外出老人',
-	      dataIndex: 'elderlyId',
-	      key: 'elderlyId',
-	      width:'8%',
-	      render:(t,r,i)=>{
-	     	 return this.state.elderlys[t]?this.state.elderlys[t].name:null;
-	      }
+	      dataIndex: 'name',
+	      width:130,
+	      align:'center',
 	    },{
 			title:'外出日期',
 			dataIndex:'startTime',
 			key:'startTime',
-			width:'10%',
+			width:150,
+			align:'center',
 			render(text,r){
-				return text.split(' ')[0];
-			}
+				return text.substr(0,10);
+			},
+			defaultSortOrder: 'ascend',
+			sorter: (a, b) =>{return moment(a.startTime).isBefore(b.startTime)?1:-1},
 		},{
 			title:'归还日期',
 			dataIndex:'endTime',
 			key:'endTime',
-			width:'10%',
+			align:'center',
+			width:150,
 			render(text,r){
 				return text.split(' ')[0];
 			}
@@ -415,33 +425,46 @@ class CMT extends Component {
 			title:'实际归还日期',
 			dataIndex:'returnTime',
 			key:'returnTime',
-			width:'10%',
+			width:130,
+			align:'center',
 			render(text,r){
 				return text&&text.split(' ')[0];
-			}
+			},
+			defaultSortOrder: 'ascend',
+			sorter: (a, b) =>{return moment(a.returnTime).isBefore(b.returnTime)?1:-1},
 		},{
-			title:'实际天数',
+			title:'外出天数',
 			dataIndex:'clearDays',
 			key:'clearDays',
-			width:'8%',	 
+			width:120,
+			align:'center',
+			align:'center'
+		},{
+			title: '备注',
+			dataIndex: 'memo',
+			key:"memo",
+			align:'center',
+            width:150
 		},{
 			title: '陪同人',
 			dataIndex: 'accompanyName',
 			key: 'accompanyName',
-			width: '8%'
+		    align:'center',	
+			width:100
 		},{
 			title: '与老人关系',
 			dataIndex: 'relation',
 			key: 'relation',
-			width: '12%',
+			align:'center',
+			width: 130,
 			render(text){
 			   switch(text){
-			   	 case '1': return <Tag color = "#f50">配偶</Tag>;  
-			   	 case '2': return <Tag color = "#2db7f5">子女</Tag>; break;	
-			   	 case '3': return <Tag color = "#87d068">祖孙</Tag>; break;	
-			   	 case '4': return <Tag color = "#108ee9">兄弟姐妹</Tag>; break;	
-			   	 case '5': return <Tag color = "cyan">侄子/侄女/外甥/外甥女</Tag>; break;	
-			   	 default: return <Tag color = "purple">其他</Tag>
+			   	 case '1': return <Tag  color="volcano" >配偶</Tag>;  
+			   	 case '2': return <Tag  color="orange">子女</Tag>; break;	
+			   	 case '3': return <Tag  color="gold">祖孙</Tag>; break;	
+			   	 case '4': return <Tag  color="geekblue">兄弟姐妹</Tag>; break;	
+			   	 case '5': return <Tag  color="green">侄子/侄女/外甥/外甥女</Tag>; break;	
+			   	 default: return <Tag  color="cyan">其他</Tag>
 			   }
 			   
 			}
@@ -449,32 +472,46 @@ class CMT extends Component {
 			title: '联系方式',
 			dataIndex: 'phone',
 			key: 'phone',
-			width: '10%'
+			align:'center',
+			 
 		},{
-			title: '备注',
-			dataIndex: 'memo',
-			key: 'memo',
-
-		}, {
 			title: '操作',
 			dataIndex: 'action',
 			key: 'action',
-			width: '12%',
+			width: 250,
+			align:'center',
+		    fixed: 'right',
+		    filters: [
+			      {
+			        text: '已归',
+			        value: '1',
+			      },
+			      {
+			        text: '未归',
+			        value: '2',
+			      },
+			    ],
+			filterMultiple: false,
+			onFilter: (value, record) =>value==1?record['returnTime']:!record['returnTime'], 
 			render: (text, record) => {
+				const {elderlys} = this.state;
 				return(<span>
-				{record.clearDays?null:
+				{record.returnTime?null:
 				  <span>
-				  <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+					  <Button type="primary" title="修改" size="small" icon="edit" onClick={() => { this.handleModify(record) }}></Button>
+		              <Divider type="vertical" />
+		              
+		              </span>
+					}
+				  <Button type="primary" title="回归" size="small" icon="bank" onClick={() => { this.handleReback(record) }}></Button>
 	              <Divider type="vertical" />
-	              <a href="javascript:;" onClick={() => { this.handleReback(record) }} style={{color:'#2ebc2e'}}>回归</a>
-	              </span>
-				}
-              <Divider type="vertical" />
-              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
-              </Popconfirm>
-            </span>)
-			},
+	              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+	                <Button type="primary" title="删除" size="small" icon="delete"></Button>
+	              </Popconfirm>
+	              <Divider type="vertical" />
+	              <Visited  record={record} elderlyName={elderlys[record.elderlyId].name}/>
+	            </span>)
+			}
 		}];
 		return(
 	    <div>
@@ -482,14 +519,24 @@ class CMT extends Component {
             <Card 
 		        title="外出记录" 
 		        bordered={false} 
-		        extra={<Button type="primary" onClick={()=>{this.handleAdd()}} >新增记录</Button>}
-		        >      
+		        extra={<div>
+		                   <Search
+					         placeholder="请输入老人姓名"
+			  		         onSearch={this.handleSearchElderly}
+				   	         enterButton
+					 	     style={{ width: 200 }}
+						   />&emsp;
+				      	    <Button type="primary" onClick={()=>{this.handleAdd()}} icon="plus" ></Button>  	 
+			        	</div>
+			        }
+		          >
 		          <Table 
-		            bordered
+		            size="middle"
+		            scroll={{ x: 1500}}
 		            rowKey='id' 
-		            dataSource={dataSource} 
+		            dataSource={filterData} 
 		            columns={columns} 
-		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 		          />
             </Card>
         {
@@ -613,13 +660,11 @@ class CMT extends Component {
 			             if (!value||moment(sdate).isBefore(moment(value))) {
 			                callback();
 			             } else {
-			                callback('结束日期不可小于开始时间');
+			                callback('结束日期不可小于开始日期');
 			             }   
 			            }
                   }],
                   initialValue:endTime?moment(endTime,'YYYY-MM-DD') : moment().add(1, 'day')
-                  
-                  ,
                 })(
                   <DatePicker />
                 )}
@@ -646,7 +691,7 @@ class CMT extends Component {
                   rules: [{ required: false, message: '请输入需要备注的消息!' }],
                   initialValue:memo,
                 })(
-                  <TextArea rows={3}/>
+                  <Input/>
                 )}
               </Form.Item>
               <Form.Item
@@ -726,7 +771,7 @@ class CMT extends Component {
                 {...formItemLayout}
                 style={{marginBottom:'4px'}}
               >
-                <Input defaultValue={startTime} disabled/>
+                <Input defaultValue={startTime} disabled />
               </Form.Item>
              
               <Form.Item
@@ -734,7 +779,7 @@ class CMT extends Component {
                 {...formItemLayout}
                 style={{marginBottom:'4px'}}
               > 
-                <Input defaultValue={endTime} disabled/>
+                <Input defaultValue={endTime} disabled />
               </Form.Item>
               <Form.Item
                 label='回归日期'
@@ -742,10 +787,18 @@ class CMT extends Component {
                 style={{marginBottom:'4px'}}
               >
                 {getFieldDecorator('endTime', {
-                  rules: [{ required: true, message: '请选择日期!' }],
-                  initialValue:endTime?moment(endTime,'YYYY-MM-DD') : null,
+                  rules: [{ required: true, message: '请选择日期!' },{
+                  	    validator:(rule, value, callback) => {
+			             if (!value||moment(startTime).isBefore(moment(value))) {
+			                callback();
+			             } else {
+			                callback('回归日期不可小于开始日期');
+			             }   
+			            }
+                  }],
+                  initialValue:returnTime?moment(returnTime,'YYYY-MM-DD'):null,
                 })(
-                  <DatePicker format="YYYY-MM-DD" disabledDate={this.disabledEndDate} onChange={this.rebackChange}/>
+                  <DatePicker format="YYYY-MM-DD"   onChange={this.rebackChange}/>
                 )}
               </Form.Item>
               <Form.Item

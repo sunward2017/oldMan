@@ -112,18 +112,21 @@ class CMT extends Component {
 		this.props.form.validateFieldsAndScroll((err, fieldsValue) => {
 			if(!err) {
 			   const {items,total,id,uuidCode} = this.state;
-			   if(!items||items.length===0){
-			   	  message.error('收费项不可为空')
+			   if(!items||items.length===0||items.some(i=>(!i.itemName||i.itemName===''))){
+			   	  message.error('收费项不可为空');
+			   	  return false;
 			   }
 			   if(fieldsValue.sumMoney&&parseInt(fieldsValue.sumMoney)!==parseInt(total)){
-			   	  message.error('收费金额有误，请核对')
+			   	  message.error('请核对金额，请核对')
 			   }else{
 			   	const { name,customerId } = _this.props.auth;
 			   	 let data = {
 			   	 	...fieldsValue,
 			   	 	tbElderlyImmediateFeeInfos:items,
 			   	 	customerId:customerId,
-			   	 	payee:name
+			   	 	payee:name,
+			   	 	customerId,
+			   	 	cId:customerId
 			   	 }
 			   	 let url= id?'updateImmediateFee':'saveImmediateFee';
 			   	 if(id) {
@@ -175,7 +178,7 @@ class CMT extends Component {
 	
 	add = () => {
 	    let {items} = this.state;
-	    if(items.some(i=>(!i.itemName))){
+	    if(items.some(i=>(!i.itemName||i.itemName===""))){
 	        message.error('项目名称不可为空')
 	    }else{
 	    	items.push({key:++key});
@@ -196,7 +199,7 @@ class CMT extends Component {
 	    }catch(e){
 	    	console.error(e)
 	    }
-	    this.setState({items,total:(+count).toFixed(1)});   
+	    this.setState({items,total:Math.round(count)});   
     }
     handlePrint =(r)=>{
       this.setState({printFlag:true,printData:r})
@@ -204,6 +207,9 @@ class CMT extends Component {
     
     closePrint=()=>{
     	this.setState({printFlag:false,printData:{}})
+    }
+    changeTime=(t,v)=>{
+    	this.setState({[t]:v})
     }
 	render() {
 		const {
@@ -240,7 +246,8 @@ class CMT extends Component {
 			title: '序号',
 			render: (text, record, index) => `${index+1}`,
 			width: '5%',
-			key:'index'
+			key:'index',
+			align:'center'
 		}, {
 			title: '结算单号',
 			dataIndex: 'settlementNum',
@@ -291,8 +298,8 @@ class CMT extends Component {
 		          bordered={false} 
 		          extra={
 		          	<span>
-		          	 开始时间:&emsp;<DatePicker value={st} onChange={(v)=>this.changeTime('s',v)}/>&emsp;
-		          	 结束时间:&emsp;<DatePicker value={et} onChange={(v)=>this.changeTime('e',v)}/>&emsp;
+		          	 开始时间:&emsp;<DatePicker value={st} onChange={(v)=>this.changeTime('st',v)}/>&emsp;
+		          	 结束时间:&emsp;<DatePicker value={et} onChange={(v)=>this.changeTime('et',v)}/>&emsp;
 		          	 <Button type="primary" onClick={this.List} >搜索</Button>&emsp;
 		          	 <Button type="primary" onClick={this.handleAdd} >新增</Button>
 		          	</span>
@@ -301,11 +308,11 @@ class CMT extends Component {
 		        >
 		        <Table 
 		            size='small'
-		            bordered
+		
 		            rowKey='id' 
 		            dataSource={dataSource} 
 		            columns={columns} 
-		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 		          />
 		        </Card>
 		        <Modal 
@@ -358,7 +365,7 @@ class CMT extends Component {
 				      </Form.Item>
 				      <Divider/>
 				      <Form.Item>
-				        <p style={{textAlign:'right'}}>合计:{total}</p>
+				        <p style={{textAlign:'right'}}>合计:￥&nbsp;<span style={{color:"red"}}>{total||0}</span>&nbsp;元</p>
 				      </Form.Item>
 				      <Form.Item
 		                label='收费金额'

@@ -1,5 +1,5 @@
 import React , {Component,Fragment} from 'react';
-import { Card ,Row, Col ,Tree, notification, Table, Popconfirm,Select,Divider,message} from 'antd';
+import { Card ,Row, Col ,Tree, notification, Table, Popconfirm,Select,Divider,message,Button} from 'antd';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '../../../axios/index';
 
@@ -273,20 +273,21 @@ class LeaveAuditSet extends Component{
       dataIndex:'action',
       key:'action',
       width:'10%',
+      align:'center',
       render:(text,record)=>{
         return(
-          <span>
+           <span>
               { record.deptId===activeKey?
                 <span>
-                  <a href="javascript:;" style={{color:'#2ebc2e'}} onClick={()=>{this.handleSave(record)}} >保存</a>
+                  <Button icon="save" title="保存" type="primary" size="small" onClick={()=>{this.handleSave(record)}} ></Button>
                   <Divider type="vertical" />
-                  <a href="javascript:;" style={{color:'#2ebc2e'}} onClick={()=>{this.setState({activeKey:'',operators:[]})}} >取消</a>
+                  <Button icon="poweroff" title="保存" type="primary" size="small" onClick={()=>{this.setState({activeKey:'',operators:[]})}} ></Button>
                 </span>
-                :<a href="javascript:;" style={{color:'#2ebc2e'}} onClick={()=>{this.edit(record)}} >编辑</a>
+                :<Button icon="edit" title="保存" type="primary" size="small" onClick={()=>{this.edit(record)}} >编辑</Button>
               }
               <Divider type="vertical" />
               <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record)}>
-                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+                 <Button size="small" icon="delete" title="删除" type="primary" ></Button>
               </Popconfirm>
           </span>
         )
@@ -330,20 +331,21 @@ class LeaveAuditSet extends Component{
       dataIndex:'action',
       key:'action',
       width:'10%',
+      align:'center',
       render:(text,record)=>{
         return(
           <span>
               { record.deptId===activeKey?
                 <span>
-                  <a href="javascript:;" style={{color:'#2ebc2e'}} onClick={()=>{this.handleSave(record)}} >保存</a>
+                  <Button size="small" icon="save" type="primary" title="保存" onClick={()=>{this.handleSave(record)}} ></Button>
                   <Divider type="vertical" />
-                  <a href="javascript:;" style={{color:'#2ebc2e'}} onClick={()=>{this.setState({activeKey:'',operators:[]})}} >取消</a>
+                  <Button size="small" icon="poweroff" type="primary" title="取消" onClick={()=>{this.setState({activeKey:'',operators:[]})}} ></Button>
                 </span>
-                :<a href="javascript:;" style={{color:'#2ebc2e'}} onClick={()=>{this.edit(record)}} >编辑</a>
+                :<Button size="small" icon="edit" type="primary" title="修改" onClick={()=>{this.edit(record)}} ></Button>
               }
               <Divider type="vertical" />
               <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record)}>
-                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+                 <Button size="small" icon="delete" title="删除" type="primary" ></Button>
               </Popconfirm>
           </span>
         )
@@ -375,10 +377,10 @@ class LeaveAuditSet extends Component{
                 }
             >
               <Table 
-                bordered
+                size="middle"
                 dataSource={dataSource} 
                 columns={columns} 
-                pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
                 rowKey={record => record.deptId}
               />
             </Card>

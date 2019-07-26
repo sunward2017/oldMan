@@ -21,11 +21,9 @@ export default class LeaveAudit extends React.Component {
     }
     
     fetchElderlyList(){
-    	const {customerId} = this.props.auth;
 		httpServer.listElderlyInfo({
-			customerId,
 			listStatus:'3',
-			langchFlag:0,
+			launchFlag:0,
 		}).then(res => {
 			if(res.code === 200) {
 				const elderlys ={};
@@ -41,8 +39,7 @@ export default class LeaveAudit extends React.Component {
 		})
     }
     fetchNursingGrade(){
-    	const {customerId} = this.props.auth;
-	    httpServer.listNursingGrade({customerId}).then((res)=>{
+	    httpServer.listNursingGrade().then((res)=>{
 	       if (res.code === 200) {
 	           let nursingGrade = {};
 	           res.data&&res.data.forEach(t=>{
@@ -57,9 +54,8 @@ export default class LeaveAudit extends React.Component {
 	    });
     }
     fetchChangeNursingGrade(){
-        const { customerId } = this.props.auth;
         const { elderlyInfo,type} = this.state;
-        httpServer.listChangeNursingGrade({customerId}).then(res => {
+        httpServer.listChangeNursingGrade().then(res => {
         	const flag =type?0:1;
             const list = res.data?res.data.filter(i=>(i.flag===flag)).map(item=>({...item,...elderlyInfo[item.elderlyId]})):[];
             this.setState({list, activeKey:list[0] && list[0].id.toString() });
@@ -127,8 +123,11 @@ export default class LeaveAudit extends React.Component {
                                     <Panel
                                         header={<div>
                                             <Tag color="geekblue">{item.name}</Tag> -- {item.age}岁 -- {item.roomName}房间
-                                            <span className="pull-right">变更记录:&emsp;<Tag color="geekblue">{nursingGrade[item.oldNursingGradeCode]}</Tag>&nbsp;=&gt;&nbsp;<Tag color="purple">{nursingGrade[item.newNursingGradeCode]}</Tag></span>
-                                        </div>}
+                                            <span className="pull-right">
+                                               变更记录:&emsp;<Tag color="geekblue">{nursingGrade[item.oldNursingGradeCode]}</Tag>&nbsp;=&gt;&nbsp;<Tag color="purple">{nursingGrade[item.newNursingGradeCode]}</Tag>
+                                               护理费:&emsp;<span className="blue">{item.oldNursingFee}元</span>&nbsp;=&gt;&nbsp;<span className="blue">{item.newNursingFee}元</span>&emsp;生效日期:&emsp;<span className="blue">{item.changeNursingFeeDate.substr(0,10)}</span>
+                                               </span>
+                                       </div>}
                                         key={item.id}
                                     >
                                         <p>审核流程进度：</p>
@@ -136,7 +135,7 @@ export default class LeaveAudit extends React.Component {
                                             {
                                                audits.map(s =>
                                                     <Step key={s.id}
-                                                         description={s.status?<span>审核人:<Tag color="cyan">{s.optName}</Tag></span>
+                                                         description={s.status?<span>审核人:&nbsp;<Tag color="cyan">{s.optName}</Tag></span>
                                                              : (s.memo.includes(auth.id.toString())?
                                                                 <Button
                                                                     type="primary"

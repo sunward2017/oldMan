@@ -231,7 +231,7 @@ class WorkProjects extends Component{
       key: 'timeLenght',
       width:'10%'
     },{
-      title: '添加日期',
+      title: '创建日期',
       dataIndex: 'addtime',
       key: 'addtime',
       width:'12%'

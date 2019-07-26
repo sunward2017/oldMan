@@ -184,18 +184,6 @@ class DiseaseLibrary extends Component{
         sm: { span: 19 },
       },
     };
-    const tailFormItemLayout = {
-      wrapperCol: {
-        xs: {
-          span: 24,
-          offset: 0,
-        },
-        sm: {
-          span: 16,
-          offset: 8,
-        },
-      },
-    };
     const columns = [{
       title: '序号',
       render:(text,record,index)=>`${index+1}`,
@@ -207,7 +195,7 @@ class DiseaseLibrary extends Component{
       key: 'diseaseName',
       width:'35%'
     },{
-      title:'添加日期',
+      title:'创建日期',
       dataIndex: 'addtime',
       key: 'addtime',
       render:(text,record)=>{
@@ -221,11 +209,10 @@ class DiseaseLibrary extends Component{
       render:(text,record)=>{
         return(
           <span>
-            
-            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+              <Button size="small" icon="edit" title="编辑" type="primary" onClick={() => { this.handleModify(record) }}></Button>
               <Divider type="vertical" />
-              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id)}>
-                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+                 <Button size="small" icon="delete" title="删除" type="primary" ></Button>
               </Popconfirm>
           </span>
         )
@@ -240,10 +227,10 @@ class DiseaseLibrary extends Component{
             extra={<Button type="primary" onClick={this.handleAdd}>新增</Button>}
         >
           <Table 
-            bordered
+            size="middle"
             dataSource={dataSource} 
             columns={columns} 
-            pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+            pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
             rowKey={record => record.id}
           />
         </Card>
@@ -255,17 +242,15 @@ class DiseaseLibrary extends Component{
                       maskClosable = {false}//点击遮罩层不允许关闭
                       footer = {null}
                     >
-                      <Form hideRequiredMark onSubmit={this.handleSubmit}>
+                      <Form hideRequiredMark >
                         
                         <Form.Item
                           label='疾病名称'
                           {...formItemLayout}
                           style={{marginBottom:'4px'}}
                         >
-                          <Input value={diseaseName} placeholder='必填项'  onChange={(e) => this.handleIptText('diseaseName',e)} disabled={flag}/>
-                        </Form.Item>
-                        <Form.Item {...tailFormItemLayout}>
-                          <Button type="primary" htmlType="submit">确认</Button>
+                          <Input value={diseaseName} placeholder='必填项'  onChange={(e) => this.handleIptText('diseaseName',e)} disabled={flag} style={{width:"80%",marginRight:5}}/>
+                          <Button type="primary" onClick={this.handleSubmit} icon="save" title="保存"></Button>
                         </Form.Item>
                       </Form>
                     </Modal>:null 

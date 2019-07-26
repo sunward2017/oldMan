@@ -1,10 +1,10 @@
 import React, {Component,Fragment} from 'react';
 import { connect } from 'react-redux'
-import { Table,Form,Tag, Divider, Popconfirm, Button,Tree,Row,Col,notification,Card,Avatar} from 'antd';
+import { Table,Form,Tag, Divider, Popconfirm, Button,Tree,Row,Col,notification,Card,Avatar,Tooltip} from 'antd';
 import httpServer from '@/axios/index';
 import ScheduleForm  from './scheduleForm'
 import BreadcrumbCustom from '../../BreadcrumbCustom';
-
+import img from '@/style/imgs/smile.jpg'
 const { Meta } = Card;
 
 class editForm extends Component{
@@ -45,7 +45,7 @@ class editForm extends Component{
 		this.setState({record:{},visible:true})
 	}
 	handleModify=(r)=>{
-	   this.setState({record:{...r,drugCode:{drugCode:r.drugCode,drugName:r.drugName}},visible:true})
+	   this.setState({record:{...r,drugCode:{drugCode:r.drugCode,name:r.drugName}},visible:true})
 	}
 	handleDelete=(r)=>{
 		httpServer.deleteDrugScheduled({id:r.id}).then(res=>{
@@ -87,8 +87,26 @@ class editForm extends Component{
 			  dataIndex: 'usage',
 			  key: 'usage',
 			  render:(t,r)=>{
-			  	 return r.quantity+r.minUnit;
+			  	 return r.quantity+'/'+r.minUnit;
 			  }
+			},{
+				title:'重复值域',
+				dataIndex:"days",
+			},{
+				title:"服用时间",
+				dataIndex:"point",
+				onCell: () => {
+			        return {
+			          style: {
+			            maxWidth: 150,
+			            overflow: 'hidden',
+			            whiteSpace: 'nowrap',
+			            textOverflow:'ellipsis',
+			            cursor:'pointer'
+			          }
+			        }
+			    },
+			    render: (text) => <Tooltip placement="topLeft" title={text}>{text}</Tooltip>
 			}, {
 			  title: '类别',
 			  dataIndex: 'type',
@@ -103,32 +121,13 @@ class editForm extends Component{
 			   
 			  }
 			},{
-			  title: '是否收费',
-			  dataIndex: 'charge',
-			  key: 'charge',
+			  title: '状态',
+			  dataIndex: 'status',
 			  render:(t,r)=>{
-			  	const color = t===1?'geekblue' : 'green';;
-				const text = t===1?'是':'否'
+			  	const color = t===1?'red' : 'green';;
+				const text = t===1?'启用':'停用'
 				return <Tag color={color}>{text}</Tag>;
 			  }
-			}, {
-			  title: '是否需要确认',
-			  key: 'confirm',
-			  dataIndex: 'confirm',
-			  render:(t,r)=>{
-			  	    const color = t===1?'geekblue':'green';
-					const text = t===1?'是':'否'
-					return <Tag color={color} >{text}</Tag>;
-			  }
-			}, {
-				title:'是否需要提醒',
-				key:'reminded',
-				dataIndex:'reminded',
-				render:(t,r)=>{
-					const color = t===1?'geekblue':'green';
-					const text = t===1?'是':'否'
-					return <Tag color={color} >{text}</Tag>;
-				}
 			},{
 			  title: '操作',
 			  key: 'action',
@@ -147,7 +146,7 @@ class editForm extends Component{
 			    <BreadcrumbCustom first="药品管理" second='用药计划制定' />
 			    <Card title="基础信息" extra={ <Button onClick={this.goBack} type="primary">返回</Button>}>
 				    <Meta
-				        avatar={<Avatar src="http://img4.imgtn.bdimg.com/it/u=212221502,2748704000&fm=200&gp=0.jpg" />}
+				        avatar={<Avatar src={img} />}
 				        title={elderlyInfo.name}
 				        description={<span>性别:&emsp;<Tag color="#108ee9">{elderlyInfo.sex===1?"男":"女"}</Tag>&emsp;年龄:&emsp;<Tag color="orange">{elderlyInfo.age}岁</Tag>&emsp;&emsp;房间:&emsp;<Tag color="geekblue">{elderlyInfo.roomName}</Tag></span>}
 				    />
@@ -155,7 +154,7 @@ class editForm extends Component{
 				    <Table rowKey='id' columns={columns} dataSource={data} />
 				 
 				    <Button onClick={this.handleAddSchedule} icon='plus'></Button>
-				    {visible?<ScheduleForm record={record} elderly={elderlyInfo} close={this.refresh}/>:null}
+				    {visible?<ScheduleForm record={record} elderlyId={elderlyInfo.id} close={this.refresh}/>:null}
 				</Card>
 				
 			</Fragment>

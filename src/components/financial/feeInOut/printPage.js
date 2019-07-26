@@ -2,6 +2,8 @@ import React,{Fragment} from 'react';
 import { Card, Input,Modal ,Button, Form, Avatar, notification, Divider,Icon,Tag,DatePicker,Table} from 'antd';
 import httpServer from '@/axios';
 import moment from 'moment';
+import {typeObj} from '@/utils/constant';
+
  
 class Cost extends React.Component {
     cancel=()=>{
@@ -20,7 +22,6 @@ class Cost extends React.Component {
     render() {
         const {elderlyInfo,printData,printFlag} = this.props;
         const name = JSON.parse(sessionStorage.getItem('auth')).name; 
-        const typeObj={1:'预约定金', 2:'热水器押金', 3:'医疗押金', 4:'锁押金',5:'住院押金', 6:'住院预交', 7:'其他预交'};
         return ( 
         	<Modal
 		        title="收据"

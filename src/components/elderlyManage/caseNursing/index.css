@@ -15,10 +15,6 @@
   border-color: transparent;
   background: transparent;
 }
-.card-container > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab-active {
-  border-color: #fff;
-  background: #fff;
-}
 
 /*个人信息部分*/
 .personInfoRow .ant-col-md-6{

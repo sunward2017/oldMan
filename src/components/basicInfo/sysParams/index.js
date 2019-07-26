@@ -197,7 +197,9 @@ class SysParamsClient extends Component{
             filterOption={(input, option) => option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
           >
             <Option value="1" >单位</Option>
-            <Option value="2" >支付方式</Option>
+            <Option value="12">收款账户</Option>
+            <Option value="13">入库方式</Option>
+            <Option value="14">出库方式</Option>
             <Option value="3" >托管方式</Option>
             <Option value="4" >自理能力</Option>
             <Option value="5" >婚姻状况</Option>
@@ -206,9 +208,6 @@ class SysParamsClient extends Component{
             <Option value="8" >供养方式</Option>
             <Option value="9" >籍贯</Option>
             <Option value="11">文化程度</Option>
-            <Option value="12">收款账户</Option>
-            <Option value="13">入库方式</Option>
-            <Option value="14">出库方式</Option>
           </Select>
           <Input 
             style={{width:200,marginLeft:40}} 
@@ -226,7 +225,7 @@ class SysParamsClient extends Component{
             新增子项
           </Button>
         </div>
-        <Table bordered dataSource={dataSource} columns={columns} rowKey={record => record.id} pagination={{pageSize:20}} />
+        <Table dataSource={dataSource} columns={columns} rowKey={record => record.id} pagination={{pageSize:20}} />
         </Card>
       </div>
     )

@@ -230,7 +230,7 @@ class ReductionMonth extends Component{
       key: 'month',
       width:'10%'
     },{
-      title:'添加日期',
+      title:'创建日期',
       dataIndex: 'addtime',
       key: 'addtime',
       width:'20%'
@@ -238,17 +238,18 @@ class ReductionMonth extends Component{
       title:'操作',
       dataIndex:'action',
       key:'action',
-      width:'20%',
+      width:'16%',
+      align:'center',
       render:(text,record)=>{
         return(
           <span>
-            <a href="javascript:;" onClick={() => { this.handleRead(record) }} style={{color:'#2ebc2e'}}>查看</a>
-            <Divider type="vertical" />
-            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+              <Button size="small" icon="read" title="详情" type="primary" onClick={() => { this.handleRead(record) }}></Button>
+	            <Divider type="vertical" />
+              <Button size="small" icon="edit" title="编辑" type="primary" onClick={() => { this.handleModify(record) }}></Button>
               <Divider type="vertical" />
-              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id)}>
-                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
-              </Popconfirm>
+              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+                 <Button size="small" icon="delete" title="删除" type="primary" ></Button>
+              </Popconfirm> 
           </span>
         )
       },
@@ -261,11 +262,10 @@ class ReductionMonth extends Component{
           bordered={false} 
           extra={<Button type="primary" onClick={this.handleAdd}>新增</Button>}
         >
-	        <Table 
-	          bordered
+	        <Table
 	          dataSource={dataSource} 
 	          columns={columns} 
-	          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+	          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
 	          rowKey={record => record.id}
 	        />
         </Card>

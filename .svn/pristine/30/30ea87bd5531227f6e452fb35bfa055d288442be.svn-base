@@ -1,0 +1,84 @@
+import React from 'react';
+import { Form, Icon, Input, Button, message } from 'antd';
+import { connect } from 'react-redux';
+import { authResolver } from '../../action';
+import httpServer from '../../axios/index';
+import img from '@/style/imgs/login-logo.png'
+
+const FormItem = Form.Item;
+
+class Login extends React.Component {
+    state = {
+        auth: JSON.parse(sessionStorage.getItem('auth')),
+    };
+    componentWillMount() {
+        const { history } = this.props;
+        const { auth } = this.state;
+        auth && (auth.level===2 ? history.replace('/app/admin/dashboard/index') : history.replace('/app/pension-agency/dashboard/index'));
+    }
+    handleSubmit = (e) => {
+        e.preventDefault();
+        this.props.form.validateFields((err, values) => {
+            if (!err) {
+                // console.log('Received values of form: ', values);
+                const { history } = this.props;
+                httpServer.login({account:values.account, password:values.password}).then(res => {
+                    
+                    if(res.code === 200) {
+                        sessionStorage.setItem('auth', JSON.stringify(res.data));
+                         
+                        this.props.saveAuth(res.data);
+                        res.data.level ===2 ? history.replace('/app/admin/dashboard/index') : history.replace('/app/pension-agency/dashboard/index');
+                    }else {
+                        message.warning(res.msg);
+                    }
+                })
+            }
+        });
+    };
+    render() {
+        const { getFieldDecorator } = this.props.form;
+        return (
+            <div className="login">
+                <div className="login-form" >
+                    <div className="login-logo">
+                      <img src={img} alt="logo" />
+                    </div>
+                    <Form onSubmit={this.handleSubmit} style={{maxWidth: '300px'}}>
+                        <FormItem>
+                            {getFieldDecorator('account', {
+                                rules: [{ required: true, message: '请输入用户名!' }],
+                            })(
+                                <Input prefix={<Icon type="user" style={{ fontSize: 13 }} />} placeholder="请输入用户名" />
+                            )}
+                        </FormItem>
+                        <FormItem>
+                            {getFieldDecorator('password', {
+                                rules: [{ required: true, message: '请输入密码!' }],
+                            })(
+                                <Input prefix={<Icon type="lock" style={{ fontSize: 13 }} />} type="password" placeholder="请输入密码" />
+                            )}
+                        </FormItem>
+                        <FormItem>
+                            <Button type="primary" htmlType="submit" className="login-form-button" style={{width: '100%'}}>
+                                登录
+                            </Button>
+                        </FormItem>
+                    </Form>
+                </div>
+            </div>
+        );
+    }
+}
+
+const mapStateToPorps = state => {
+    const { auth } = state.myAuth;
+    return { auth };
+};
+const mapDispatchToProps = dispatch => ({
+    saveAuth:(data) => {
+        dispatch(authResolver(data))
+    }
+});
+
+export default connect(mapStateToPorps, mapDispatchToProps)(Form.create()(Login));

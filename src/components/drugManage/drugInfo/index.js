@@ -1,7 +1,7 @@
 import React , { Component } from 'react';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '../../../axios';
-import {Tag,Table,Divider,Popconfirm,notification,Button,Card,Input} from 'antd';
+import {Tag,Table,Divider,Popconfirm,notification,Button,Card,Input,Tooltip} from 'antd';
 import ModalInfo from './DrugInfoModal';
 class DrugInfo1 extends Component{
   constructor(props){
@@ -140,6 +140,7 @@ class DrugInfo1 extends Component{
       title: '是否处方',
       dataIndex: 'prescription',
       key: 'prescription',
+      align:'center',
       render:(text,record)=>{
         return record.prescription==0?<Tag color="red">否</Tag>:<Tag color="green">是</Tag>
         
@@ -149,6 +150,7 @@ class DrugInfo1 extends Component{
       title: '是否医保',
       dataIndex: 'insurance',
       key: 'insurance',
+      align:'center',
       render:(text,record)=>{
         return record.insurance == 0?<Tag color="red">否</Tag>:<Tag color="green">是</Tag>
       },
@@ -157,33 +159,67 @@ class DrugInfo1 extends Component{
       title: '功能主治',
       dataIndex: 'indicationsFunction',
       key: 'indicationsFunction',
+      width:"10%",
+      onCell: () => {
+        return {
+          style: {
+            maxWidth: 150,
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow:'ellipsis',
+            cursor:'pointer'
+          }
+        }
+      },
+      render: (text) => <Tooltip placement="topLeft" title={text}>{text}</Tooltip>
     },{
       title: '用法用量',
       dataIndex: 'usage1',
       key: 'usage1',
-      width:'18%'
+      width:"10%",
+      onCell: () => {
+        return {
+          style: {
+            maxWidth: 150,
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow:'ellipsis',
+            cursor:'pointer'
+          }
+        }
+      },
+      render: (text) => <Tooltip placement="topLeft" title={text}>{text}</Tooltip>
     },{
     	title: '规格',
       dataIndex: 'specification',
       key: 'specification',
       width:'10%'
     },{
-    	title: '价格',
-      dataIndex: 'referencePrice',
-      key: 'referencePrice',
-      width:'6%'
+    	title:'单位',
+    	dataIndex:'minUnit',
+    	align:'center',
+    	width:'5%'
+    },{
+    	title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      render:(text,record)=>{
+        return record.status === 0?<Tag color="red">禁用</Tag>:<Tag color="green">启用</Tag>
+      },
+      width:'5%'
     },{
       title:'操作',
       dataIndex:'action',
       key:'action',
       width:'10%',
+      align:'center',
       render:(text,record)=>{
         return(
           <span>
-              <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+              <Button title="修改" type="primary" size="small" icon="edit" onClick={() => { this.handleModify(record) }}></Button>
               <Divider type="vertical" />
               <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+                 <Button type="primary" title="删除" size="small" icon="delete"></Button>
               </Popconfirm>
           </span>
         )
@@ -210,11 +246,11 @@ class DrugInfo1 extends Component{
           	</span>
           	}
         >
-        <Table 
-          bordered
+        <Table
+          size="middle"
           dataSource={data} 
           columns={columns} 
-          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
           rowKey={record => record.id}
         />
         </Card>

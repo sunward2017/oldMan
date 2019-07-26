@@ -193,7 +193,6 @@ class EstimateLib extends Component {
     let _this = this;
     setTimeout(()=>{
       _this.props.form.validateFields((err,value)=>{
-         console.log(err)
         if(!err){
           _this.setState({editFlag:true}) 
         }else{ 
@@ -262,7 +261,7 @@ class EstimateLib extends Component {
     const columns = [{
       title: '序号',
       render: (text, record, index) => `${index+1}`,
-      width: '5%',
+      width: '10%',
       key: 'index',
     }, {
       title: '评估项',
@@ -286,15 +285,16 @@ class EstimateLib extends Component {
       title: '操作',
       dataIndex: 'action',
       key: 'action',
-      width: '18%',
+      width: '15%',
+      align:'center',
       render: (text, record) => {
         return(
           			<span>
-                  <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
-                  <Divider type="vertical" />
-                  <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-                     <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
-                  </Popconfirm>
+                  <Button size="small" icon="edit" title="编辑" type="primary" onClick={() => { this.handleModify(record) }}></Button>
+		              <Divider type="vertical" />
+		              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+		                 <Button size="small" icon="delete" title="删除" type="primary" ></Button>
+		              </Popconfirm>
                 </span>
         )
       },
@@ -308,11 +308,11 @@ class EstimateLib extends Component {
 	        >
          
           <Table 
+            size="middle"
             rowKey="id"
-            bordered
             dataSource={dataSource} 
             columns={columns} 
-            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
           />
           </Card>
         
@@ -321,10 +321,10 @@ class EstimateLib extends Component {
           <Modal 
             title="评估信息输入"
             width='60%'
+            onOk= {this.handleSubmit}
             onCancel={this.handleCancel}
             visible={modalFlag}
-            footer={null}
-          >
+           >
             <Form hideRequiredMark>
               <Form.Item
                 label='评估项'
@@ -337,7 +337,7 @@ class EstimateLib extends Component {
                   }],
                   initialValue:title,
                 })(
-                  <Input placeHolder="请输入评估项名称"/>
+                  <Input placeholder="请输入评估项名称"/>
                 )}
               </Form.Item>
               <Form.Item
@@ -374,9 +374,9 @@ class EstimateLib extends Component {
                   </Radio.Group>
                 )}
               </Form.Item>
-              <Form.Item {...tailFormItemLayout}>
-                <Button type="primary" onClick={this.handleSubmit}>保存</Button>
-              </Form.Item>
+               
+                
+              
             </Form>
           </Modal>:null
         } 

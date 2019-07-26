@@ -47,7 +47,7 @@ class PersonInfo1 extends Component{
     return(
       <Fragment>
         <Card title="健康和疾病情况评估" style={{ width: "100%" }}>
-          <Form hideRequiredMark onSubmit={this.handleSubmit}>
+          <Form onSubmit={this.handleSubmit}>
             <Form.Item
               label='身高'
               {...formItemLayout}
@@ -66,7 +66,7 @@ class PersonInfo1 extends Component{
               style={{marginBottom:'4px'}}
             >
               {getFieldDecorator('weight1', {
-                rules: [{ required: true, message: '请输入体重'}],
+                rules: [{ required: false, message: '请输入体重'}],
                 initialValue:weight1
               })(
                 <Input />
@@ -78,7 +78,7 @@ class PersonInfo1 extends Component{
               style={{marginBottom:'4px'}}
             >
               {getFieldDecorator('medicalHistory', {
-                rules: [{ required: true, message: '请输入病历'}],
+                rules: [{ required: false, message: '请输入病历'}],
                 initialValue:medicalHistory
               })(
                 <TextArea rows={4}/>

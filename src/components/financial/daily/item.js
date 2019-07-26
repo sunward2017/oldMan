@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input, Button,InputNumber } from 'antd';
+import { Form, Input, Button,InputNumber,Select} from 'antd';
 
 class ItemInput extends React.Component {
   static getDerivedStateFromProps(nextProps) {
@@ -18,6 +18,7 @@ class ItemInput extends React.Component {
     this.state = {
       money: value.money || 1,
       itemName: value.itemName||'',
+      payType: value.payType||'支付宝',
     };
   }
 
@@ -35,7 +36,13 @@ class ItemInput extends React.Component {
     }
     this.triggerChange({money });
   };
-
+  
+   handleTypeChange = payType => {
+    if (!('value' in this.props)) {
+      this.setState({ payType });
+    }
+    this.triggerChange({payType});
+  };
   triggerChange = changedValue => {
     // Should provide an event to pass value to Form.
     const onChange = this.props.onChange;
@@ -47,6 +54,7 @@ class ItemInput extends React.Component {
   render() {
     const { size } = this.props;
     const state = this.state;
+    const types=["支付宝",'微信',"现金","刷卡","转账","其他"];
     return (
       <span>
         <Input
@@ -55,15 +63,18 @@ class ItemInput extends React.Component {
           value={state.itemName}
           placeholder="收费项目"
           onChange={this.handleNumberChange}
-          style={{ width: '60%', marginRight: '3%' }}
+          style={{ width: '35%', marginRight: '2%' }}
         />
         <InputNumber
           min={1}
           size={size}
           value={state.money}
           onChange={this.handleCurrencyChange}
-          style={{ width: '32%',marginRight: '1%'}}
+          style={{ width: '32%',marginRight: '2%'}}
         />
+        <Select style={{ width:'20%',marginRight:'1%'}} value={state.payType} onChange={this.handleTypeChange}>
+            {types.map(i=>(<Select.Option key={i}>{i}</Select.Option>))}
+        </Select>
       </span>
     );
   }

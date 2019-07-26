@@ -152,7 +152,7 @@ export default class Permission extends Component {
           </Col>
           <Col   md={14} lg={16} xl={18}>
            <Card title="角色列表" extra={<Button type='primary' onClick={this.handleSave} disabled={!selectedNode}>保存用户角色</Button>}>
-            <Table bordered dataSource={listData} columns={this.columns} rowKey={record => record.id}  rowSelection={rowSelection} />
+            <Table dataSource={listData} columns={this.columns} rowKey={record => record.id}  rowSelection={rowSelection} />
             </Card>
           </Col>
         </Row>

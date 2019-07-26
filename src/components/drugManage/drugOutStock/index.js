@@ -4,25 +4,26 @@ import {Table,Card,Col,Row,Input, DatePicker, Button, notification, Divider, Ico
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '@/axios'
 import StockForm from './stockForm'
- 
 
 const { RangePicker } = DatePicker;
+const {Search} = Input;
 
 class DrugInStock extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       dataSource:[],
-      addTime:[moment().subtract('days', 6).format('YYYY-MM-DD HH:mm:ss'),moment().format('YYYY-MM-DD HH:mm:ss')],
+      initData:[],
+      addTime:[moment().subtract('days', 6),moment()],
       state:false,
       record:{},
       type:'edit',
     }  
   }
-  onChange=(a,v)=>{
-  	this.setState({addTime:v})
+  onChange=(date,dateStr)=>{
+  	this.setState({addTime:date})
   }
-  componentDidMount(){
+  componentWillMount(){
      this.listElderly();
   }
   
@@ -30,41 +31,41 @@ class DrugInStock extends React.Component {
     this.listInStock();
   }
   
-  listInStock=()=>{
-  	let {addTime} = this.state;
-  	const {customerId} = this.props.auth;
-  	let param = {type:2,customerId};
-  	param=addTime.length>0?{...param,startTime:addTime[0],endTime:addTime[1]}:param;
+  listInStock=(txt)=>{
+  	let {addTime,elderlys} = this.state;
+  	let param = {type:2,name:txt};
+  	if(!txt){
+  		param=addTime.length>0?{...param,startTime:addTime[0].format('YYYY-MM-DD HH:mm:ss'),endTime:addTime[1].format('YYYY-MM-DD HH:mm:ss')}:param;
+  	}
   	httpServer.listDrugInAndOut(param).then(res=>{
   		 if(res.code===200){
-  		 	 const dataSource = res.data?res.data:[];
-  		 	 this.setState({dataSource})
+  		 	 const data = res.data?res.data.map(i=>({...i,elderlyName:elderlys[i.elderlyId]})):[];
+  		 	 this.setState({dataSource:data,initData:data})
   		 }else{
-  		 	 this.setState({dataSource:[]})
+  		 	 this.setState({dataSource:[],initData:[]})
   		 }
   	})
   }
   handleAdd=()=>{
-  	this.setState({state:true,record:{},type:'add'})
+  	this.setState({record:{},state:true,type:"add"})
   }
   
   listElderly=()=>{
-  	const customerId = JSON.parse(sessionStorage.getItem('auth')).customerId;
-		const value = this.props.value;
-		httpServer.listElderlyInfo({
-			customerId,
-			listStatus: '0,1,2,3'
-		}).then(res => {
+		httpServer.listElderlyInfo({listStatus: '0,1,2,3'}).then(res => {
 			if(res.code === 200 && res.data) {
 				 let elderlys = {}
 				 res.data.forEach(item=>{
 				  	elderlys[item.id] = item.name;
 				 })
-				 this.setState({elderlys})
+				 this.setState({elderlys},()=>{
+				 	 this.listInStock()
+				 })
 			}else{
-				this.setState({elderlys:{}})
+				this.setState({elderlys:{}},()=>{
+					 this.listInStock()
+				})
 			}
-			this.listInStock()
+			
 		})
   }
   
@@ -97,12 +98,15 @@ class DrugInStock extends React.Component {
 	    ) 
   }
   
-  handleRead(record) {
-     this.setState({state:true,record,type:'audit'})
+  handleRead(record,type) {
+     this.setState({state:true,record,type})
   }
   cancle=()=>{
     this.handleSearch();
   	this.setState({state:false})
+  }
+  handleSearchElderly=(searchText)=>{//搜索老人信息 
+  	this.listInStock(searchText);
   }
   render() {
     let {dataSource,state,addTime} = this.state;
@@ -110,26 +114,28 @@ class DrugInStock extends React.Component {
        title: '出库单号',
 	      dataIndex:'docNo',
 	      key: 'docNo',
-	      width:'10%'	
+	      width:'10%',
+	      align:'center'
     },{
        title: '老人',
-	      dataIndex: 'elderlyId',
-	      key: 'elderlyId',
+	      dataIndex: 'elderlyName',
+	      key: 'elderlyName',
 	      width:'20%',
-	      render:(t,r)=>{
-	      	const elderlys = this.state.elderlys;
-	      	return elderlys[t]?elderlys[t]:t;
-	      }
     },{
        title: '出库类别',
 	      dataIndex: 'receiptType',
 	      key: 'receiptType',
 	      width:'10%'	
     },{
-        title: '出库时间',
+        title: '出库日期',
 	      dataIndex: 'inOutTime',
 	      key: 'inOutTime',
 	      width:'10%'	
+    },{
+        title: '出库日期',
+	      dataIndex: 'auditTime',
+	      key: 'auditTime',
+	      width:'10%',
     },{
     	  title:'审核人',
     	  dataIndex:'auditor',
@@ -140,20 +146,21 @@ class DrugInStock extends React.Component {
 			dataIndex: 'action',
 			key: 'action',
 			width: '12%',
+			align:'center',
 			render: (text, record) => {
 				return(
 					<span>
                {
 					      !record.auditor?
 					      <span>
-					        <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+					         <Button type="primary" title="修改" size="small" icon="edit" onClick={() => { this.handleModify(record) }}></Button>
 					        <Divider type="vertical" />
 		              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id)}>
-		                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+		                 <Button type="primary" title="删除" size="small" icon="delete"></Button>
 		              </Popconfirm>
 		              <Divider type="vertical" />
-					        <a href="javascript:;" onClick={() => { this.handleRead(record) }} style={{color:'#2ebc2e'}}>审核</a>
-					      </span>:null
+					        <Button size="small" type="primary" title="审核" icon="audit" onClick={() => { this.handleRead(record,"audit") }}></Button>
+					      </span>:<Button size="small" type="primary" title="查看" icon="read" onClick={() => { this.handleRead(record,"read") }}></Button>
 					    }
           </span>
 				)
@@ -164,15 +171,26 @@ class DrugInStock extends React.Component {
     	  <BreadcrumbCustom first="药品管理" second="药品出库" />
           <Card bordered={false}>
             <Row gutter={16}>
-	                <Input.Group compact>
-	                  <RangePicker onChange={this.onChange} showTime   value={[moment(addTime[0]),moment(addTime[1])]}/>  
-	                  <Button type="primary" onClick={this.handleSearch}>搜索</Button>
-	                  <Button type="primary" onClick={this.handleAdd}>点击添加</Button> 
-	                </Input.Group>
+              <Col md={16} sm={12}>
+                <Input.Group compact>
+                  <RangePicker onChange={this.onChange} showTime value={addTime}/>  
+                  <Button type="primary" onClick={this.handleSearch} title="搜索" icon="search"></Button>
+                  <Button type="primary" onClick={this.handleAdd} title="新增出库" icon="plus"></Button>  
+                </Input.Group>
+              </Col>
+              <Col md={8} sm={12} className="text-right">
+                <Search
+							      placeholder="请输入关键字"
+							      onSearch={v=>this.handleSearchElderly(v)}
+							      style={{ width: 200 }}
+							      enterButton
+							  />
+              </Col>  
             </Row>
           </Card>
           <Card bordered={false} style={{marginTop:'10px'}}>
 	          <Table 
+	           size="middle"
 	           columns={columns} 
 	           dataSource={dataSource} 
 	           rowKey={record => record.id}

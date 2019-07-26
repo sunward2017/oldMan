@@ -249,16 +249,15 @@ class DeptAdd1 extends Component{
     return(
       <Fragment>
         <Card
-          title="部门员工信息列表"
+          title={<span>所属部门:&emsp;<span style={{color:"#e43975"}}>{selectedNode.departmentName}</span></span>}
           extra={<Button type="primary" onClick={this.handleAdd}>添加</Button>}
           style={{ width: "100%", }}
         >
-          <p>当前所在部门：{selectedNode.departmentName}</p>
           <Table 
-            bordered
+            size="small"
             dataSource={dataSource} 
             columns={columns} 
-            pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+            pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
             rowKey={record => record.id}
           />
         </Card>

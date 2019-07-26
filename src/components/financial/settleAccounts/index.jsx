@@ -1,418 +1,420 @@
-import React from 'react';
-import { Row, Col, Card, Button, notification, Select,Divider,Table,Modal,Form,Input,InputNumber,Radio,Popconfirm,message,Tag} from 'antd';
+ import React, {
+	Component,
+	Fragment
+} from 'react';
+import { Modal, Button, Input, Icon, Table, Tag, notification,Divider,Card,message,Tooltip} from 'antd';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
-import httpServer from '../../../axios/index';
-import { FeeTabs } from './feeTabs';
-import  Elderlys  from './elderlys'
+import httpServer from '@/axios';
+import ElderlyInfo from '@/common/elderlyInfo'
 import  Cost  from '@/common/costDetail'
-import {host} from '@/axios/config'
+import CostDetail from './costDetail'
 
-const Option = Select.Option;
-const RadioButton = Radio.Button;
-const RadioGroup = Radio.Group;
-class SettleAccounts extends React.Component {
-    state={
-        fee:{},
-        activeKey:'nursingFee',
-        count:0, //计算费用
-        computed:0,
-        collection:[],//付款项
-        ids:{},
-        visible:false,
-        record:{},
-        pageTxt:'在院',
-        elderlyInfo:{},
-        costFlag:false,
-        sumMoney:{}
-    };
-    param={};
-    componentWillMount(){
+class ElderlySelect extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			sourceData:[],
+			data:[],
+			searchText:'',
+			modalFlag:false,
+			elderly:{},
+			fledgeVisible:true,
+			feeData:{},
+			costFlag:false,
+			pageTxt:'',
+			page:1,
+			pageSize:10,
+			meelObj:{},
+			gradeObj:{}
+		};
+	}
+	componentWillMount(){
     	const pageTxt=(this.props.location.pathname.indexOf('settleAccounts')>-1)?'在院':'出院';
     	this.setState({pageTxt})        
     }
     componentDidMount(){
-        const {customerId, account}= this.props.auth;
-        this.urlObj = {
-            urlLists:{
-                nursingFee:'listNursingAndCheckItem',
-                mealFee:'listMealFeeList',
-                waterFee:'listWaterRecoder',
-                roomFee:'listRoomFeeList',
-                drugFee:'listDrugFeeList'
-            },
-            urlSaves:{
-                nursingFee:'settlementNursingItem',
-                mealFee:'saveSettlementMealFee',
-                waterFee:'saveSettlementWaterFee',
-                roomFee:'saveSettlementRoomFee',
-                drugFee:'saveSettlementDrugFee'
-            }
-        }
-        this.customerId = customerId;
-        this.param = {account,customerId};
-        this.fetchSysParams('creditList');
-        //this.fetchElderlyInfo()
-       // this.fetchSumMoney()
-       
-    }
-    componentWillUnmount(){
-    	this.setState=(state,cb)=>{
-    		return 
-    	}
-    }
-    fetchSysParams(t){
-    	const type = t==="creditList"?12:2;
-        httpServer.listParam({ type}).then(res => {
-            this.param[t]= res.data||[];
-        })
-    }
-     
-    fetchElderlyInfo(){
-        const { activeKey, fee, elderSelected } = this.state;
-        const url = this.urlObj.urlLists[activeKey] ;
-        httpServer[url]({ elderlyId:this.elderlyId}).then(res => {
-            res.code === 200 ? this.setState({
-                fee: { ...fee ,[activeKey]: {list:res.data ? res.data: {data:[]}, elderly:elderSelected, param:this.param}}
-            }) : this.notice('error', res.msg) ;
-            
-        })
-    }
-    notice(status, msg) {
-        let text = status==='success' ? '成功' : (status === 'error'? '失败' : '');
-        notification[status]({
-            message: `${text}提示:`,
-            description:msg,
-            duration:2
-        })
-    }
-     
-    onBillSubmitHandler = (data,t) => {
-        if(data.money){
-        	let  {count,ids} = this.state;
-	    	let type = '';
-	    	switch(t){
-	    		case '1': type = 'nursingIds'; break;
-	    		case '2': type = 'mealIds'; break;
-	    		case '3': type = 'waterIds'; break;
-	    		case '4': type = 'roomIds'; break;
-	    	}
-	    	if(!ids[type]){
-	    		ids[type]=data.data?data.data.map(i=>(i.id)).join(','):'';
-	    	}
-	        count += data.money; 
-	        this.setState({count})
-        }
-    };
-    onTabChangeHandler = (activeKey) => {
-        const {fee } = this.state;
-        this.setState({activeKey},() => {
-            !fee[activeKey] && this.fetchElderlyInfo();
-        });
-    };
-    
-    add=()=>{ 
-        this.setState({visible:true,record:{}});   
-    }
-    
-    fetchSumMoney=()=>{
-    	httpServer.getMoneyInfo({elderlyId:this.elderlyId}).then(res=>{
-    	    if(res.code===200){
-    	        this.setState({sumMoney:res.data||{}})	
-    	    }else{
-    	    	message.error('获取账户预交出错，请不要用预交结算');
-    	    }
-    	     
-    	})
-    }
-    handleOk=()=>{
-    	this.props.form.validateFieldsAndScroll((err, fieldsValue) => {
-    	   if(!err){
-    	   	   let {collection,sumMoney} = this.state;
-    	   	   if(fieldsValue.type==="6"||fieldsValue.type==="7"){
-    	   	   	  if(fieldsValue.money>sumMoney['je'+fieldsValue.type]){
-    	   	   	  	 message.error('预交金额不足，请选择其他方式');
-    	   	   	  	 return;
-    	   	   	  }else{
-    	   	   	  	 fieldsValue.flag =fieldsValue.type;
-    	   	   	  }
-    	   	   	  
-    	   	   }
-    	   	   const index = collection.findIndex(i=>(i.type===fieldsValue.type));
-    	   	   if(index>-1){
-    	   	   	   collection.splice(index,1,{...fieldsValue})
-    	   	   }else{
-    	   	   	   collection.push(fieldsValue)
-    	   	   }
-    	       let money = collection.map(i=>(i.money)).reduce((t,n)=>(t+n));
-    	   	   this.setState({collection,computed:money,visible:false})   
-    	   }
-    	})
-    }
-    handleCancel=()=>{
-    	this.setState({visible:false});
-    }
-    handleModify=(r)=>{
-    	  this.setState({visible:true,record:r});
-    }
-    handleRowDelete(id){
-       this.setState(state=>{
-       	   const index = state.collection.findIndex(i=>(i.id===id));
-    	   state.collection.splice(index,1);
-    	   return {...state}
-       })
-    }
-    
-    handleSubmit=()=>{
-    	const {collection,ids,count,computed,pageTxt} = this.state;
-    	if(!count){
-    		message.error('没有要结算费用');
-    		return false;
-    	}
-    	
-    	if(parseInt(computed)!==parseInt(count)){
-    		message.error('收款金额不对，请核对');
-    		return false;
-    	}
-    	const { name,customerId } = this.props.auth
-    	var values = {
-    		...ids,
-    		tbPayMoneyDetailInfo: collection,
-    		elderlyId:this.elderlyId,
-    		payee:name,
-    		sumMoney:computed,
-    		customerId:customerId
-    	}
-    	let request = new Request(host.api+'/saveSettlementWaterFee', {
-	        body: JSON.stringify(values),
-	        method: 'POST',
-	        headers: new Headers({
-	          'Content-Type': 'application/json;charset=utf-8'
-	        })
+    	this.ListElderlyByCost();
+        this.getNursingGrade();
+	    this.getPayItemChild()
+	  }
+	getPayItemChild(){
+	    httpServer.selectPayItemChild().then((res)=>{
+	      if (res.code === 200) {
+	            if(res.data){
+		         	let obj = {};
+		         	res.data.forEach(k=>{
+		         		obj[k.itemCode]=k.name;
+		         	})
+		        	this.setState({
+		        		meelObj:obj
+		        	})
+		        }
+	      } else {
+	        if(res.message ==='Request failed with status code 500'){
+	            console.log(res.message);
+	         }else{
+	            const args = {
+	            message: '通信失败',
+	            description: res.msg,
+	            duration: 2,
+	          };
+	          notification.error(args);
+	         }
+	      }
+	    }).catch((error)=>{
+	      console.log(error);
+	    });
+	}
+	getNursingGrade(){
+	    httpServer.listNursingGrade().then((res) => {
+	      if (res.code === 200) {
+	        if(res.data){
+	        	let obj = {};
+	        	res.data.forEach(i=>{
+	        		obj[i.nursingGradeCode]=i.nursingGradeName;
+	        	})
+	        	this.setState({
+	        		gradeObj:obj
+	        	})
+	        }
+	      } else {
+	        if(res.message ==='Request failed with status code 500'){
+	            console.log(res.message);
+	         }else{
+	             const args = {
+	            message: '通信失败',
+	            description: res.msg,
+	            duration: 2,
+	          };
+	          notification.error(args);
+	         }
+	      }
+	    }).catch((error) => {
+	      console.log(error);
+	    });
+	}
+	
+    handleSearchElderly=()=>{
+    	const { searchText } = this.state;
+	    if(searchText){
+	      const reg = new RegExp(searchText, 'gi');
+	      const data = this.state.sourceData.filter((record) =>record.name && record.name.match(reg));
+	      this.setState({
+	        data,
 	      });
-          fetch(request).then(resp => resp.json()).then( res => {
-            if(res.code === 200) {
-				this.setState({costId:res.data.uuidCode})
-					this.notice('success', res.msg);
-			} else {
-					this.notice('error', res.msg);
+	    }else{
+	        this.setState(state=>{
+	        	state.data= state.sourceData;
+	        	return state;
+	        })
+	    }
+    }
+    handleInputChange=(e) =>{ //老人姓名搜索框发生变化
+	    this.setState({ searchText: e.target.value });
+	}
+    
+	ListElderlyByCost = () => {
+		const {pageTxt} = this.state;
+		httpServer.listSettlementInfo({
+			listStatus:'3',
+			launchFlag:pageTxt==="在院"?"0":"1",
+		}).then(res => {
+			if(res.code === 200) {
+			    const data = res.data?res.data.map(d=>{
+			    	const m = d.amountMoney||0;
+			    	const n = d.closeMoney||0;
+			    	const z = d.tbMoneyLibrary&&d.tbMoneyLibrary.je6||0;
+			    	const q = d.tbMoneyLibrary&&d.tbMoneyLibrary.je7||0;
+			        return {...d,lack:0-(m-n-z-q)}
+			    }):[];
+				this.setState({
+					data,
+					sourceData:data,
+				},()=>{
+					if(this.state.searchText){
+					   this.handleSearchElderly()	
+					}	
+				})
+			}else{
+				this.setState({data:[],sourceData:[]});
+				message.error('获取老人失败')
 			}
-		   const { history } = this.props;
-		   const curUrl = pageTxt==="在院"?'/app/pension-agency/financial/settleAccounts':'/app/pension-agency/financial/leaveSettle';
-           history.replace(curUrl) 
-          }).catch(err => { console.log(err) });
+		})
+	}
+    handleReset = ()=>{ 
+    	 this.setState(state=>{
+    	 	    state.searchText='';
+	        	state.data= state.sourceData;
+	        	return state;
+	        })
+    }
+    lookAt=(r)=>{
+    	this.setState({modalFlag:true,elderly:r})
+    }
+    fetchCostByElderly=(r)=>{
+    	this.setState({elderly:r,fledgeVisible:false}) 
+    }
+     
+    handleCancel=()=>{
+    	this.setState({feeData:{},fledgeVisible:true},()=>this.ListElderlyByCost())
     }
     
-    showCost=()=>{
-        this.setState({costFlag:true})	
+    showCost=(r)=>{
+        this.setState({costFlag:true,elderly:r})	
     }
     
     close =()=>{
     	this.setState({costFlag:false})	
     }
-    
-    changeElderly=(r)=>{
-    	this.elderlyId = r.id;
-        this.setState({elderlyInfo:r,elderSelected:r.id,collection:[]},()=>{
-         	this.fetchSysParams('creditList');
-            this.fetchElderlyInfo()
-            this.fetchSumMoney()
-        })
+    pageChange=(page,pageSize)=>{
+    	this.setState({page,pageSize}) 
     }
-    render() {
-        const {elderlyInfo, fee, elderSelected, pageTxt,collection,record,sumMoney,count} = this.state;
-        const { account }= this.props.auth;
-        const creditList = this.param.creditList;
-      
-        const columns=[{
-			title: '序号',
-			render: (text, record, index) => `${index+1}`,
-			width: '5%',
-			key:'index'
-		},{
-        	title:'付款方式',
-        	dataIndex:'type',
-        	width:'10%',
-        	render:(t,r)=>{
-        		 switch(t){
-        		 	case '1': return "现金";
-        		 	case '2': return "支付宝"
-        		 	case '3': return "医疗押金"
-        		 	case '8': return "刷卡"
-        		 	case '5': return "转账"
-        		 	case '6': return "住院预交"
-        		 	case '7': return "其他预交"
-        		 	case '3': return "微信"
-        		 }
-        	}
-        },{
-        	title:'金额',
-        	dataIndex:'money',
-        	width:'10%'
-        },{
-        	title:'账号',
-        	dataIndex:'account',
-        	width:'10%'
-        },{
-			title: '操作',
-			dataIndex: 'action',
-			key: 'action',
-			width: '8%',
-			render: (text, record) => {
-				return(
-					<span>
-			            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
-			              <Divider type="vertical" />
-			              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id)}>
-			                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
-			              </Popconfirm>
-			          </span>
-				)
-			},
-		}]
-        const formItemLayout = {
-			labelCol: {
-				xs: {
-					span: 24
+	render() {
+		const columns = [{
+		      title: '序号',
+		      render:(text,record,index)=>`${index+1}`,
+		      key:'serialNumber',
+		      align: 'center',
+		      width:'5%'
+		    },{
+				title: '姓名',
+				dataIndex: 'name',
+				align: 'center',
+				render: text => <a href="javascript:;">{text}</a>,
+			},{
+			      title: '性别',
+			      dataIndex: 'sex',
+			      key: 'sex',
+			      align:'center',
+			      render:(text)=>{
+			      	 return text===1?<Tag color="#87d068">男</Tag>:<Tag color="#F50">女</Tag>
+			      }
+			},{
+				title: '房间号',
+				dataIndex: 'roomName',
+				align: 'center',
+				defaultSortOrder: 'ascend',
+			    sorter: (a, b) => a.roomName - b.roomName,
+			},{
+				title: '入院日期',
+				dataIndex: 'checkInDate',
+			 
+				render:(t,r)=>{
+					return t&&<Tag color="geekblue">{t.substr(0,10)}</Tag>
+				}
+				 
+			}, {
+				title: '应收费用',
+				dataIndex: 'amountMoney',
+				align: 'center',
+				 
+				render:(t,r)=>{
+					return t&&Math.round(t)
+				}
+			},{
+				title: '已收费',
+				dataIndex: 'closeMoney',
+				align: 'center',
+				 
+				render:(t,r)=>{
+					return t&&Math.round(t)
+				}
+			},{
+				title: '未收费',
+				dataIndex: 'qf',
+				align: 'center',
+			 
+				render:(t,r)=>{
+					return r.openMoney&&Math.round(r.openMoney)
+				}
+			},{
+				title: '住院预交',
+				dataIndex: 'tbMoneyLibrary.je6',
+				align: 'center',
+				 
+			},{
+				title: '其他预交',
+				dataIndex: 'tbMoneyLibrary.je7',
+				align: 'center',
+			},{
+				title: '医疗押金',
+				dataIndex: 'tbMoneyLibrary.je3',
+				align: 'center',
+			 
+			},{
+				title: '费用结余',
+				dataIndex: 'lack',
+				align: 'center',
+				 
+				render:(t,r)=>{
+					return t>0?Math.round(t):<span style={{color:'red'}}>{Math.round(t)}</span>
 				},
-				sm: {
-					span: 6
+				defaultSortOrder: 'ascend',
+			    sorter: (a, b) => a.lack - b.lack,
+			},{
+				title: '操作',
+				dataIndex: 'action',
+				width:200,
+				align:'center',
+				fixed: 'right',
+				filters: [
+			      {
+			        text: '已欠费',
+			        value: '2',
+			      }, {
+			        text: '未欠费',
+			        value: '1',
+			      },
+			    ],
+				filterMultiple: false,
+				onFilter: (value, record) =>value==1?record['lack']>=0:record['lack']<0, 
+				render:(t,r)=>{
+				return <span>
+				         <Button size="small" icon="alipay" type="primary" title="结算" onClick={() => { this.fetchCostByElderly(r)}}></Button>
+				      	 <Divider type="vertical"/>
+						 <Button size="small" icon="read" type="primary" title="基础信息" onClick={() => { this.lookAt(r)}}></Button>
+				      	 <Divider type="vertical"/>
+				      	 <Button size="small" icon="file-done" type="primary" title="历史结算" onClick={() => { this.showCost(r)}}></Button>
+				      	 
+				      </span>
+				}
+			}];
+			const columns_ = [{
+		      title: '序号',
+		      render:(text,record,index)=>`${index+1}`,
+		      key:'serialNumber',
+		      align: 'center',
+		      width:'5%'
+		    },{
+				title: '姓名',
+				dataIndex: 'name',
+				align: 'center',
+				render: text => <a href="javascript:;">{text}</a>,
+			},{
+			      title: '性别',
+			      dataIndex: 'sex',
+			      key: 'sex',
+			      
+			      align:'center',
+			      render:(text)=>{
+			      	 return text===1?<Tag color="#87d068">男</Tag>:<Tag color="#F50">女</Tag>
+			      }
+			},{
+				title: '房间号',
+				dataIndex: 'roomName',
+				align: 'center',
+				 
+				defaultSortOrder: 'ascend',
+			    sorter: (a, b) => a.roomName - b.roomName,
+			},{
+				title: '应收费用',
+				dataIndex: 'amountMoney',
+				align: 'center',
+				 
+				render:(t,r)=>{
+					return t&&Math.round(t)
+				}
+			},{
+				title: '已收费',
+				dataIndex: 'closeMoney',
+				align: 'center',
+				 
+				render:(t,r)=>{
+					return t&&Math.round(t)
+				}
+			},{
+				title: '未收费',
+				dataIndex: 'qf',
+				align: 'center',
+				 
+				render:(t,r)=>{
+					return r.openMoney&&Math.round(r.openMoney)
+				}
+			},{
+				title: '住院预交',
+				dataIndex: 'tbMoneyLibrary.je6',
+				align: 'center',
+				 
+			},{
+				title: '其他预交',
+				dataIndex: 'tbMoneyLibrary.je7',
+				align: 'center',
+				 
+			},{
+				title: '费用结余',
+				dataIndex: 'lack',
+				align: 'center',
+				 
+				render:(t,r)=>{
+					return t>0?Math.round(t):<span style={{color:'red'}}>{Math.round(t)}</span>
 				},
-			},
-			wrapperCol: {
-				xs: {
-					span: 24
-				},
-				sm: {
-					span: 18
-				},
-			},
-		};
-		const {
-			getFieldDecorator,
-		} = this.props.form;
-		
-		
-        return (
-            <div>
-                <BreadcrumbCustom first="财务管理" second={`${pageTxt}结算`} />
-                <Card bordered={false} style={{marginBottom:10}}>
-	                <Row gutter={16}>
-	                  <Col sm={24} md={16}>
-	                   {elderlyInfo.id?
-	                    <span>
-	                             姓名:&emsp; <Tag color="magenta">{elderlyInfo.name}</Tag>
-	                           性别:&emsp;<Tag color="#108ee9">{elderlyInfo.sex===1?'男':'女'}</Tag>&emsp;&emsp;
-	                          	年龄:&emsp;<Tag color="orange" >{elderlyInfo.age}</Tag>岁&emsp;&emsp;
-	                           	生日:&emsp;<Tag color="blue">{elderlyInfo.birthday.split(' ')[0]}</Tag>&emsp;&emsp;
-	                               房间:&emsp;<Tag color="cyan">{elderlyInfo.roomName}</Tag>
-	                               
-	                    </span>:null
-	                    }</Col>
-	                  <Col sm={24} md={8}>
-	                    <Elderlys onChange={this.changeElderly} launchFlag={pageTxt==="在院"?"0":"1"}/>
-	                  </Col>                
-	                </Row>
-	            </Card>
-                <Card  bordered={false} style={{marginBottom:10}} title="费用明细">
-                    <Row className="mb-s">
-                        <FeeTabs
-                            key={this.elderlyId}
-                            data={fee}
-                            selected={elderSelected}
-                            onBillSubmit={this.onBillSubmitHandler}
-                            onTabChange={this.onTabChangeHandler}
-                        />
-                    </Row>
-                </Card>
-                <Card title="结算明细">
-                    <Row gutter={16}>
-                       <Col xs={24} sm={6}>
-                         <Card title="费用统计">
-                           <h3> 结算老人: <span className="ml-m"><Tag color="magenta">{elderlyInfo.name}</Tag></span></h3>
-                           <h3> 应收费用 : <span className="ml-m">{(+count).toFixed(1)}元</span></h3>
-                           <h3> 收 款 人 : <span className="ml-m">{account}</span></h3>
-                         </Card>  
-                       </Col>
-                       <Col xs={24} sm={18}>
-                          <Table 
-                          bordered
-                          columns={columns} 
-                          rowKey='type' 
-                          dataSource={collection} 
-                          pagination={{ pageSize: 50 }} 
-                          scroll={{ y: 240 }}   
-                          footer={() =><div>
-                          	合计:{this.state.computed}元
-                          	<Button className="pull-right tb-footer-text" type="primary" size="small" onClick={this.showCost} disabled={!elderlyInfo.name}>历史记录</Button>
-                            <Button className="pull-right tb-footer-text" type="primary" size="small" onClick={this.handleSubmit} disabled={this.state.collection.length===0}>提交</Button>
-                            <Button className="pull-right tb-footer-text" size="small" type="primary" onClick={this.add} disabled={(+count)==0.0}>付款</Button></div>}
-                          />
-                       </Col>
-                    </Row> 
-                     
-                </Card>
-                <Modal
-		          title="付款清单"
-		          key ={this.state.visible}
-		          visible={this.state.visible}
-		          onOk={this.handleOk}
-		          onCancel={this.handleCancel}
-		          
-		        > 
-		          <Form>
-				        <Form.Item
-				            label='付款方式'
-			                {...formItemLayout}
-			                style={{marginBottom:'4px'}}
-				        >
-				          {getFieldDecorator('type', {
-				            rules: [{ required: true, message: '请选择付款方式' }],
-				            initialValue:record.type||"1"
-				          })(
-				             <RadioGroup  buttonStyle="solid">
-				                <Radio.Button value="1">现金</Radio.Button>
-						        <Radio.Button value="2">支付宝</Radio.Button>
-						        <Radio.Button value="4">微信</Radio.Button>
-						        <Radio.Button value="8">刷卡</Radio.Button>
-						        <Radio.Button value="5">转账</Radio.Button>
-						        <Radio.Button value="6">住院预交</Radio.Button>
-						        <Radio.Button value="7">其他预交</Radio.Button>
-						        <Radio.Button value="3">医疗押金</Radio.Button>
-						      </RadioGroup>
-				          )}
-				        </Form.Item>
-				        <Form.Item
-				            label='付款金额'
-			                {...formItemLayout}
-			                style={{marginBottom:'4px'}} 
-				        >
-				          {getFieldDecorator('money', {
-				            rules: [{ required: true, message: '请输入付款金额' }],
-				            initialValue:record.money
-				          })(
-				            <InputNumber min={0} style={{width:'100%'}}/>
-				          )}
-				        </Form.Item>
-				         <Form.Item
-				            label='收款账号'
-			                {...formItemLayout}
-			                style={{marginBottom:'4px'}} 
-				        >
-				          {getFieldDecorator('account', {
-				            rules: [{ required: false, message: 'Please input your account' }],
-				            initialValue:record.account
-				          })(
-				              <Select>
-				                 {creditList&&creditList.map(i=>(<Option key={i.id} value={i.value}>{i.value}</Option>))}
-				              </Select>
-				          )}
-				        </Form.Item>
-				      </Form>
-		        </Modal> 
-		        {this.state.costFlag?<Cost visible={this.state.costFlag} elderlyInfo={elderlyInfo} close={this.close} sumMoney={sumMoney} />:null}
-            </div>
-        )
-    }
+				defaultSortOrder: 'ascend',
+			    sorter: (a, b) => a.lack - b.lack,
+			},{
+				title: '操作',
+				dataIndex: 'action',
+				width:200,
+				align:'center',
+				fixed: 'right',
+				filters: [
+			      {
+			        text: '已欠费',
+			        value: '2',
+			      }, {
+			        text: '未欠费',
+			        value: '1',
+			      },
+			    ],
+				filterMultiple: false,
+				onFilter: (value, record) =>value==1?record['lack']>=0:record['lack']<0, 
+				render:(t,r)=>{
+				return <span>
+				         <Button size="small" icon="alipay" type="primary" title="结算" onClick={() => { this.fetchCostByElderly(r)}}></Button>
+				      	 <Divider type="vertical"/>
+						 <Button size="small" icon="read" type="primary" title="基础信息" onClick={() => { this.lookAt(r)}}></Button>
+				      	 <Divider type="vertical"/>
+				      	 <Button size="small" icon="file-done" type="primary" title="历史结算" onClick={() => { this.showCost(r)}}></Button>
+				      	 
+				      </span>
+				}
+			}];
+        const {name,data,modalFlag,elderly,costFlag,pageTxt,fledgeVisible,page,pageSize,meelObj,gradeObj} =this.state;
+		return(<Fragment>
+			<BreadcrumbCustom first="财务管理" second={`${pageTxt}结算`} />
+			{ fledgeVisible?
+			   <div>
+					<Card>
+				        <Input 
+		                  placeholder="按老人姓名搜索" 
+		                  style={{width:300,marginRight:'10px'}}
+		                  ref={ele => this.searchInput = ele}
+		                  value={ this.state.searchText }
+		                  onChange={this.handleInputChange}
+		                  onPressEnter={this.handleSearchElderly}
+		                />
+		                <Button type="primary" onClick={this.handleSearchElderly}>搜索</Button>
+		                <Button type="primary" onClick={this.handleReset}>刷新</Button>
+		                <Divider/>
+				        <Table  scroll={{ x: 1500}} columns={pageTxt==="在院"?columns_:columns} dataSource={data} rowKey='id' size="middle"   pagination={{showSizeChanger:true , showQuickJumper:true ,current:page,pageSize:pageSize,onChange:this.pageChange, pageSizeOptions:['10','20','30','40','50']}} /> 
+				    </Card> 
+				    <ElderlyInfo visible={modalFlag} data={elderly} close={()=>{this.setState({modalFlag:false})}} meelObj={meelObj} gradeObj={gradeObj}/>
+				    {costFlag?<Cost visible={this.state.costFlag} elderlyInfo={elderly} close={this.close} />:null}
+			    </div>:<CostDetail elderlyInfo={elderly} reback={()=>{this.handleCancel()}} auth={this.props.auth} />
+			}
+			
+        </Fragment>)
+	}
 }
-    
-export default Form.create()(SettleAccounts);
+
+export default ElderlySelect;
+/*
+  *  <Modal
+		          title="押金明细"
+		          visible={this.state.fledgeVisible}
+		          footer={null}
+		          onCancel={()=>{this.handleCancel()}}
+		          width={400}
+		    >
+		       <Balance feeData={this.state.feeData} />
+		    </Modal>	
+  */

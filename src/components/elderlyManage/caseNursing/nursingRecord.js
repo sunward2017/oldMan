@@ -51,7 +51,10 @@ class CMT extends Component {
         	if(!err){
         		const { records } = this.state;
         		if(records.length===0){
-        			message.error('护理措施不可为空')
+        			let values={...fieldsValue}
+        			const {id} = this.props.record;
+        		    if(id) values.id =id;
+        		    this.props.saveCasePlan('record',values)
         		}else{
         		    let values ={...fieldsValue,a15:JSON.stringify(records)};
         		    const {id} = this.props.record;
@@ -108,7 +111,7 @@ class CMT extends Component {
 			    <Row gutter={16}>
 			        <Col span={12}>
 					    <Form.Item label="现病史" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}> 
-					          {getFieldDecorator('a1', { rules: [{required: true, message: '请输入现病史',}],initialValue:a1 })
+					          {getFieldDecorator('a1', { rules: [{required: false, message: '请输入现病史',}],initialValue:a1 })
 					          (
 					            <Input/>
 						       )}
@@ -116,7 +119,7 @@ class CMT extends Component {
 				    </Col>
 				    <Col span={12}>
 					    <Form.Item label="以往病史" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}> 
-					          {getFieldDecorator('a2', { rules: [{required: true, message: '请输入以往病史',}],initialValue:a2 })
+					          {getFieldDecorator('a2', { rules: [{required: false, message: '请输入以往病史',}],initialValue:a2 })
 					          (
 					            <Input/>
 						       )}
@@ -124,7 +127,7 @@ class CMT extends Component {
 				    </Col>
 				    <Col span={12}>
 					    <Form.Item label="思维能力" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}> 
-					          {getFieldDecorator('a3', { rules: [{required: true, message: '请输入老人思维能力',}],initialValue:a3 })
+					          {getFieldDecorator('a3', { rules: [{required: false, message: '请输入老人思维能力',}],initialValue:a3 })
 					          (
 					            <Input/>
 						       )}
@@ -132,7 +135,7 @@ class CMT extends Component {
 				    </Col>
 				    <Col span={12}>
 					    <Form.Item label="行动能力" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}> 
-					          {getFieldDecorator('a4', { rules: [{required: true, message: '请输入老人行动能力',}],initialValue:a4 })
+					          {getFieldDecorator('a4', { rules: [{required: false, message: '请输入老人行动能力',}],initialValue:a4 })
 					          (
 					            <Input/>
 						       )}
@@ -140,7 +143,7 @@ class CMT extends Component {
 				    </Col>
 				    <Col span={12}>
 					    <Form.Item label="表达能力" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}> 
-					          {getFieldDecorator('a5', { rules: [{required: true, message: '请输入老人表达能力',}],initialValue:a5 })
+					          {getFieldDecorator('a5', { rules: [{required: false, message: '请输入老人表达能力',}],initialValue:a5 })
 					          (
 					            <Input/>
 						       )}
@@ -148,7 +151,7 @@ class CMT extends Component {
 				    </Col>
 				    <Col span={6}>
 					    <Form.Item label="视力" labelCol={{ xs: { span: 24 },sm: { span: 8 },md: {span:8}}} wrapperCol={{xs: { span: 24 }, sm: { span: 16 },md: {span:16}}}> 
-					          {getFieldDecorator('a6', { rules: [{required: true, message: '请输入视力',}],initialValue:a6 })
+					          {getFieldDecorator('a6', { rules: [{required: false, message: '请输入视力',}],initialValue:a6 })
 					          (
 					            <Input/>
 						       )}
@@ -156,7 +159,7 @@ class CMT extends Component {
 				    </Col>
 				    <Col span={6}>
 					    <Form.Item label="听力" labelCol={{ xs: { span: 24 },sm: { span: 8 },md: {span:8}}} wrapperCol={{xs: { span: 24 }, sm: { span: 16 },md: {span:16}}}> 
-					          {getFieldDecorator('a7', { rules: [{required: true, message: '请输入听力',}],initialValue:a7 })
+					          {getFieldDecorator('a7', { rules: [{required: false, message: '请输入听力',}],initialValue:a7 })
 					          (
 					            <Input/>
 						       )}
@@ -164,7 +167,7 @@ class CMT extends Component {
 				    </Col>
 				    <Col span={24}>
 					    <Form.Item label="护理需求" labelCol={{ xs: { span: 24 },sm: { span: 2 },md: {span:2}}} wrapperCol={{xs: { span: 24 }, sm: { span: 22 },md: {span:22}}}> 
-					          {getFieldDecorator('a8', { rules: [{required: true, message: '请输入护理需求',}],initialValue:a8 })
+					          {getFieldDecorator('a8', { rules: [{required: false, message: '请输入护理需求',}],initialValue:a8 })
 					          (
 					            <Input/>
 						       )}
@@ -172,7 +175,7 @@ class CMT extends Component {
 				    </Col>
 				    <Col span={12}>
 					    <Form.Item label="饮食情况" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}> 
-					          {getFieldDecorator('a9', { rules: [{required: true, message: '请输入老人饮食情况',}],initialValue:a9 })
+					          {getFieldDecorator('a9', { rules: [{required: false, message: '请输入老人饮食情况',}],initialValue:a9 })
 					          (
 					            <Input/>
 						       )}
@@ -180,7 +183,7 @@ class CMT extends Component {
 				    </Col>
 				    <Col span={12}>
 					    <Form.Item label="睡眠情况" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}> 
-					          {getFieldDecorator('a10', { rules: [{required: true, message: '请输入老人睡眠情况',}],initialValue:a10 })
+					          {getFieldDecorator('a10', { rules: [{required: false, message: '请输入老人睡眠情况',}],initialValue:a10 })
 					          (
 					            <Input/>
 						       )}
@@ -188,7 +191,7 @@ class CMT extends Component {
 				    </Col>
 				    <Col span={12}>
 					    <Form.Item label="大小便情况" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}> 
-					          {getFieldDecorator('a11', { rules: [{required: true, message: '请输入老人大小便情况',}],initialValue:a11 })
+					          {getFieldDecorator('a11', { rules: [{required: false, message: '请输入老人大小便情况',}],initialValue:a11 })
 					          (
 					            <Input/>
 						       )}
@@ -211,7 +214,7 @@ class CMT extends Component {
 				    </Col>
 				    <Col span={6}>
 				        <Form.Item label="家属签名" labelCol={{ xs: { span: 24 },sm: { span: 8 },md: {span:8}}} wrapperCol={{xs: { span: 24 }, sm: { span:16},md: {span:16}}}>
-					        {getFieldDecorator('a14', { rules: [{required: true, message: '请输入家属姓名',}],initialValue:a14 })
+					        {getFieldDecorator('a14', { rules: [{required: false, message: '请输入家属姓名',}],initialValue:a14 })
 					        (
 					          <Input />
 					        )}

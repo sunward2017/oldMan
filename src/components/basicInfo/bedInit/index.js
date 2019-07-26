@@ -168,14 +168,12 @@ class MealInit extends Component{
       render: (text, record) => {
         return(
           edit && (record.id === id)?
-          <span>
-            <a href="javascript:;" onClick={() => { this.handleSave(record) }} style={{color:'#2ebc2e'}}>保存</a>
-            <Divider type="vertical" />
-            <a href="javascript:;" onClick={() => { this.handleCancle() }} style={{color:'#2ebc2e'}}>取消</a>
-          </span>:
-          <span>
-            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>编辑</a>
-          </span>
+                <span>
+                  <Button onClick={()=>{this.handleSave(record)}} icon="save" title="保存" size="small" type="primary"></Button>
+                  <Divider type="vertical" />
+                  <Button icon="poweroff" title="取消" size="small" type="primary" onClick={() => { this.handleCancle() }} ></Button>
+                </span>
+                :<Button icon="edit" title="编辑" size="small" type="primary"  onClick={() => { this.handleModify(record) }}></Button>
         )
       },
     }];
@@ -198,11 +196,10 @@ class MealInit extends Component{
           }
         >
             <Table 
-              bordered
               rowKey='id' 
               dataSource={data} 
               columns={columns}
-              pagination={{ defaultPageSize:10,showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+              pagination={{ defaultPageSize:10,showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
             />
           </Card>
       </Fragment>

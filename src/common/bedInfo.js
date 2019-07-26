@@ -3,7 +3,7 @@ import React, {
 	Fragment
 } from 'react';
 import { connect } from 'react-redux'
-import { Table,Input,Tree,Row,Col,notification,Card,Icon,Modal,Empty,Button} from 'antd';
+import {Input,Tree,Row,Col,notification,Card,Icon,Modal,Empty,Button} from 'antd';
 import httpServer from '@/axios/index';
  
 
@@ -15,13 +15,12 @@ class Plan extends Component {
 		this.state = {
 		   areaTree:[],
 		   visible:false,
-		   bedInfo:'',
 		   southRoom:[],
 		   northRoom:[],
 		   elderlyInfo:{},
 		   active:'',
 		   bed:'',
-		   room:''
+		   room:'',
 		}
 	}
 	componentDidMount() {
@@ -36,8 +35,7 @@ class Plan extends Component {
     	this.setState({visible:true})
     }
 	AreaTree=()=>{
-		const customerId = this.props.customerId;
-		httpServer.listAreaInfo({customerId}).then(res=>{
+		httpServer.listAreaInfo().then(res=>{
 			if(res.code===200){
 				const data = res.data?[res.data]:[];
 				this.setState({areaTree:data})
@@ -67,13 +65,12 @@ class Plan extends Component {
 			})
 			this.setState({elderlyInfo:obj})
 		})	
-	}
-	 
+	} 
 	renderTreeNodes = data => data.map((item) => {
 	    if (item.children) {
 	      return (
 	        <TreeNode title={item.areaName} key={item.id} value={item.id}>
-                 {this.renderTreeNodes(item.children)}
+                {this.renderTreeNodes(item.children)}
             </TreeNode>
 	      );
 	    }
@@ -111,23 +108,17 @@ class Plan extends Component {
     }
     changeBed(bed,room){
        if(bed.elderlyId) return;
-       this.setState({active:bed.bedCode,bed,room},()=>{
-       	  this.handleOk();
+       this.setState({active:bed.bedCode,bed,room,visible:false},()=>{
+       	  this.triggerChange(room,bed);
        })
     }
-    handleOk=()=>{
-    	const {bed,room} = this.state;
-    	if(!bed||!room){
-    		return;
-    	}
-    	this.setState({visible:false},()=>{
-    		this.triggerChange({...room,...bed});
-    	})
-    }
-    triggerChange = (changedValue) => {
-		const onChange = this.props.onChange;
+    triggerChange = (room,bed) => {
+		const {onChange,exportBed }= this.props;
 		if(onChange) {
-			onChange(changedValue);
+			onChange({...room,...bed});
+		}
+		if(exportBed){
+			exportBed(bed)
 		}
 	}
 	render() {
@@ -147,8 +138,8 @@ class Plan extends Component {
 		return(
 	    <Fragment>
 	        <Input.Group compact>
-	            <Input value={room&&bed?`${room.roomName}室/${bed.bedCode}床`:''} disabled placeholer="请选择床位" style={{ width: '90%' }} disabled/>
-	            <Button type="primary" style={{ width: '10%' }} icon="search" onClick={this.showModal} disabled={this.props.roomDisflag?true:false}></Button>
+	            <Input value={room&&bed?`${room.roomName}室/${bed.bedCode}床`:''} disabled placeholer="请选择床位" style={{ width: '85%' }} disabled/>
+	            <Button type="primary" style={{ width: '15%' }} icon="search" onClick={this.showModal} disabled={this.props.disabled?true:false}></Button>
 	        </Input.Group>
 	        <Modal 
 		        title="床位选择"
@@ -182,6 +173,7 @@ class Plan extends Component {
 				         	   	  	<div className={bed.elderlyId&&bed.flag===0?"bed":bed.elderlyId&&bed.flag===1?'bed_1':bed.bedCode===active?"bed_2 active":"bed_2"} key={bed.bedCode} onClick={()=>{this.changeBed(bed,room)}}>
 					         	     <Icon type="user" style={{fontSize:'20px'}} /> 
 					         	     <div>{bed.bedCode}</div>
+					         	     <div>{bed.money}元</div>
 					         	     <div>{elderlyInfo[bed.elderlyId]||bed.elderlyId}</div>
 					         	    </div>
 				         	   	 ) 
@@ -204,6 +196,7 @@ class Plan extends Component {
 				         	   	  	<div className={bed.elderlyId&&bed.flag===0?"bed":bed.elderlyId&&bed.flag===1?'bed_1':bed.bedCode===active?"bed_2 active":"bed_2"} key={bed.bedCode} onClick={()=>{this.changeBed(bed,room)}}>
 					         	     <Icon type="user" style={{fontSize:'20px'}} /> 
 					         	     <div>{bed.bedCode}</div>
+					         	     <div>{bed.money}元</div>
 					         	     <div>{elderlyInfo[bed.elderlyId]||bed.elderlyId}</div>
 					         	    </div>
 				         	   	 ) 
@@ -239,7 +232,7 @@ class Plan extends Component {
 	        	}
 	        	.bed,.bed_1,.bed_2{
 	        		float:left;
-	        		width:44px;
+	        		width:48px;
 	        	 	height:95px;
 	        	 	margin:3px;
 	        	 	font-size:12px;

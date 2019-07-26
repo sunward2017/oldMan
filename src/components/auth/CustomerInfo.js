@@ -271,10 +271,9 @@ class CustomerInfo1 extends Component{
         <BreadcrumbCustom first="系统管理" second="客户信息" />
         <Button type="primary" onClick={()=>{this.handleAdd()}} style={{marginBottom:'20px'}} >点击添加</Button>
           <Table 
-            bordered
             dataSource={dataSource} 
             columns={columns} 
-            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
             rowKey={record => record.id}
           />
         {

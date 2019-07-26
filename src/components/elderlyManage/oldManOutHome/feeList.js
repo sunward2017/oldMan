@@ -19,10 +19,10 @@ class FeeList extends Component{
   render(){
     const {f1,f2,f3,f4,f5,feeList1,feeList2,feeList3,feeList4,feeList5,record,feeData} = this.props;
     const columns1=[{
-      title:'日期',
-      dataIndex:'addtime',
+      title:'结算日期',
+      dataIndex:'endTime',
       render:(text,record)=>{
-          return moment(record.addtime,'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD')
+          return  text.substr(0,10)
       }
     },{
         title:'项目名称',
@@ -117,9 +117,6 @@ class FeeList extends Component{
         title:'房间',
         dataIndex:'roomName'
     },{
-        title:'入住天数',
-        dataIndex:'days'
-    },{
         title:'床位费/月',
         dataIndex:'bedFee'
     },{
@@ -133,12 +130,10 @@ class FeeList extends Component{
         <Card 
           className="mb-l"
           title="基本信息"
-          extra={<span>未结算合计:&emsp;<span className="blue">{`${(+(f1+f2+f3+f4+f5).toFixed(1))}`}元</span>&emsp;&emsp;<Button  size="small" onClick={this.handleGoback}>返回</Button></span>}
+          extra={<span>未结算合计:&emsp;<span className="blue">{Math.round(+(f1+f2+f3+f4+f5))}元</span>&emsp;&emsp;<Button title="返回" type="primary" onClick={this.handleGoback} icon="rollback"></Button></span>}
         >
         <h3>
-         姓名:&emsp;<Tag color="blue">{record.name}</Tag>&emsp;
-               性别:&emsp;<Tag color="geekblue">{record.sex===1?'男':'女'}</Tag>&emsp;
-               年龄:&emsp;<Tag color="purple">{record.age}岁</Tag>   
+           姓名:&emsp;<Tag color="#2db7f5">{record.name}</Tag>&emsp;性别:&emsp;<Tag color="#87d068">{record.sex===1?'男':'女'}</Tag>&emsp;年龄:&emsp;<Tag color="#108ee9">{record.age}岁</Tag>   
         </h3>
         </Card>
         <Row gutter={16}>

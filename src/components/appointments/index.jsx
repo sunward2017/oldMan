@@ -57,7 +57,6 @@ class CMT extends Component {
 	handleRowDelete(id, record) {
         const _this = this;
 	    httpServer.deleteAppointmentInfo ({id}).then(res => {
-	    	
 	      if (res.code === 200) {
 	        const args = {
 	          message: '通信成功',
@@ -66,7 +65,12 @@ class CMT extends Component {
 	        };
 	        notification.success(args);
 	      } else {
-	        console.log(res.message);
+	         const args = {
+	          message: '提示',
+	          description: res.msg,
+	          duration: 2,
+	        };
+	        notification.info(args);
 	      }
 	      this.setState({modalFlag:false,record:''});
 	      _this.List();
@@ -191,7 +195,7 @@ class CMT extends Component {
 					span: 24
 				},
 				sm: {
-					span: 20
+					span: 18
 				},
 			},
 		};
@@ -213,7 +217,8 @@ class CMT extends Component {
 			title: '序号',
 			render: (text, record, index) => `${index+1}`,
 			width: '5%',
-			key:'index'
+			key:'index',
+			align:'center'
 		},  {
 			title: '预约人',
 			dataIndex: 'appointmentPersonnel',
@@ -268,14 +273,14 @@ class CMT extends Component {
 			title: '操作',
 			dataIndex: 'action',
 			key: 'action',
-			width: '12%',
+			width: '8%',
 			render: (text, record) => {
 				return(
 					<span>
-		               <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+		               <Button size="small" onClick={() => { this.handleModify(record) }}  icon="edit" title="修改" type="primary"></Button>
 		               <Divider type="vertical" />
 		              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-		                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+		                  <Button size="small" icon="delete" title="删除" type="primary"></Button>
 		              </Popconfirm>
 		            </span>
 				)
@@ -287,15 +292,15 @@ class CMT extends Component {
 		        <Card 
 		          title="预约" 
 		          bordered={false} 
-		          extra={<Button type="primary" onClick={this.handleAdd} >预订</Button>}
+		          extra={<Button type="primary" icon="plus" onClick={this.handleAdd} title="预约"></Button>}
 		          activeTabKey={this.state.tabKey}
 		        >
 		        <Table 
-		            bordered
+		            size="middle"
 		            rowKey='id' 
 		            dataSource={dataSource} 
 		            columns={columns} 
-		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 		          />
 		        </Card>
 		        {
@@ -368,7 +373,7 @@ class CMT extends Component {
 		              >
 		                {getFieldDecorator('sex', {
 		                  rules: [{ required: true, message: '请选择性别!' }],
-		                  initialValue:sex,
+		                  initialValue:sex||1,
 		                })(
 		                  <RadioGroup buttonStyle="solid">
 		                    <Radio.Button value={1}>男</Radio.Button>

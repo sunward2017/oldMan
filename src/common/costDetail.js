@@ -2,6 +2,7 @@ import React,{Fragment} from 'react';
 import { Card, Input,Modal ,Button,Select, Form, Avatar, notification, Divider,Icon,Tag,DatePicker,Table} from 'antd';
 import httpServer from '@/axios';
 import moment from 'moment';
+import {costType} from '@/utils/constant'
 
 const { Meta } = Card;
 const Option = Select.Option;
@@ -10,7 +11,7 @@ class Cost extends React.Component {
 	state={
 		data:{},
 		userName:'',
-		costType:{"1":"现金","2":"支付宝","4":"微信","3":"住院押金","5":"转账","6":"住院预交","7":"其他预交","8":"刷卡"},
+		costType,
 		flag:'list',
 		dataSource:[],
 		uuidCode:'',
@@ -64,7 +65,7 @@ class Cost extends React.Component {
     	})
     }
     render() {
-        const {elderlyInfo,account,visible,sumMoney} = this.props;
+        const {elderlyInfo,account,visible} = this.props;
         const { data,costType,flag ,dataSource} = this.state;
         const  {je1,je2,je3,je4,je5,je6,je7}= data.tbMoneyLibrary?data.tbMoneyLibrary:{je1:0,je2:0,je3:0,je4:0,je5:0,je6:0,je7:0};
         const total=data.tbPayMoneyDetailInfo?data.tbPayMoneyDetailInfo.reduce((p,c)=>{
@@ -73,7 +74,7 @@ class Cost extends React.Component {
         const columns = [{
         	    title: '序号',
 				render: (text, record, index) => `${index+1}`,
-				width: '5%',
+				width: '10%',
 				key:'index'
             },{
 			  title: '结算单号',
@@ -105,7 +106,7 @@ class Cost extends React.Component {
         	<Modal
 		        title="费用清单"
 		        okText='确认'
-		        width="40%"
+		        width="60%"
 		        visible={visible}
 		        onOk={this.handleOk}
 		        onCancel={this.cancel}
@@ -118,7 +119,7 @@ class Cost extends React.Component {
           ]}
 		      >
         	   {flag==="list"?
-        	    <Table rowKey='id' columns={columns} dataSource={dataSource} onRow={(record,rowkey)=>({onClick:this.rowClick.bind(this,record,rowkey)})}/>
+        	    <Table size="small" rowKey='id' columns={columns} dataSource={dataSource} onRow={(record,rowkey)=>({onClick:this.rowClick.bind(this,record,rowkey)})}/>
         	   :<div  id={"cost"}>
                <h2 style={{textAlign:'center'}}>欢乐之家养老院</h2> 
                <div><span>结算单号:&emsp;{data.settlementNum}</span></div>
@@ -140,7 +141,7 @@ class Cost extends React.Component {
                   </thead>
                   <tbody>
                    {data.tbBaseItemFee&&data.tbBaseItemFee.map(item=>(<tr key={item.itemName}>
-                   	  <td>{item.endTime}</td>
+                   	  <td>{item.endTime&&item.endTime.substr(0,10)}</td>
                    	  <td>{item.itemName||'护理费'}</td>
                    	  <td>{item.nursingFee}</td>
                    	  <td>{item.inDays}</td>

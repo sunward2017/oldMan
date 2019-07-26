@@ -1,7 +1,8 @@
 import React,{Fragment,Component} from 'react';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '../../../axios';
-import {notification,Card,Table,Divider,Popconfirm,Input} from 'antd';
+import {notification,Card,Table,Divider,Popconfirm,Input,DatePicker,message} from 'antd';
+import moment from 'moment';
 
 class WaterKwhInit extends Component{
   constructor(props){
@@ -34,12 +35,12 @@ class WaterKwhInit extends Component{
     });
   }
 
-  changeHandler(record,param,e){ //表格字段值发生变化
+  changeHandler(record,param,value){ //表格字段值发生变化\
     const roomUuid = record.roomUuid;
     const dataSource = this.state.dataSource;
     const newDataSource = dataSource && dataSource.map((item,index)=>{
       if(item.roomUuid === roomUuid){
-        item[param] = e.target.value;
+        item[param] = value;
       }
       return item;
     });
@@ -53,11 +54,9 @@ class WaterKwhInit extends Component{
 
   handleSave(r){
   	const {type} = this.state;
-    const {id,kwh,water,roomUuid} = r;
-    const data = {id,kwh,water,roomCode:roomUuid};
-    console.log(type);
-    if(type) delete data.id
-    console.log(data)
+    const {id,kwh,water,roomUuid,regDate} = r;
+    if(!regDate){message.error("请输入出始化日期")}
+    const data = {id,kwh,water,roomCode:roomUuid,regDate};
     httpServer.setRoomWaterAndKwh(data).then((res)=>{
       if(res.code === 200){
         const args = {
@@ -91,27 +90,32 @@ class WaterKwhInit extends Component{
       title: '序号',
       render: (text, record, index) => `${index+1}`,
       width: '5%',
+      align:'center',
       key:'index'
     }, {
       title: '区域名称',
       dataIndex: 'areaName',
       key: 'areaName',
+      align:'center',
       width: '10%'
     },{
       title: '房间名称',
       dataIndex: 'roomCode',
       key: 'roomCode',
-      width: '10%'
+      width: '10%',
+      defaultSortOrder: 'ascend',
+			sorter: (a, b) => a.roomCode-b.roomCode,
     },{
       title: '水表度数',
       dataIndex: 'water',
       key: 'water',
+      align:'center',
       render:(text,record)=>{
         return(
           edit && (record.roomUuid === roomUuid)?
           <Input 
             value={record.water} 
-            onChange={(e) => this.changeHandler(record,"water",e)}
+            onChange={(e) => this.changeHandler(record,"water",e.target.value)}
             placeholder="只允许输入正整数"
           />:record.water
         ) 
@@ -121,17 +125,34 @@ class WaterKwhInit extends Component{
       title: '电表度数',
       dataIndex:'kwh',
       key:'kwh',
+      align:'center',
       render:(text,record)=>{
         return (
           edit && (record.roomUuid === roomUuid)?
           <Input 
             value={record.kwh} 
             placeholder="只允许输入正整数"
-            onChange={(e) => this.changeHandler(record,"kwh",e)}
+            onChange={(e) => this.changeHandler(record,"kwh",e.target.value)}
           />:record.kwh
         ) 
       },
       width:'10%'
+    },{
+    	title:'出始化日期',
+    	dataIndex:'regDate',
+    	width:'15%',
+    	align:'center',
+    	render:(t,record)=>{
+    		return(
+    			 edit && (record.roomUuid === roomUuid)?
+           <DatePicker 
+            allowClear={false}
+            format="YYYY-MM-DD HH:mm:ss"
+            value={t?moment(t):moment()}
+            onChange={(d,t) => this.changeHandler(record,"regDate",t)}
+          />:t
+    		)
+    	}
     },{
       title: '操作',
       dataIndex: 'action',
@@ -161,11 +182,10 @@ class WaterKwhInit extends Component{
           bordered={false} 
         >
             <Table 
-              bordered
               rowKey='roomUuid' 
               dataSource={dataSource} 
               columns={columns}
-              pagination={{ defaultPageSize:10,showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+              pagination={{ defaultPageSize:10,showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
             />
           </Card>
       </Fragment>

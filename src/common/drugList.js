@@ -2,7 +2,7 @@ import React, {
 	Component,
 	Fragment
 } from 'react';
-import { Modal, Button, Input, Icon, Table, Tag} from 'antd';
+import { Modal, Button, Input, Icon, Table, Tag,message,Tooltip} from 'antd';
 import httpServer from '@/axios';
 
 const Search = Input.Search;
@@ -10,7 +10,7 @@ class drugSelect extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			name:'',
+			name:"",
 			visible:false,
 			data:[],
 			initData:[],
@@ -34,7 +34,6 @@ class drugSelect extends Component {
 	}
 
 	ListAllDrug = () => {
-		const {elderlyId} =this.props;
 		httpServer.listDrugInfoInfo().then(res => {
 			if(res.code === 200 && res.data) {
 				const {value} = this.props;
@@ -50,9 +49,14 @@ class drugSelect extends Component {
 	}
 
 	rowClick = (r, text) => {
-        this.setState({name:r.name,visible:false},function(){
-        	this.triggerChange({drugCode:r.code,drugName:r.name,minUnit:r.minUnit});
-        })
+		if(r.status===0){
+			message.error('该药品已禁用');
+		}else{
+			this.setState({name:r.name,visible:false},function(){
+	        	this.triggerChange({drugCode:r.code,drugName:r.name,minUbit:r.minUnit});
+	        })
+		}
+        
 	}
 	
 	filterDrug=(v)=>{
@@ -77,34 +81,44 @@ class drugSelect extends Component {
       title: '药品名称',
       dataIndex: 'name',
       key: 'name',
-      width:'10%'
-    }, {
-      title: '处方药',
-      dataIndex: 'prescription',
-      key: 'prescription',
-      render:(text,record)=>{
-        return record.prescription === 0?<Tag color="red">非处方药</Tag>:<Tag color="green">处方药</Tag>;
-      },
+      width:'12%'
+    },{
+      title: '简称',
+      dataIndex: 'shortName',
       width:'8%'
     },{
-      title: '是否医保',
-      dataIndex: 'insurance',
-      key: 'insurance',
-      render:(text,record)=>{
-          return record.insurance === 0?<Tag color="red">否</Tag>:<Tag color="green">是</Tag>
+      title: '生产厂家',
+      dataIndex: 'vender',
+      width:'15%',
+      onCell: () => {
+        return {
+          style: {
+            maxWidth: 150,
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow:'ellipsis',
+            cursor:'pointer'
+          }
+        }
       },
-      width:'8%'
+      render: (text) => <Tooltip placement="topLeft" title={text}>{text}</Tooltip>
+    },{
+      title: '规格',
+      dataIndex: 'specification',
+      key: 'specification',
+      width:'10%'
     },{
     	title:'单位',
     	dataIndex:'minUnit',
     	key:'minUnit',
-    	width:'8%'
+    	align:'center',
+    	width:'5%'
     },{
       title: '状态',
       dataIndex: 'status',
       key: 'status',
       render:(text,record)=>{
-        return record.status === 0?<Tag color="red">注销</Tag>:<Tag color="green">正常</Tag>
+        return record.status === 0?<Tag color="red">禁用</Tag>:<Tag color="green">启用</Tag>
       },
       width:'5%'
     }];
@@ -127,7 +141,7 @@ class drugSelect extends Component {
 				    onSearch={v=>{ this.filterDrug(v) }}
 				    enterButton
 				/>&emsp;<Button onClick={this.refresh}>刷新</Button><br/><br/>
-		        <Table bordered columns={columns} dataSource={data} rowKey='id' size="small" onRow={(record,rowkey)=>({onClick:this.rowClick.bind(this,record,rowkey)  })}/> 
+		        <Table columns={columns} dataSource={data} rowKey='id' size="small" onRow={(record,rowkey)=>({onClick:this.rowClick.bind(this,record,rowkey)  })}/> 
 	        </Modal>
         </Fragment>);
 	}

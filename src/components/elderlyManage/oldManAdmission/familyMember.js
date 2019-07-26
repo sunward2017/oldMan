@@ -49,7 +49,7 @@ class FamilyMember extends Component{
     }else{
       const args = {
         message: '友情提示',
-        description: "请先编辑并保存之前的数据，才能再次添加家庭成员",
+        description: "请先保存 ",
         duration: 2,
       };
       notification.info(args);
@@ -74,8 +74,8 @@ class FamilyMember extends Component{
   }
 
   handleSave(record){//保存新增的家庭成员
-    const {name,sex,relation,phone,address} = record;
-    if(!(name  && relation && phone && address)){
+    const {name,relation,phone,address} = record;
+    if(!(name&&relation&&phone&&address)){
       const args = {
         message: '友情提示',
         description: "还有数据未填，请仔细检查",
@@ -371,10 +371,9 @@ class FamilyMember extends Component{
           }
         >
           <Table 
-            bordered
             dataSource={memberList} 
             columns={columns} 
-            pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+            pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
             rowKey={record => {
               if(record.id){
                 return record.id

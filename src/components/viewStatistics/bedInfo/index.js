@@ -3,7 +3,7 @@ import React, {
 	Fragment
 } from 'react';
 import { connect } from 'react-redux'
-import { Table,Input,Tree,Row,Col,notification,Card,Icon,Modal,Empty,Button} from 'antd';
+import {Input,Tree,Row,Col,notification,Card,Icon,Modal,Empty,Button} from 'antd';
 import httpServer from '@/axios/index';
 import BreadcrumbCustom from '@/components/BreadcrumbCustom';
 

@@ -103,34 +103,24 @@ class NursingGrade extends Component{
       dataIndex: 'state',
       key: 'state',
       render:(text,record)=>{
-        return record.state === 1?<Tag color="green">正常</Tag>:<Tag color="red">无效</Tag>
+        return record.state === 1?<Tag color="green">启用</Tag>:<Tag color="red">禁用</Tag>
       },
       width:'14%'
-    },{
-      title: '添加日期',
-      dataIndex: 'addtime',
-      key: 'addtime',
-      render:(text,record)=>{
-        return record.addtime && record.addtime.substr(0,10)
-      },
-      width:'22%'
     },{
       title: '退费启始天数',
       dataIndex: 'days',
       key: 'days',
-      width:'14%'
+      width:'14%',
+      align:'center'
     },{
       title:'操作',
       dataIndex:'action',
       key:'action',
+      width:'10%',
       render:(text,record)=>{
         return(
           <span>
-            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
-              <Divider type="vertical" />
-              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
-              </Popconfirm>
+             <Button size="small" icon="edit" title="编辑" type="primary" onClick={() => { this.handleModify(record) }}></Button>
           </span>
         )
       },
@@ -144,10 +134,9 @@ class NursingGrade extends Component{
 	          extra={<Button type="primary" onClick={()=>{this.handleAdd()}} >新增等级</Button>}
 	        >
         <Table 
-          bordered
           dataSource={dataSource} 
           columns={columns} 
-          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
           rowKey={record => record.id}
         />
         </Card>

@@ -299,24 +299,19 @@ class examineConfig extends Component {
 			render: (text, record) => {
 				return(
 					<span>
-            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
-              <Divider type="vertical" />
-              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
-              </Popconfirm>
-          </span>
+                      <Button size="small" icon="edit" title="编辑" type="primary" onClick={() => { this.handleModify(record) }}></Button>
+		              <Divider type="vertical" />
+		              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+		                 <Button size="small" icon="delete" title="删除" type="primary" ></Button>
+		              </Popconfirm>
+                    </span>
 				)
 			},
 		}];
 		return(
 			<div>
 		        <BreadcrumbCustom first="基础信息" second='收费护理项' />
-        		<Card 
-		          title="检查项信息"
-		          bordered={false} 
-		          extra={<Button type="primary" onClick={()=>{this.handleAdd()}} >新增</Button>}
-		        >
-	        	<Row>
+	        	<Row gutter={16}>
            			<Col span={4}>
 	                     <DirectoryTree
 					        defaultExpandAll
@@ -326,16 +321,21 @@ class examineConfig extends Component {
 	                    </DirectoryTree>
 					</Col>
 		           <Col span={20} style={{padding:'0 0 0 20px'}}>
-		                <Table 
-				            bordered
+		              <Card 
+				          title="检查项信息"
+				          bordered={false} 
+				          extra={<Button type="primary" icon="plus" title="新增" onClick={()=>{this.handleAdd()}} ></Button>}
+				        >
+		                <Table
 				            rowKey='id' 
 				            dataSource={dataSource} 
 				            columns={columns} 
-				            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+				            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 				          />
+		                </Card>
 		           </Col>
                 </Row>
-                </Card>
+               
        
 		        {
 		          modalFlag?

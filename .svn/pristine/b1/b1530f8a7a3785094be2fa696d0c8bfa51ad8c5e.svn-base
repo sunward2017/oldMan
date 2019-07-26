@@ -1,0 +1,60 @@
+import React from 'react';
+import { Row, Col, Button, InputNumber, Select, Input,Icon } from 'antd';
+import {typeObj,methodObj} from '@/utils/constant';
+
+const Option = Select.Option;
+
+function render(obj){
+	let arr = [];
+	for(var k in obj){
+		arr.push(<Option value={k} key={k}>{obj[k]}</Option>)
+	}
+	return arr.map(i=>i)
+}
+
+
+
+export const Charge = ({ disabled, onFeeSave, onFeeChange, creditList, iptColor}) => {
+    return (
+        <React.Fragment>
+            <Row className="mb-s">
+                <Col md={24}>收费项目 :
+                    <Select className="w60p ml-m"
+                        onChange={(v) => onFeeChange('type', Number(v))}
+                    >
+                       {render(typeObj)}
+                    </Select>
+                </Col>
+            </Row>
+            <Row className="mb-s">
+                <Col md={24}>&emsp;付款人:
+                    <Input className="w60p ml-m" onChange={(e) => onFeeChange('payName', e.target.value )} />
+                </Col>
+            </Row>
+            <Row className="mb-s">
+                <Col md={24} >收款账号:
+                    <Select className="ml-m w60p" onChange={(v) => onFeeChange('creditedAccount', v)}>
+                        { creditList.map(o => <Option value={o.value} key={o.id}>{o.value}</Option>) }
+                    </Select>
+                </Col>
+            </Row>
+            <Row>
+                <Col md={24}>付款金额 :
+                    <InputNumber className="mr-s ml-m"
+                                 style={{color:iptColor,width:120}}
+                                 onChange={(v) => onFeeChange('money',v)}
+                                 formatter={value => `￥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    />
+                    <Select className="w-120 mr-s" defaultValue="2"
+                        onChange={(v) => onFeeChange('settlementMethod', Number(v))}
+                    >
+                       {
+                       	  render(methodObj)
+                       }
+                    </Select>
+                    <Button type="primary" onClick={onFeeSave} disabled={disabled}>充值</Button>
+                </Col>
+            </Row>
+        </React.Fragment>
+    )
+};

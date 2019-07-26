@@ -85,8 +85,8 @@ class ModalInfo extends Component{
   }
   render(){
     const {unitList,flag} = this.props;
-    const {vender, name, alias, shortName, referencePrice, dosageForm, barcode, specification,prescription, insurance, indicationsFunction, usage1, minUnit, store, classOne, approvalNo, status=1, operatedOn, addtime} = this.state.dataList;
-    console.log(insurance)
+    const {vender, name, alias, shortName, referencePrice, dosageForm, barcode, specification,prescription, insurance, indicationsFunction, usage1, minUnit, store, classOne, approvalNo, status, operatedOn} = this.state.dataList;
+   
     const formItemLayout = {
       labelCol: {
         xs: { span: 24 },
@@ -158,7 +158,7 @@ class ModalInfo extends Component{
                 style={{marginBottom:'4px'}}
               > 
                 { getFieldDecorator('shortName', {
-                  rules: [{ required: false, message: '请选择药品'}],
+                  rules: [{ required: false, message: '请输入简称'}],
                   initialValue:shortName
                 })(
                    <Input placeholder='药品简称' disabled={flag}/>  
@@ -185,7 +185,7 @@ class ModalInfo extends Component{
                 style={{marginBottom:'4px'}}
               >  
                 { getFieldDecorator('vender', {
-                  rules: [{ required: true, message: '厂家不可为空'}],
+                  rules: [{ required: false, message: '厂家不可为空'}],
                   initialValue:vender
                 })(
                     <Input placeholder='请输入厂家' disabled={flag}/>  
@@ -202,7 +202,7 @@ class ModalInfo extends Component{
                   rules: [{ required: true, message: '请输入药品规格'}],
                   initialValue:specification
                 })(
-                   <Input placeholder='药品简称' disabled={flag}/>  
+                   <Input placeholder='药品规格' disabled={flag}/>  
                 )}
               </Form.Item>
             </Col>
@@ -292,7 +292,23 @@ class ModalInfo extends Component{
                   <TextArea rows={3} disabled={flag} placeholder="用法用量"/>
                 )}
               </Form.Item>
-            </Col>  
+            </Col> 
+            <Col span={12}>  
+              <Form.Item
+                label='是否启用'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >{ getFieldDecorator('status', {
+                  rules: [{ required: true, message: '不可为空'}],
+                  initialValue:status
+                })(
+                  <RadioGroup disabled={flag}>
+                    <Radio value={1}>是</Radio>
+                    <Radio value={0}>否</Radio>
+                  </RadioGroup>
+                )}
+              </Form.Item>
+            </Col>
           </Row>  
         </Form>
       </Modal>

@@ -59,7 +59,7 @@ class CaseCare extends Component{
           <Row gutter={16}>
             <Col md={16}>
                <Form.Item label="个案工作计划(跟进目标及方法)">
-				          {getFieldDecorator('content', { rules: [{required: true, message: '请输入工作内容',}],initialValue:content||'' })
+				          {getFieldDecorator('content', { rules: [{required: false, message: '请输入工作内容',}],initialValue:content||'' })
 				           ( <ReactQuill  style={{minHeight:'70vh'}}/>)
 				           }
 				       </Form.Item>

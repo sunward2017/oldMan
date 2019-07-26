@@ -152,35 +152,34 @@ class editForm extends Component {
           	<Col span={6}>
              <div className="bed" onClick={this.add}><span style={{fontSize:'70px',fontWeight:'bold'}}>+</span></div>
             </Col>
-          }
         </Row>
         <style>
            {`
-        	.bed{
-        		background: #6a8abe;
-        		border:6px solid #4a6a9e; 
-            color:#fff;
-            border-radius:4px;
-            text-align:center;
-            padding:30px 0;
-            position:relative;
-            margin-bottom:15px;
-        	}
-        	.bed:hover{
-        		background:#4a6a9e;
-        		cursor:pointer;
-        	}
-        	.remove{
-        	  position:absolute;
-        	  top:1px;
-        	  right:1px;
-        	  color:red;
-        	  display:none;
-        	}
-        	.bed:hover>.remove{
-        		display:block;
-        	}
-           `}
+	        	.bed{
+	        		background: #6a8abe;
+	        		border:6px solid #4a6a9e; 
+	            color:#fff;
+	            border-radius:4px;
+	            text-align:center;
+	            padding:30px 0;
+	            position:relative;
+	            margin-bottom:15px;
+	        	}
+	        	.bed:hover{
+	        		background:#4a6a9e;
+	        		cursor:pointer;
+	        	}
+	        	.remove{
+	        	  position:absolute;
+	        	  top:1px;
+	        	  right:1px;
+	        	  color:red;
+	        	  display:none;
+	        	}
+	        	.bed:hover>.remove{
+	        		display:block;
+	        	}
+         `}
         </style>
       </Modal>
       <Modal

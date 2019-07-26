@@ -184,10 +184,9 @@ class DrugInfo extends Component{
         <BreadcrumbCustom first="基础设置" second="药品信息" />
         <Button type="primary" onClick={this.handleAdd} style={{marginBottom:'20px'}}>点击添加</Button>
         <Table 
-          bordered
           dataSource={dataSource} 
           columns={columns} 
-          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
           rowKey={record => record.id}
         />
 

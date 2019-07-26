@@ -324,16 +324,17 @@ class roomConfig extends Component {
 			dataIndex: 'action',
 			key: 'action',
 			width: '8%',
+			align:'center',
 			render: (text, record) => {
 				return(
 					<span>
-			              <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+			              <Button size="small" icon="edit" title="编辑" type="primary" onClick={() => { this.handleModify(record) }}></Button>
 			              <Divider type="vertical" />
 			              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-			                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+			                 <Button size="small" icon="delete" title="删除" type="primary" ></Button>
 			              </Popconfirm>
 			              <Divider type="vertical" />
-			              <a href="javascript:;" onClick={() => { this.handleModifyBed(record) }} style={{color:'#2ebc2e'}}>床位编辑</a>
+			              <Button icon="box-plot" title="床位编辑" size="small" type="primary" onClick={() => { this.handleModifyBed(record) }}></Button>
 			        </span>
 				)
 			},
@@ -352,11 +353,11 @@ class roomConfig extends Component {
 						</Col>
 			           <Col span={20} style={{padding:'0 0 0 20px'}}>
 			                <Table 
-					            bordered
+					         
 					            rowKey='id' 
 					            dataSource={dataSource} 
 					            columns={columns} 
-					            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+					            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 					          />
 			           </Col>
 	                </Row>

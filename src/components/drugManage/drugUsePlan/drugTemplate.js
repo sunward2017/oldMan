@@ -2,7 +2,7 @@ import React, {
 	Component,
 	Fragment
 } from 'react';
-import { Modal, Button, Input, Icon, Table, Tag } from 'antd';
+import { Modal, Button, Input, Icon, Table, Tag,Tooltip} from 'antd';
 import httpServer from '@/axios';
 
 class drugSelect extends Component {
@@ -87,20 +87,32 @@ class drugSelect extends Component {
 			key: 'days',
 			width: '10%'
 		}, {
-			title: '时长(分)',
+			title: '用药时长(分)',
 			dataIndex: 'longTime',
 			key: 'longTime',
-			width: '8%',
+			width: '12%',
 		}, {
 			title: '语音提示',
 			dataIndex: 'hint',
 			key: 'hint',
 			width: '15%'
 		}, {
-			title: '描述',
+			title: '备注',
 			dataIndex: 'describes',
 			key: 'describes',
-		}, ];
+			onCell: () => {
+	        return {
+	          style: {
+	            maxWidth: 150,
+	            overflow: 'hidden',
+	            whiteSpace: 'nowrap',
+	            textOverflow:'ellipsis',
+	            cursor:'pointer'
+	          }
+	        }
+	      },
+	      render: (text) => <Tooltip placement="topLeft" title={text}>{text}</Tooltip>
+		}];
         const {name,data} =this.state;
 		return(<Fragment>
 	        <Input.Group compact>
@@ -114,7 +126,7 @@ class drugSelect extends Component {
 		          footer={null}
 		          onCancel={()=>{this.handleCancel()}}
 		        >
-		        <Table bordered columns={columns} dataSource={data} rowKey='id' size="small" onRow={(record,rowkey)=>({onClick:this.rowClick.bind(this,record,rowkey)  })}/> 
+		        <Table columns={columns} dataSource={data} rowKey='id' size="small" onRow={(record,rowkey)=>({onClick:this.rowClick.bind(this,record,rowkey)  })}/> 
 	        </Modal>
         </Fragment>);
 	}

@@ -54,6 +54,7 @@ class ModalInfo1 extends Component{
             'entryTime': fieldsValue['entryTime'].format('YYYY-MM-DD HH:mm:ss'),
             'customerId':customerId
           };
+          if(values.quitTime){values.quitTime=values.quitTime.format('YYYY-MM-DD HH:mm:ss')}
           const { id }= this.state.dataList;
           if(id){
             values.id = id;
@@ -139,7 +140,7 @@ class ModalInfo1 extends Component{
   render(){
     const {handleCancel,disFlag} = this.props;
     const {getFieldDecorator} = this.props.form;
-    const {workerName, sex=1, phone, jobNumber, entryTime, status=1, memo,faceUrl} = this.state.dataList;
+    const {workerName, sex=1, phone, jobNumber, entryTime, status=1, memo,faceUrl,quitTime} = this.state.dataList;
     const formItemLayout = {
       labelCol: {
         xs: { span: 24 },
@@ -166,14 +167,14 @@ class ModalInfo1 extends Component{
       <Modal 
         title="护工信息"
         visible={true}
+        onOk={this.handleSubmit}
         onCancel={handleCancel}
-        maskClosable = {false}//点击遮罩层不允许关闭
-        footer = {null}
+        maskClosable = {false}
       >
         {
           /*<PicturesWall changUrl={this.handleChangeUrl} deleteUrl={this.handleDeleteUrl} A01={faceUrl}/>*/
         }
-        <Form hideRequiredMark onSubmit={this.handleSubmit}>
+        <Form>
 	        <Form.Item
 	            label='工号'
 	            {...formItemLayout}
@@ -249,7 +250,19 @@ class ModalInfo1 extends Component{
               rules: [{ required: false, message: '请选择入职日期!' }],
               initialValue:entryTime?moment(entryTime,'YYYY-MM-DD HH:mm:ss'):null,
             })(
-              <DatePicker format='YYYY-MM-DD HH:mm:ss' showTime  allowClear={false} disabled={disFlag}/>
+              <DatePicker format='YYYY-MM-DD' showTime  allowClear={false} disabled={disFlag}/>
+            )}
+          </Form.Item>
+          <Form.Item
+            label='离职日期'
+            {...formItemLayout}
+            style={{marginBottom:'4px'}}
+          >
+            {getFieldDecorator('quitTime', {
+              rules: [{ required: false, message: '请选择日期!' }],
+              initialValue:quitTime?moment(entryTime,'YYYY-MM-DD HH:mm:ss'):null,
+            })(
+              <DatePicker format='YYYY-MM-DD' showTime  allowClear={false} disabled={disFlag}/>
             )}
           </Form.Item>
           <Form.Item
@@ -279,9 +292,6 @@ class ModalInfo1 extends Component{
               <TextArea disabled={disFlag}/>
             )}
             
-          </Form.Item>
-          <Form.Item style={{textAlign:'center'}}>
-            <Button type="primary" htmlType="submit">确认</Button>
           </Form.Item>
         </Form>
       </Modal>

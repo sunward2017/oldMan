@@ -109,7 +109,7 @@ class CMT extends Component {
 			       <Row gutter={16}>
 			          <Col span={16}>
 			            <Form.Item label="自我照料能力" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-					        {getFieldDecorator('a1', { rules: [{required: true, message: '请输入自我照料能力',}],initialValue:a1 })
+					        {getFieldDecorator('a1', { rules: [{required: false, message: '请输入自我照料能力',}],initialValue:a1 })
 					        (
 					          <Input/>
 					        )}
@@ -117,7 +117,7 @@ class CMT extends Component {
 			          </Col>
 			          <Col span={4}>
 			            <Form.Item label="评估人" labelCol={{ xs: { span: 24 },sm: { span: 6 },md: {span:6}}} wrapperCol={{xs: { span: 24 }, sm: { span: 18 },md: {span:18}}}>
-					        {getFieldDecorator('a2', { rules: [{required: true, message: '评估人不可为空',}],initialValue:a2 })
+					        {getFieldDecorator('a2', { rules: [{required: false, message: '评估人不可为空',}],initialValue:a2 })
 					        (
 					          <Input/>
 					        )}
@@ -125,7 +125,7 @@ class CMT extends Component {
 			          </Col>
 			          <Col span={4}>
 			            <Form.Item label="日期" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-					        {getFieldDecorator('a3', { rules: [{required: true, message: '日期不可为空',}],initialValue:a3?moment(a3):moment() })
+					        {getFieldDecorator('a3', { rules: [{required: false, message: '日期不可为空',}],initialValue:a3?moment(a3):moment() })
 					        (
 					          <DatePicker/>  
 					        )}
@@ -133,7 +133,7 @@ class CMT extends Component {
 			          </Col>
 			           <Col span={16}>
 			            <Form.Item label="定向识别能力" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-					        {getFieldDecorator('a4', { rules: [{required: true, message: '不可为空',}],initialValue:a4 })
+					        {getFieldDecorator('a4', { rules: [{required: false, message: '不可为空',}],initialValue:a4 })
 					        (
 					          <Input/>
 					        )}
@@ -141,7 +141,7 @@ class CMT extends Component {
 			          </Col>
 			          <Col span={4}>
 			            <Form.Item label="评估人" labelCol={{ xs: { span: 24 },sm: { span: 6 },md: {span:6}}} wrapperCol={{xs: { span: 24 }, sm: { span: 18 },md: {span:18}}}>
-					        {getFieldDecorator('a5', { rules: [{required: true, message: '不可为空',}],initialValue:a5 })
+					        {getFieldDecorator('a5', { rules: [{required: false, message: '不可为空',}],initialValue:a5 })
 					        (
 					          <Input/>
 					        )}
@@ -149,7 +149,7 @@ class CMT extends Component {
 			          </Col>
 			          <Col span={4}>
 			            <Form.Item label="日期" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-					        {getFieldDecorator('a6', { rules: [{required: true, message: '不可为空',}],initialValue:a6?moment(a6):moment()})
+					        {getFieldDecorator('a6', { rules: [{required: false, message: '不可为空',}],initialValue:a6?moment(a6):moment()})
 					        (
 					            <DatePicker/>  
 					        )}
@@ -157,7 +157,7 @@ class CMT extends Component {
 			          </Col>
 			           <Col span={16}>
 			            <Form.Item label="抑郁/焦虑心境" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-					        {getFieldDecorator('a7', { rules: [{required: true, message: '不可为空',}],initialValue:a7 })
+					        {getFieldDecorator('a7', { rules: [{required: false, message: '不可为空',}],initialValue:a7 })
 					        (
 					          <Input/>
 					        )}
@@ -165,7 +165,7 @@ class CMT extends Component {
 			          </Col>
 			          <Col span={4}>
 			            <Form.Item label="评估人" labelCol={{ xs: { span: 24 },sm: { span: 6 },md: {span:6}}} wrapperCol={{xs: { span: 24 }, sm: { span: 18 },md: {span:18}}}>
-					        {getFieldDecorator('a8', { rules: [{required: true, message: '不可为空',}],initialValue:a8 })
+					        {getFieldDecorator('a8', { rules: [{required: false, message: '不可为空',}],initialValue:a8 })
 					        (
 					          <Input/>
 					        )}
@@ -173,7 +173,7 @@ class CMT extends Component {
 			          </Col>
 			          <Col span={4}>
 			            <Form.Item label="日期" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-					        {getFieldDecorator('a9', { rules: [{required: true, message: '不可为空',}],initialValue:a9?moment(a9):moment() })
+					        {getFieldDecorator('a9', { rules: [{required: false, message: '不可为空',}],initialValue:a9?moment(a9):moment() })
 					        (
 					            <DatePicker/>  
 					        )}
@@ -181,7 +181,7 @@ class CMT extends Component {
 			          </Col>
 			           <Col span={16}>
 			            <Form.Item label="激惹行为" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-					        {getFieldDecorator('a10', { rules: [{required: true, message: '不可为空',}],initialValue:a10 })
+					        {getFieldDecorator('a10', { rules: [{required: false, message: '不可为空',}],initialValue:a10 })
 					        (
 					          <Input/>
 					        )}
@@ -189,7 +189,7 @@ class CMT extends Component {
 			          </Col>
 			          <Col span={4}>
 			            <Form.Item label="评估人" labelCol={{ xs: { span: 24 },sm: { span: 6 },md: {span:6}}} wrapperCol={{xs: { span: 24 }, sm: { span: 18 },md: {span:18}}}>
-					        {getFieldDecorator('a11', { rules: [{required: true, message: '请输入评估人',}],initialValue:a11 })
+					        {getFieldDecorator('a11', { rules: [{required: false, message: '请输入评估人',}],initialValue:a11 })
 					        (
 					          <Input/>
 					        )}
@@ -197,7 +197,7 @@ class CMT extends Component {
 			          </Col>
 			          <Col span={4}>
 			            <Form.Item label="日期" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-					        {getFieldDecorator('a12', { rules: [{required: true, message: '不可为空',}],initialValue:a12?moment(a12):moment() })
+					        {getFieldDecorator('a12', { rules: [{required: false, message: '不可为空',}],initialValue:a12?moment(a12):moment() })
 					        (
 					           <DatePicker/>  
 					        )}
@@ -205,7 +205,7 @@ class CMT extends Component {
 			          </Col>
 			           <Col span={16}>
 			            <Form.Item label="退缩行为" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-					        {getFieldDecorator('a13', { rules: [{required: true, message: '不可为空',}],initialValue:a13 })
+					        {getFieldDecorator('a13', { rules: [{required: false, message: '不可为空',}],initialValue:a13 })
 					        (
 					          <Input/>
 					        )}
@@ -213,7 +213,7 @@ class CMT extends Component {
 			          </Col>
 			          <Col span={4}>
 			            <Form.Item label="评估人" labelCol={{ xs: { span: 24 },sm: { span: 6 },md: {span:6}}} wrapperCol={{xs: { span: 24 }, sm: { span: 18 },md: {span:18}}}>
-					        {getFieldDecorator('a14', { rules: [{required: true, message: '请输入评估人',}],initialValue:a14 })
+					        {getFieldDecorator('a14', { rules: [{required: false, message: '请输入评估人',}],initialValue:a14 })
 					        (
 					          <Input/>
 					        )}
@@ -221,7 +221,7 @@ class CMT extends Component {
 			          </Col>
 			          <Col span={4}>
 			            <Form.Item label="日期" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-					        {getFieldDecorator('a15', { rules: [{required: true, message: '请输入老人姓名',}],initialValue:a15?moment(a15):moment()})
+					        {getFieldDecorator('a15', { rules: [{required: false, message: '请输入老人姓名',}],initialValue:a15?moment(a15):moment()})
 					        (
 					          <DatePicker/>  
 					        )}
@@ -231,7 +231,7 @@ class CMT extends Component {
 			    </Card>
 			    <Card title="老人特殊需求"  >
 			        <Form.Item label="" >
-					        {getFieldDecorator('b', { rules: [{required: true, message: '请输入老人需求',}],initialValue:b })
+					        {getFieldDecorator('b', { rules: [{required: false, message: '请输入老人需求',}],initialValue:b })
 					        (
 					          <TextArea rows={4} />
 					        )}
@@ -239,7 +239,7 @@ class CMT extends Component {
 			        <Row gutter={16}>  
 			          <Col span={8} offset={8}>
 			            <Form.Item label="记录人" labelCol={{ xs: { span: 24 },sm: { span: 6 },md: {span:6}}} wrapperCol={{xs: { span: 24 }, sm: { span: 18 },md: {span:18}}}>
-					        {getFieldDecorator('b1', { rules: [{required: true, message: '请输入记录人',}],initialValue:b1 })
+					        {getFieldDecorator('b1', { rules: [{required: false, message: '请输入记录人',}],initialValue:b1 })
 					        (
 					          <Input/>
 					        )}
@@ -247,7 +247,7 @@ class CMT extends Component {
 			          </Col>
 			          <Col span={8}>
 			            <Form.Item label="日期" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-					        {getFieldDecorator('b2', { rules: [{required: true, message: '请输入日期',}],initialValue:b2?moment(b2):moment()})
+					        {getFieldDecorator('b2', { rules: [{required: false, message: '请输入日期',}],initialValue:b2?moment(b2):moment()})
 					        (
 					           <DatePicker/>  
 					        )}
@@ -257,19 +257,19 @@ class CMT extends Component {
 			    </Card>
 			    <Card title="初步个案护理计划"  >
 			        <Form.Item label="日常生活护理计划" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}> 
-			          {getFieldDecorator('c', { rules: [{required: true, message: '请输入日常生活护理计划',}],initialValue:c })
+			          {getFieldDecorator('c', { rules: [{required: false, message: '请输入日常生活护理计划',}],initialValue:c })
 			          (
 			            <TextArea rows={2} />
 				        )}
 			       </Form.Item>
 			       <Form.Item label="认知能力护理计划" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-				        {getFieldDecorator('c1', { rules: [{required: true, message: '请输入认知能力护理计划',}],initialValue:c1 })
+				        {getFieldDecorator('c1', { rules: [{required: false, message: '请输入认知能力护理计划',}],initialValue:c1 })
 				        (
 				          <TextArea rows={2} />
 				        )}
 				    </Form.Item>
 				    <Form.Item label="健康服务计划" labelCol={{ xs: { span: 24 },sm: { span: 4 },md: {span:4}}} wrapperCol={{xs: { span: 24 }, sm: { span: 20 },md: {span:20}}}>
-				        {getFieldDecorator('c2', { rules: [{required: true, message: '请输入健康服务计划',}],initialValue:c2})
+				        {getFieldDecorator('c2', { rules: [{required: false, message: '请输入健康服务计划',}],initialValue:c2})
 				        (
 				          <TextArea rows={2} />
 				        )}

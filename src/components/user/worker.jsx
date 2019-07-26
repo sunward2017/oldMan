@@ -312,11 +312,10 @@ class CMT extends Component {
 				<Button type="primary" onClick={()=>{this.handleAdd()}}>点击添加</Button>
 				<Divider />
 				<Table
-					bordered
 					rowKey="id"
 					dataSource={dataSource}
 					columns={columns}
-					pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+					pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 				/>
                 {
                     modalFlag?

@@ -61,7 +61,8 @@ class App extends Component {
 const mapStateToProps = state => {
     const { responsive = {data: {}} } = state.httpData;
     const auth = state.myAuth;
-    return {auth, responsive};
+    const loading = state.loading;
+    return {auth, responsive,loading};
 };
 const mapDispatchToProps = dispatch => ({
     isMobileView:(data, category) => {

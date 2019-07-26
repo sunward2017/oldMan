@@ -1,5 +1,5 @@
 import React, { Component,Fragment } from 'react';
-import { Table, Tabs, Icon, notification, Button, Row, Col,Card,Tree  } from 'antd';
+import { Tabs, Icon, notification, Button, Row, Col,Card,Tree  } from 'antd';
 import httpServer from '@/axios/index';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import ItemList from './table' 

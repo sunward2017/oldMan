@@ -225,33 +225,30 @@ class WorkProjects extends Component{
       key: 'pointTime',
       width:'12%'
     }, {
-      title: '添加日期',
-      dataIndex: 'addtime',
-      key: 'addtime',
-      render:(text,record)=>{
-        return record.addtime && record.addtime.substr(0,10)
-      },
-      width:'16%'
+    	 title:'描述',
+    	 dataIndex:"memo",
     },{
       title:'操作',
       dataIndex:'action',
       key:'action',
+      align:'center',
+      width:'15%',
       render:(text,record)=>{
         return(
           <span>
-            <a href="javascript:;" onClick={() => { this.handleRead(record) }} style={{color:'#2ebc2e'}}>查看</a>
-            <Divider type="vertical" />
-            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+              <Button size="small" icon="read" title="详情" type="primary" onClick={() => { this.handleRead(record) }}></Button>
+	            <Divider type="vertical" />
+              <Button size="small" icon="edit" title="编辑" type="primary" onClick={() => { this.handleModify(record) }}></Button>
               <Divider type="vertical" />
-              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id)}>
-                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+                 <Button size="small" icon="delete" title="删除" type="primary" ></Button>
               </Popconfirm>
           </span>
         )
       },
     }]; 
     const contentList = {
-      tab1: <Table dataSource={dataSource} columns={columns} rowKey={record => record.id} bordered/>,
+      tab1: <Table dataSource={dataSource} columns={columns} rowKey={record => record.id}/>,
       tab2: <MineForm 
               changeTabskeyToTab1={this.changeTabskey} 
               itemTypeList={itemTypeList}

@@ -125,7 +125,7 @@ class ModalInfo extends Component{
   }
   render(){
     const {unitList,flag} = this.props;
-    const {vender, name, alias, shortName, referencePrice, dosageForm, auditOn, barcode, specification,prescription=1, insurance=1, indicationsFunction, usage1, minUnit, store, classOne, approvalNo, status=1, operatedOn, addtime} = this.state.dataList;
+    const {vender, name, alias, shortName, referencePrice, dosageForm, auditOn, barcode, specification,prescription=1, insurance=1, indicationsFunction, usage1, minUnit, store, classOne, approvalNo, status=1, operatedOn} = this.state.dataList;
     const formItemLayout = {
       labelCol: {
         xs: { span: 24 },

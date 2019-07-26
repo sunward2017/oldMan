@@ -96,6 +96,7 @@ class CMT extends Component {
 					'entryTime': fieldsValue['entryTime'].format('YYYY-MM-DD HH:mm:ss'),
 					'customerId': this.state.customerId
 				};
+			  if(values.quitTime){values.quitTime=values.quitTime.format('YYYY-MM-DD HH:mm:ss')}	
 			  const { id }= this.state.record;
               if(id){
               	    values.id = id;
@@ -163,7 +164,8 @@ class CMT extends Component {
 			entryTime,
 			status,
 			memo,
-			sex
+			sex,
+			quitTime
 		} = this.state.record;
 		const formItemLayout = {
 			labelCol: {
@@ -198,42 +200,58 @@ class CMT extends Component {
 		};
 
 		const columns = [{
-			title: '序号',
-			render: (text, record, index) => `${index+1}`,
-			width: '5%',
-			key:'index'
+			title: '工号',
+			dataIndex: 'jobNumber',
+			key: 'jobNumber',
+			align:'center',
+			width: '5%'
 		}, {
 			title: '姓名',
 			dataIndex: 'nurseName',
 			key: 'nurseName',
-			width: '5%'
+			width: '8%',
+			align:'center'
 		}, {
-			title: '电话号码',
+			title: '联系电话',
 			dataIndex: 'phone',
 			key: 'phone',
 			width: '10%'
-		}, {
-			title: '工号',
-			dataIndex: 'jobNumber',
-			key: 'jobNumber',
-			width: '15%'
 		}, {
 			title: '性别',
 			dataIndex: 'sex',
 			key: 'sex',
 			width: '5%',
+			align:'center',
 			render: (text, record) => {
 				return text === 1 ? < Tag color = "green" >男 < /Tag>:< Tag color = "red">女</Tag >
 			}
 		}, {
+	      title: '入职日期',
+	      dataIndex: 'entryTime',
+	      key: 'entryTime',
+	      align:'center',
+	      width:'10%',
+	      render:(text,record)=>{
+	        return record.entryTime && record.entryTime.substr(0,10)
+	      },
+	    },{
+	      title: '离职日期',
+	      dataIndex: 'quitTime',
+	      key: 'quitTime',
+	      align:'center',
+	      render:(text,record)=>{
+	        return record.quitTime && record.quitTime.substr(0,10)
+	      },
+	    },{
 			title: '状态',
 			dataIndex: 'status',
 			key: 'status',
+			align:'center',
 			render: (text, record) => {
-				return record.status === 1 ? < Tag color = "green" > 正常 < /Tag>:<Tag color="red">注销</Tag >
+				return record.status === 1 ? < Tag color = "green" >在职< /Tag>:<Tag color="red">离职</Tag >
 			},
 			width: '5%'
-		}, {
+		},{
 			title: '备注',
 			dataIndex: 'memo',
 			key: 'memo',
@@ -242,14 +260,16 @@ class CMT extends Component {
 			title: '操作',
 			dataIndex: 'action',
 			key: 'action',
-			width: '12%',
+			fixed: 'right',
+            width: 200,
+			align:'center',
 			render: (text, record) => {
 				return(
 			      <span>
-		            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+		              <Button size="small" icon="edit" title="编辑" type="primary" onClick={() => { this.handleModify(record) }}></Button>
 		              <Divider type="vertical" />
 		              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-		                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+		                 <Button size="small" icon="delete" title="删除" type="primary" ></Button>
 		              </Popconfirm>
 		          </span>
 				)
@@ -264,11 +284,12 @@ class CMT extends Component {
 	          extra={<Button type="primary" onClick={()=>{this.handleAdd()}} >新增</Button>}
 	        >
 	          <Table 
-	            bordered
-	            rowKey='id' 
+	            size='middle'
+	            rowKey='id'
+	            scroll={{x:1300}}
 	            dataSource={dataSource} 
 	            columns={columns} 
-	            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+	            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 	          />
 	        </Card>
         {
@@ -283,7 +304,7 @@ class CMT extends Component {
             maskClosable={false}
             footer={null}
           >
-            <Form hideRequiredMark onSubmit={this.handleSubmit}>
+            <Form onSubmit={this.handleSubmit}>
               <Form.Item
                 label='工号'
                 {...formItemLayout}
@@ -306,6 +327,21 @@ class CMT extends Component {
                   initialValue:nurseName,
                 })(
                   <Input />
+                )}
+              </Form.Item>
+              <Form.Item
+                label='性别'
+                {...formItemLayout}
+                style={{marginBottom:'4px'}}
+              >
+                {getFieldDecorator('sex', {
+                  rules: [{ required: true, message: '请选择性别!' }],
+                  initialValue:sex,
+                })(
+                  <RadioGroup buttonStyle="solid">
+                    <Radio.Button value={1}>男</Radio.Button>
+                    <Radio.Button value={0}>女</Radio.Button>
+                  </RadioGroup>
                 )}
               </Form.Item>
               <Form.Item
@@ -345,22 +381,18 @@ class CMT extends Component {
                   <DatePicker format='YYYY-MM-DD' />
                 )}
               </Form.Item>
-               
               <Form.Item
-                label='性别'
-                {...formItemLayout}
-                style={{marginBottom:'4px'}}
-              >
-                {getFieldDecorator('sex', {
-                  rules: [{ required: true, message: '请选择性别!' }],
-                  initialValue:sex,
-                })(
-                  <RadioGroup buttonStyle="solid">
-                    <Radio.Button value={1}>男</Radio.Button>
-                    <Radio.Button value={0}>女</Radio.Button>
-                  </RadioGroup>
-                )}
-              </Form.Item>
+	            label='离职日期'
+	            {...formItemLayout}
+	            style={{marginBottom:'4px'}}
+	          >
+	            {getFieldDecorator('quitTime', {
+	              rules: [{ required: false, message: '请选择日期!' }],
+	              initialValue:quitTime?moment(entryTime,'YYYY-MM-DD HH:mm:ss'):null,
+	            })(
+	              <DatePicker format='YYYY-MM-DD' showTime  allowClear={false}/>
+	            )}
+	          </Form.Item>
               <Form.Item
                 label='状态'
                 {...formItemLayout}
@@ -371,8 +403,8 @@ class CMT extends Component {
                   initialValue:status,
                 })(
                   <RadioGroup buttonStyle="solid">
-                    <Radio.Button value={1}>正常</Radio.Button>
-                    <Radio.Button value={0}>注销</Radio.Button>
+                    <Radio.Button value={1}>在职</Radio.Button>
+                    <Radio.Button value={0}>离职</Radio.Button>
                   </RadioGroup>
                 )}
               </Form.Item>

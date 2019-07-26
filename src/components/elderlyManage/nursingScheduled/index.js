@@ -181,7 +181,7 @@ class CMT extends Component {
           const { searchText } = this.state;
 	    if(searchText){
 	      const reg = new RegExp(searchText, 'gi');
-	      const data = this.state.dataSource.filter((record) =>record.name && record.name.match(reg));
+	      const data = this.state.initData.filter((record) =>record.tbElderlyInfo&&record.tbElderlyInfo.name.match(reg));
 	      this.setState({dataSource:data});
 	    }else{ 
 	       const {initData } = this.state;
@@ -285,12 +285,13 @@ class CMT extends Component {
 			dataIndex: 'action',
 			key: 'action',
 			width: '8%',
+			align:'center',
 			render: (text, record) => {
 				return(
 					record.overFlag===1?null:
 					<span>
-		              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id)}>
-		                <a href="javascript:;" style={{color:'#2ebc2e'}}>撤销</a>
+		              <Popconfirm title="确定取消?" onConfirm={() => this.handleRowDelete(record.id)}>
+		                 <Button icon="delete" type="primary" title="取消" size="small"></Button>
 		              </Popconfirm>
 		            </span>
 				)
@@ -316,11 +317,10 @@ class CMT extends Component {
 		          activeTabKey={this.state.tabKey}
 		        >
 		          <Table 
-		            bordered
 		            rowKey='id' 
 		            dataSource={dataSource} 
 		            columns={columns} 
-		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 		          />
 		        </Card>
 		        

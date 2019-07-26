@@ -1,11 +1,12 @@
 import React from 'react';
 import { Card, Button, Divider, Table,Row,Col } from 'antd';
+import {typeObj,methodObj} from '@/utils/constant';
 
 export const Balance = ({feeData, showFeeDetail}) => {
     return (
         <Card>
             
-	            <h2 style={{textAlign:'center'}}>费用余额:</h2>
+	            <h2 style={{textAlign:'center',color:"#333"}}>费用余额:</h2>
 	            <Divider dashed="true" orientation="left" >定金</Divider>
 	            <Row gutter={32}><Col span={12} className="label"> 预约定金 :</Col><Col span={12} className="content">{feeData.je1 || 0}元</Col> </Row>
 	            <Divider dashed="true" orientation="left" >押金</Divider>
@@ -13,7 +14,7 @@ export const Balance = ({feeData, showFeeDetail}) => {
 	            <Row gutter={32}><Col span={12} className="label"> 医疗押金 :</Col><Col span={12} className="content">{feeData.je3 || 0}元</Col> </Row>
 	            <Row gutter={32}><Col span={12} className="label"> 锁押金 :</Col><Col span={12} className="content">{feeData.je4 || 0}元</Col> </Row>
 	            <Divider dashed="true" orientation="left" >预交</Divider>
-	            <Row gutter={32}><Col span={12} className="label"> 住院押金:</Col><Col span={12} className="content">{feeData.je5 || 0}元</Col> </Row>
+	            <Row gutter={32}><Col span={12} className="label"> 住院押金 :</Col><Col span={12} className="content">{feeData.je5 || 0}元</Col> </Row>
 	            <Row gutter={32}><Col span={12} className="label"> 住院预交 :</Col><Col span={12} className="content">{feeData.je6 || 0}元</Col> </Row>
 	            <Row gutter={32}><Col span={12} className="label"> 其他预交 :</Col><Col span={12} className="content">{feeData.je7 || 0}元</Col> </Row>
 	            <Divider dashed="true" />
@@ -34,8 +35,6 @@ export const Balance = ({feeData, showFeeDetail}) => {
 };
 
 export const DetailTable = ({listData,bills}) => {
-    const typeObj={1:'预约定金', 2:'热水器押金', 3:'医疗押金', 4:'锁押金',5:'住院押金', 6:'住院预交', 7:'其他预交'};
-    const methodObj = {1:'现金', 2:'支付宝', 3:'微信', 4:'刷卡', 5:'其它'};
     const columns = [{
         title: '老人',
         dataIndex: 'name',
@@ -58,8 +57,11 @@ export const DetailTable = ({listData,bills}) => {
         title: '付款时间',
         dataIndex: 'addtime',
     },{
-        title:'操作员',
-        dataIndex:'operator'
+        title:'收款人',
+        dataIndex:'recvName',
+    },{
+    	title:'备注',
+    	dataIndex:"memo"
     },{
     	title:'操作',
     	dataIndex:'action',

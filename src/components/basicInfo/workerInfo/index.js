@@ -93,78 +93,73 @@ class WorkerInfo extends Component{
   render(){
     const {dataSource,modalFlag,record,disFlag,action} = this.state;
     const columns = [{
-      title: '序号',
-      render:(text,record,index)=>`${index+1}`,
-      key:'serialNumber',
-      width:'5%'
+      title: '工号',
+      dataIndex: 'jobNumber',
+      key: 'jobNumber',
+      width:'5%',
+      align:'center',
     },{
       title: '姓名',
       dataIndex: 'workerName',
       key: 'workerName',
-      width:'8%'
+      width:'10%',
+      align:'center'
     },{
-      title:'电话',
+      title:'联系电话',
       dataIndex: 'phone',
       key: 'phone',
       width:'10%'
     },{
       title: '性别',
       dataIndex: 'sex',
+      align:'center',
       key: 'sex',
       render:(text,record)=>{
         return record.sex === 1?<Tag color="green">男</Tag>:<Tag color="red">女</Tag>
       },
       width:'8%'
     },{
-      title: '工号',
-      dataIndex: 'jobNumber',
-      key: 'jobNumber',
-      width:'10%'
-    },{
-      title: '添加日期',
-      dataIndex: 'addtime',
-      key: 'addtime',
-      render:(text,record)=>{
-        return record.addtime && record.addtime.substr(0,10)
-      },
-      width:'13%'
-    },{
       title: '入职日期',
       dataIndex: 'entryTime',
       key: 'entryTime',
+      align:'center',
       render:(text,record)=>{
         return record.entryTime && record.entryTime.substr(0,10)
       },
-      width:'13%'
     },{
       title: '离职日期',
       dataIndex: 'quitTime',
       key: 'quitTime',
+      align:'center',
+      width:'10%',
       render:(text,record)=>{
         return record.quitTime && record.quitTime.substr(0,10)
       },
-      width:'13%'
     },{
       title: '状态',
       dataIndex: 'status',
       key: 'status',
+      align:'center',
       render:(text,record)=>{
-        return record.status === 1?<Tag color="green">在职</Tag>:<Tag color="red">离职</Tag>
+        return record.status === 1 ? < Tag color = "green" >在职< /Tag>:<Tag color="red">离职</Tag >
       },
-      width:'5%'
+      width:'10%'
     },{
       title:'操作',
       dataIndex:'action',
+      align:'center',
       key:'action',
+      fixed: 'right',
+      width: 200,
       render:(text,record)=>{
         return(
           <span>
-            <a href="javascript:;" onClick={() => { this.handleRead(record) }} style={{color:'#2ebc2e'}}>查看</a>
-            <Divider type="vertical" />
-            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
+	            <Button size="small" icon="read" title="详情" type="primary" onClick={() => { this.handleRead(record) }}></Button>
+	            <Divider type="vertical" />
+              <Button size="small" icon="edit" title="编辑" type="primary" onClick={() => { this.handleModify(record) }}></Button>
               <Divider type="vertical" />
               <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+                 <Button size="small" icon="delete" title="删除" type="primary" ></Button>
               </Popconfirm>
           </span>
         )
@@ -179,10 +174,11 @@ class WorkerInfo extends Component{
 	          extra={<Button type="primary" onClick={()=>{this.handleAdd()}} >新增</Button>}
 	        >
         <Table 
-          bordered
+          size="middle"
+          scroll={{x:1300}}
           dataSource={dataSource} 
           columns={columns} 
-          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
           rowKey={record => record.id}
         />
         </Card>

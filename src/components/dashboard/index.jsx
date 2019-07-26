@@ -75,25 +75,25 @@ class Dashboard extends React.Component {
             <div className="gutter-example button-demo">
                 <BreadcrumbCustom />
                 <Row gutter={10}>
-                    <Col className="gutter-row" xxl={9} xl={11} md={12}>
+                    <Col className="gutter-row" xxl={12} xl={12} md={12}>
+                        
                         <Col className="gutter-row" md={8}>
-                            <MinCard icon="user" data={singleData.peopleNumber} title="在院总数" color="rgb(106,138,190)" />
+                            <MinCard icon="user-add" data={singleData.curMonthNumber} title="本月新增" bg="#7e57c2" color="#fff" lg='#630DAB'/>
                         </Col>
                         <Col className="gutter-row" md={8}>
-                            <MinCard icon="user-add" data={singleData.curMonthNumber} title="本月新增" color="rgb(252,134,117)" />
+                            <MinCard icon="user" data={singleData.peopleNumber} title="在院总数" bg="#607d8b" color="#fff" lg="#395161"/>
                         </Col>
                         <Col className="gutter-row" md={8}>
-                            <MinCard icon="usergroup-add" data={singleData.sumNumber} title="入住总数" color="rgb(90,182,223)" />
+                            <MinCard icon="usergroup-add" data={singleData.sumNumber} title="入住总数" bg="#33b86c" color="#fff" lg="#0d8a48"/>
                         </Col>
+                        
                         <Col className="gutter-row" md={24}>
-                            <LongCard data={singleData} color="rgb(74,202,203)" />
+                            <LongCard data={singleData} color="#6E8CD7" lg=""/>
                         </Col>
                     </Col>
-                    <Col className="gutter-row" xxl={15} xl={13} md={12}>
+                    <Col className="gutter-row" xxl={12} xl={12} md={12}>
                         <div className="gutter-box">
-                            <Card bordered={false} className={'no-padding'}>
-                                <EchartsProjects data={checkInMonthlyData} />
-                            </Card>
+                            <EchartsProjects data={checkInMonthlyData} />
                         </div>
                     </Col>
                 </Row>
@@ -112,7 +112,7 @@ class Dashboard extends React.Component {
                                 </Timeline>
                                 <Timeline>
                                     <Timeline.Item color="red">
-                                        <p><Link to={{ pathname:'/app/pension-agency/alarm/arrearageAlarm'}}>欠费提醒</Link></p>
+                                        <p><Link to={{ pathname:'/app/pension-agency/alarm/arrearageAlarm'}}>余额不足</Link></p>
                                         <p>数量 : {taskAndWaringData.lessFreeNumber}</p>
                                     </Timeline.Item>
                                 </Timeline>
@@ -130,16 +130,6 @@ class Dashboard extends React.Component {
                             </Card>
                         </div>
                     </Col>
-                    <Col className="gutter-row" md={6}>
-                        <div className="gutter-box">
-                            <Card bordered={false}>
-                                <div className="pb-m">
-                                    <h3 className="dotted-bottom">当月及下月生日老人</h3>
-                                </div>
-                                { birthdayData.map((one,idx) => <Tag color="#2db7f5" className="mb-s" key={idx}>{one.name}</Tag>) }
-                            </Card>
-                        </div>
-                    </Col>
                     <Col className="gutter-row" md={10}>
                         <div className="gutter-box">
                             <Card bordered={false}>
@@ -150,6 +140,17 @@ class Dashboard extends React.Component {
                             </Card>
                         </div>
                     </Col>
+                    <Col className="gutter-row" md={6}>
+                        <div className="gutter-box">
+                            <Card bordered={false}>
+                                <div className="pb-m">
+                                    <h3 className="dotted-bottom">当月及下月生日老人</h3>
+                                </div>
+                                { birthdayData.map((one,idx) => <Tag color="#2db7f5" className="mb-s" key={idx}>{one.name}</Tag>) }
+                            </Card>
+                        </div>
+                    </Col>
+                   
                 </Row>
             </div>
         )

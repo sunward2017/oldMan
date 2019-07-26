@@ -1,11 +1,13 @@
 import React, {Component,Fragment} from 'react';
 import BreadcrumbCustom from '../../BreadcrumbCustom';
 import httpServer from '../../../axios';
-import {Row,Popconfirm,notification,Col,Input,Button,Table,Divider,Card} from 'antd';
+import {Row,Popconfirm,notification,Col,Input,Button,Table,Divider,Card,Tooltip} from 'antd';
+import { Link } from 'react-router-dom';
 import FeeList from './feeList';
 import moment from 'moment'
 import ElderlyInfo from '@/common/elderlyInfo'
 
+const Search = Input.Search;
 class OldManOutHome extends Component{
   constructor(props){
     super(props);
@@ -28,7 +30,9 @@ class OldManOutHome extends Component{
       feeData:{},
       record:'',
       modalFlag:false,
-      elderly:{}
+      elderly:{},
+      gradeObj:{},
+      meelObj:{},
     }
     this.handleInputChange = this.handleInputChange.bind(this);//老人信息搜索框发生变化
     this.handleSearchElderly = this.handleSearchElderly.bind(this);//搜索老人信息
@@ -38,6 +42,64 @@ class OldManOutHome extends Component{
   componentDidMount(){
     //获取入院老人信息列表
     this.getListElderlyInfo();
+    this.getNursingGrade();
+    this.getPayItemChild()
+  }
+  getPayItemChild(){
+    httpServer.selectPayItemChild().then((res)=>{
+      if (res.code === 200) {
+         if(res.data&&res.data){
+         	let obj = {};
+         	res.data.forEach(k=>{
+         		obj[k.itemCode]=k.name;
+         	})
+        	this.setState({
+        		meelObj:obj
+        	})
+        }
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+            const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error)=>{
+      console.log(error);
+    });
+  }
+  getNursingGrade(){
+    httpServer.listNursingGrade().then((res) => {
+      if (res.code === 200) {
+        if(res.data){
+        	let obj = {};
+         	res.data.forEach(k=>{
+         		obj[k.nursingGradeCode]=k.nursingGradeName
+         	})
+        	this.setState({
+        		gradeObj:obj
+        	})
+        }
+      } else {
+        if(res.message ==='Request failed with status code 500'){
+            console.log(res.message);
+         }else{
+             const args = {
+            message: '通信失败',
+            description: res.msg,
+            duration: 2,
+          };
+          notification.error(args);
+         }
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
   }
   //获取入院老人信息列表
   getListElderlyInfo(){
@@ -108,12 +170,8 @@ class OldManOutHome extends Component{
         }).filter(record => !!record),
       });
     }else{
-      const args = {
-        message: '友情提示',
-        description: "请先输入老人姓名",
-        duration: 2,
-      };
-      notification.info(args);
+    	const {oldManList} = this.state;
+      this.setState({oldManList_copy:oldManList})
     }
   }
   handleClickReset(){//清楚搜索条件
@@ -248,7 +306,7 @@ class OldManOutHome extends Component{
     	this.setState({modalFlag:true,elderly:r})
   }
   render(){
-    const {feeData,pageFlag,oldManList_copy,customerId,f1,f2,f3,f4,f5,feeList1,feeList2,feeList3,feeList4,feeList5,record,modalFlag,elderly} = this.state;
+    const {feeData,pageFlag,oldManList_copy,customerId,f1,f2,f3,f4,f5,feeList1,feeList2,feeList3,feeList4,feeList5,record,modalFlag,elderly,gradeObj,meelObj} = this.state;
     const columns = [{
       title: '序号',
       render:(text,record,index)=>`${index+1}`,
@@ -265,17 +323,29 @@ class OldManOutHome extends Component{
       key: 'name',
       width:'12%'
     },{
-      title:'身份证号',
-      dataIndex: 'idNumber',
-      key: 'idNumber',
-      width:'20%'
-    },{
-      title: '房间名称',
+      title: '房号',
       dataIndex: 'roomName',
       key: 'roomName',
       width:'12%'
     },{
-      title:'结算日期',
+      title:'出院原因',
+      dataIndex: 'reason',
+      key: 'reason',
+      width:'20%',
+      onCell: () => {
+        return {
+          style: {
+            maxWidth: 150,
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow:'ellipsis',
+            cursor:'pointer'
+          }
+        }
+      },
+      render: (text) => <Tooltip placement="topLeft" title={text}>{text}</Tooltip>
+    },{
+      title:'出院日期',
       dataIndex: 'outDay',
       render:(text,record)=>{
         return moment(text).format('YYYY-MM-DD')
@@ -285,16 +355,19 @@ class OldManOutHome extends Component{
       title: '操作',
       dataIndex: 'action',
       key: 'action',
+      align:'center',
       render:(text,record)=>{
         return(
           <span>
-            <a href="javascript:;" onClick={() => { this.lookAt(record)}} style={{color:'#2ebc2e'}}>基础信息</a>
+            <Button type="primary" size="small" icon="read" title="基本信息" onClick={() => { this.lookAt(record)}}></Button>
             <Divider type='vertical' />
-            <a href="javascript:;" onClick={() => { this.handleClickRead(record) }} style={{color:'#108ee9'}}>费用明细</a>
+            <Button type="primary" size="small" icon="dollar" title="费用明细"  onClick={() => { this.handleClickRead(record) }}></Button>
             <Divider type="vertical" />
-            <Popconfirm title="是否发起出院申请?" onConfirm={() => this.handleOutHomeCancel(record)}>
-              <a href="javascript:;" style={{color:'orange'}}>取消出院</a>
+            <Popconfirm title="是否取消" onConfirm={() => this.handleOutHomeCancel(record)}>
+                <Button type="primary" size="small" icon="stop" title="取消出院"></Button>
             </Popconfirm>
+            <Divider type="vertical" />
+            <Link to={{ pathname:"/app/pension-agency/processAudit/leaveAudit"}}><Button type="primary" size="small" icon="highlight" title="签字审核" ></Button></Link>
           </span>
         )
       }
@@ -305,28 +378,19 @@ class OldManOutHome extends Component{
         {
           pageFlag?
           <Row>
-            <Card bordered={false} style={{marginBottom:10}}>
-              <Row gutter={16}>
-                <Col md={4}>
-                  <Input 
-                    placeholder="按老人姓名搜索"  
-                    value={this.state.searchText}
-                    onChange={this.handleInputChange}
-                    onPressEnter={this.handleSearchElderly}
-                  />
-                </Col>
-                <Col md={4}>
-                  <Button onClick={this.handleSearchElderly} type="primary">搜索</Button>
-                  <Button onClick={this.handleClickReset} type="primary">刷新</Button>
-                </Col>
-              </Row>
-            </Card>
-              <Card bordered={false} title="老人列表">
+              <Card bordered={false} title="老人列表" extra={<Search
+							      placeholder="请输入关键字"
+							      onChange={this.handleInputChange}
+							      value={this.state.searchText}
+							      onSearch={this.handleSearchElderly}
+							      style={{ width: 200 }}
+							      enterButton
+							    />}>
                 <Table 
-                  bordered
+                  size="middle"
                   dataSource={oldManList_copy} 
                   columns={columns} 
-                  pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+                  pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
                   rowKey={record => record.id}
                 />
               </Card>
@@ -348,16 +412,10 @@ class OldManOutHome extends Component{
           />
           
         }
-         <ElderlyInfo visible={modalFlag} data={elderly} close={()=>{this.setState({modalFlag:false})}}/>
+         <ElderlyInfo visible={modalFlag} data={elderly} close={()=>{this.setState({modalFlag:false})}} gradeObj={gradeObj} meelObj={meelObj}/>
       </Fragment>
     )
   }
 }
 
 export default OldManOutHome;
-/*{
-      title: '操作员',
-      dataIndex: 'opetator',
-      key: 'opetator',
-      width:'10%',
-    },*/

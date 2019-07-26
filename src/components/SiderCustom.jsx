@@ -44,12 +44,15 @@ class SiderCustom extends Component {
             })
         }
     }
-
+    componentWillReceiveProps(nextProps) {
+        this.onCollapse(nextProps.collapsed);
+        this.setMenuOpen(nextProps)
+    }
     getMenusArray(menus){
         const newMenus =[];
         if(this.props.auth && this.props.auth.perminsStrlist.length>0){
             for(let i =0 ;i<this.props.auth.perminsStrlist.length;i++){
-                menus && menus.map((item,index)=>{
+                menus && menus.forEach((item,index)=>{
                     if(item.id === this.props.auth.perminsStrlist[i]){
                         newMenus.push(item);
                     }
@@ -58,10 +61,7 @@ class SiderCustom extends Component {
         }
         return newMenus;
     }
-    componentWillReceiveProps(nextProps) {
-        this.onCollapse(nextProps.collapsed);
-        this.setMenuOpen(nextProps)
-    }
+   
     setMenuOpen = props => {
         const { pathname } = props.location;
         this.setState({

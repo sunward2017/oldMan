@@ -30,7 +30,6 @@ class CMT extends Component {
 	componentDidMount() {
 		const auth = this.props.auth;
 		this.setState({customerId:auth.customerId},function(){
-			console.log(this.state.record)
 			this.List()
 		})
 	}
@@ -241,41 +240,54 @@ class CMT extends Component {
 			title: '序号',
 			render: (text, record, index) => `${index+1}`,
 			width: '5%',
-			key:'index'
+			key:'index',
+			align:'center'
 		}, {
 			title: '甲方',
 			dataIndex: 'acceptor',
 			key: 'acceptor',
-			width: '5%'
+			width: '8%'
 		},{
 			title: '乙方',
 			dataIndex: 'consignor',
 			key: 'consignor',
-			width: '5%'
+			width: '8%'
 		},{
 			title: '地址',
 			dataIndex: 'address',
 			key: 'address',
-			width: '10%'
+			width: '15%'
+		},{
+			title:'签订日期',
+			dataIndex:'contractDate',
+			width:'12%',
+			align:'center',
+			render:(t,r)=>{
+				return t&&t.substr(0,10);
+				
+			},
+			defaultSortOrder: 'ascend',
+			sorter: (a, b) =>{return moment(a.contractDate).isBefore(b.contractDate)?1:-1},
 		},{
 			title: '文件名',
 			dataIndex:'dataName',
 			key:'dataName',
-			width:'8%'
+			width:'12%'
 		},{
 			title: '操作',
 			dataIndex: 'action',
 			key: 'action',
 			width: '8%',
+			align:'center',
 			render: (text, record) => {
 				return(
 					<span>
-            <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
-              <Divider type="vertical" />
-              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
-              </Popconfirm>
-          </span>
+		              <Button onClick={() => { this.handleModify(record) }} icon="edit" type="primary"  title="修改" size="small"></Button> 
+		              <Divider type="vertical" />
+		              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
+		                <Button icon="delete" type="primary" title="删除" size="small"></Button>
+		              </Popconfirm>
+                    </span>
 				)
 			},
 		}];
@@ -285,14 +297,14 @@ class CMT extends Component {
             <Card 
 		        title="入院合同" 
 		        bordered={false} 
-		        extra={<Button type="primary" onClick={()=>{this.handleAdd()}} >新增合同</Button>}
+		        extra={<Button type="primary" onClick={()=>{this.handleAdd()}} icon="plus" title="新增"></Button>}
 		    >
 	          <Table 
-	            bordered
+	            size="middle"
 	            rowKey='id' 
 	            dataSource={dataSource} 
 	            columns={columns} 
-	            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+	            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 	          />
           </Card>
         {
@@ -303,9 +315,9 @@ class CMT extends Component {
             visible={modalFlag}
             onCancel={()=>{this.handleCancel()}}
             maskClosable={false}
-            footer={null}
+            footer={<Button type="primary"  onClick={this.handleSubmit}  loading={this.state.iconLoading}>提交</Button>}
           >
-            <Form hideRequiredMark onSubmit={this.handleSubmit}>
+            <Form>
               <Form.Item
                 label='甲方'
                 {...formItemLayout}
@@ -408,9 +420,9 @@ class CMT extends Component {
 				  </Dragger>)
 	            }
               </Form.Item>
-              <Form.Item  wrapperCol={{ span: 2, offset: 20 }}>
-                <Button type="primary" htmlType="submit"  loading={this.state.iconLoading}>提交</Button>
-              </Form.Item>
+               
+              
+               
             </Form>
           </Modal>:null
         }

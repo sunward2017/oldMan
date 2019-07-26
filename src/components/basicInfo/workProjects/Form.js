@@ -229,7 +229,7 @@ class MineForm extends Component{
                               </Fragment>:null
           }
           <Form.Item
-            label="备注"
+            label="描述"
             style={{marginBottom:'4px'}}
             {...formItemLayout}
           >

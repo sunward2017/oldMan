@@ -1,9 +1,22 @@
 { 
     "@primary-color": "#337ab7",
     "@font-size-base": "14px",
-    "@menu-dark-highlight-color":"#65cea7",
+    "@menu-dark-highlight-color":"#00C1DE",
     "@menu-dark-item-active-bg":"#2A323F",
     "@menu-dark-bg":"#424F63",
     "@menu-dark-color":"#FFF",
-    "@menu-dark-submenu-bg":"#353F4F"
-}  
+    "@menu-dark-submenu-bg":"#353F4F",
+    "@input-disabled-bg":"#edf1f2",
+    "@disabled-color":"#3a3f51",
+    "@modal-mask-bg":"rgba(0,0,0,0.35)",
+    "@modal-header-bg":"#424f63",
+    "@table-header-bg":"#353f4f",
+    "@table-header-sort-bg":"#353f4f",
+    "@table-border-radius-base":"10px",
+    "@table-header-color":"#f0f0f0",
+    "@heading-color":"#333",
+    "@label-color":"#3a3f51",
+    "@card-head-color":"#333",
+    "@tabs-card-active-color":"#65CEA7",
+    "@btn-primary-bg":"#34A3CC"
+} 

@@ -162,10 +162,10 @@ class CMT extends Component {
 			render: (text, record) => {
 				return(
 					<span>
-		                <a href="javascript:;" onClick={() => { this.handleModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
-		                <Divider type="vertical" />
+		              <Button icon="edit" title="修改" size="small" type="primary"  onClick={() => { this.handleModify(record) }}></Button>
+		              <Divider type="vertical" />
 		              <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record.id,record)}>
-		                <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
+		                <Button icon="delete" type="primary" title="删除" size="small"></Button>
 		              </Popconfirm>
 		            </span>
 				)
@@ -181,11 +181,11 @@ class CMT extends Component {
 		          activeTabKey={this.state.tabKey}
 		        >
 		        <Table 
-		            bordered
+		          
 		            rowKey='id' 
 		            dataSource={dataSource} 
 		            columns={columns} 
-		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50','100','200']}}
+		            pagination={{ showSizeChanger:true ,showQuickJumper:true,pageSizeOptions:['10','20','30','40','50']}}
 		          />
 		        </Card>
 		         

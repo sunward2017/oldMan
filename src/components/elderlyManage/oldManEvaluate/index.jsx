@@ -136,19 +136,17 @@ class OldManEvaluate extends Component{
       dataIndex: 'estimate',
       key: 'addtime',
       width:'15%',
+      align:'center',
       render:(text,record,index)=>{
-      	return text&&text.split(' ')[0]
+      	return  text?text.substr(0,10):text
       }
     },{
       title: '评估老人',
       dataIndex: 'elderlyId',
       key: 'elderlyId',
      render:(t,r,i)=>{
-     	   if(this.state.elderlys[t]){
-           return this.state.elderlys[t].name;
-         }else{
-         	 return t;
-         }
+     	   const {elderlys} = this.state;
+     	    return elderlys[t]?elderlys[t].name:"已删除"
      }
     },{
       title: '评估最终等级',
@@ -159,20 +157,20 @@ class OldManEvaluate extends Component{
       title:'操作',
       dataIndex:'action',
       key:'action',
-      width:'10%',
+      width:'8%',
       render:(text,record)=>{
         return( 
-            <a href="javascript:;" onClick={() => { this.handleRead(record) }} style={{color:'#2ebc2e'}}>修改</a>
+            <Button onClick={() => { this.handleRead(record) }} size="small" icon="edit" type="primary" title="修改"></Button>
         )
       },
     }];
     const contentList = {
       tab1: <Table 
-          bordered
+          size="middle"
           dataSource={dataSource} 
           indentSize={20}
           columns={columns} 
-          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
           rowKey={record => record.id}
         />,
       tab2: <EvaluateInfo key={rowId} isRegular={this.state.isRegular}  evaluateByElderly={evaluateByElderly} reback={this.reback} rowId={rowId}/>,
@@ -183,7 +181,7 @@ class OldManEvaluate extends Component{
         <Card 
           title={isRegular?"定期评估":"入院评估"}
           bordered={false} 
-          extra={tabKey=='tab1'?<Button type="primary" onClick={this.handleAdd} >新建评估</Button>:null}
+          extra={tabKey=='tab1'?<Button type="primary" onClick={this.handleAdd} icon="plus" title="新增"></Button>:null}
           activeTabKey={this.state.tabKey}
         >
           {contentList[this.state.tabKey]}

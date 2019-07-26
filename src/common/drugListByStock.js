@@ -2,20 +2,20 @@ import React, {
 	Component,
 	Fragment
 } from 'react';
-import { Modal, Button, Input, Icon, Table, Tag } from 'antd';
+import { Modal, Button, Input, Icon, Table, Tag,message} from 'antd';
 import httpServer from '@/axios';
 
 class drugSelect extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			name:'',
+			name:"",
 			visible:false,
 			data:[]
 		};
 	}
     componentDidMount(){
-    	this.ListElderly();
+    	this.ListDrugByElderly();
     }
     
     showModal=()=>{
@@ -31,16 +31,15 @@ class drugSelect extends Component {
 		}
 	}
 
-	ListElderly = () => {
+	ListDrugByElderly = () => {
 		const {elderlyId} =this.props;
 		httpServer.listDrugStockInfo({elderlyId}).then(res => {
 			if(res.code === 200 && res.data) {
 				const {value} = this.props;
 				const data = res.data.map(m=>({...m,...m.tbDrugInfo}))
-				const drug =data.find(i=>(i.code===value));
 				this.setState({
 					data,
-					name:drug?drug.name:'',
+					name:value?value.name:'',
 				})
 			}else{
 				this.setState({data:[]})
@@ -48,33 +47,66 @@ class drugSelect extends Component {
 		})
 	}
 
-	rowClick = (r, text) => {
-        this.setState({name:r.name,visible:false},function(){
-        	this.triggerChange(r);
-        })
+	rowClick = (r, text) => { 
+	   this.setState({name:r.name,visible:false},function(){
+	      	this.triggerChange(r);
+	    })
 	}
 	render() {
-	const columns = [{
-      title: '序号',
-      render:(text,record,index)=>`${index+1}`,
-      width:'5%',
-      key:'index'
-    },{
-      title: '药品名称',
-      dataIndex: 'name',
-      key: 'name',
-      width:'10%'
-    }, {
-      title: '库存数量',
-      dataIndex: 'quantity',
-      key: 'quantity',
-      width:'8%'
-    }, {
-      title: '单位',
-      dataIndex: 'minUnit',
-      key: 'minUnit',
-      width:'5%'
-    }];
+		const columns = [{
+	      title: '序号',
+	      render:(text,record,index)=>`${index+1}`,
+	      width:'5%',
+	      key:'index'
+	    },{
+	      title: '药品名称',
+	      dataIndex: 'name',
+	      key: 'name',
+	      width:'12%'
+	    },{
+	      title: '简称',
+	      dataIndex: 'shortName',
+	      width:'8%'
+	    },{
+	      title: '生产厂家',
+	      dataIndex: 'vender',
+	      width:'15%',
+	      onCell: () => {
+	        return {
+	          style: {
+	            maxWidth: 150,
+	            overflow: 'hidden',
+	            whiteSpace: 'nowrap',
+	            textOverflow:'ellipsis',
+	            cursor:'pointer'
+	          }
+	        }
+	      }
+	    },{
+	      title: '规格',
+	      dataIndex: 'specification',
+	      key: 'specification',
+	      width:'10%'
+	    },{
+	      title: '库存数量',
+	      dataIndex:'quantity',
+	      width:'5%',
+	      align:'center',
+	    },{
+	    	title:'单位',
+	    	dataIndex:'minUnit',
+	    	key:'minUnit',
+	    	align:'center',
+	    	width:'5%'
+	    },{
+	      title: '状态',
+	      dataIndex: 'status',
+	      key: 'status',
+	      render:(text,record)=>{
+	        return record.status === 0?<Tag color="red">禁用</Tag>:<Tag color="green">启用</Tag>
+	      },
+	      width:'5%'
+	    }];
         const {name,data} =this.state;
        
 		return(<Fragment>
@@ -89,7 +121,7 @@ class drugSelect extends Component {
 		          footer={null}
 		          onCancel={()=>{this.handleCancel()}}
 		        >
-		        <Table bordered  rowKey={record => record.id} columns={columns} dataSource={data} rowKey='id' size="small" onRow={(record,rowkey)=>({onClick:this.rowClick.bind(this,record,rowkey)  })}/> 
+		        <Table  rowKey={record => record.id} columns={columns} dataSource={data} rowKey='id' size="small" onRow={(record,rowkey)=>({onClick:this.rowClick.bind(this,record,rowkey)  })}/> 
 	        </Modal>
         </Fragment>);
 	}

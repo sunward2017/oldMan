@@ -53,11 +53,9 @@ export default class PriceTable extends React.Component{
             render: (text, record) => {
                 return (
                     <React.Fragment>
-                        <a href="javascript:;" onClick={() => { this.saveModifyHandler(record) }}>保存</a>
+                        <Button onClick={() => { this.saveModifyHandler(record) }}>保存</Button>
                         <Divider type="vertical" />
-                        <Popconfirm title="确定删除?" onConfirm={() => this.rowDeleteHandler(record)}>
-                            <a href="javascript:;">删除</a>
-                        </Popconfirm>
+                        <Button onClick={() => { this.saveModifyHandler(record) }}>修改</Button> 
                     </React.Fragment>
                 );
             }

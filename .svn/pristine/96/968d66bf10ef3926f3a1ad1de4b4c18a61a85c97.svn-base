@@ -1,0 +1,240 @@
+import React, {
+	Component,
+	Fragment
+} from 'react';
+import { connect } from 'react-redux'
+import { Table,Input,Tree,Row,Col,notification,Card,Icon,Modal,Empty,Button} from 'antd';
+import httpServer from '@/axios/index';
+import BreadcrumbCustom from '@/components/BreadcrumbCustom';
+
+const TreeNode = Tree.TreeNode;
+const {Meta} = Card;
+class Plan extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+		   areaTree:[],
+		   visible:false,
+		   bedInfo:'',
+		   southRoom:[],
+		   northRoom:[],
+		   elderlyInfo:{},
+		   active:'',
+		   bed:'',
+		   room:''
+		}
+	}
+	componentDidMount() {
+	   this.AreaTree();
+	   this.elderlyList()
+	}
+	showModal=()=>{
+    	this.setState({visible:true})
+    }
+	AreaTree=()=>{
+		const { customerId }= this.props.auth;
+		httpServer.listAreaInfo({customerId}).then(res=>{
+			if(res.code===200){
+				const data = res.data?[res.data]:[];
+				this.setState({areaTree:data})
+			}else{
+				const args = {
+		          message: '失败',
+		          description: res.msg,
+		          duration: 2,
+		        };
+		        notification.error(args);
+			}
+		})
+	}
+	elderlyList() {
+	   const { customerId } = this.props.auth;
+	   httpServer.listElderlyInfo({
+			customerId,
+			listStatus:'0,1,2,3',
+			langchFlag:0,
+		}).then(res => {
+			if(res.code!==200){
+				this.notice('error','获取老人失败')
+			}
+			const obj ={}
+			res.data&&res.data.forEach(e=>{
+				obj[e.id]=e.name
+			})
+			this.setState({elderlyInfo:obj})
+		})	
+	}
+	 
+	renderTreeNodes = data => data.map((item) => {
+	    if (item.children) {
+	      return (
+	        <TreeNode title={item.areaName} key={item.id} value={item.id}>
+                 {this.renderTreeNodes(item.children)}
+            </TreeNode>
+	      );
+	    }
+	    return <TreeNode {...item} />;
+	})
+	
+    onTreeSelectChangeHandler = (value) => {
+       httpServer.getRoomAndBedTree({areaId:value[0]}).then(res => {
+       	  if(res.code===200){
+       	 	const data= res.data&&res.data.tbRoomInfos?res.data.tbRoomInfos:[];
+       	 	var southRoom=[];
+       	 	var northRoom=[];
+       	 	for(var i=0,l=data.length;i<l;i++){
+                if(parseInt(data[i].roomName)%2===0){
+                  northRoom.push(data[i])
+                }else{
+                  southRoom.push(data[i])
+                }
+       	 	}
+       	    this.setState({southRoom,northRoom})
+       	 }else{
+       	 	this.notice('error', res.msg) ;
+       	 }
+       	
+       })
+    }
+    
+    notice(status, msg) {
+        let text = status==='success' ? '成功' : (status === 'error'? '失败' : '');
+        notification[status]({
+            message: `${text}提示:`,
+            description:msg,
+            duration:2
+        })
+    }
+    
+	render() {
+		const {
+			areaTree,
+			visible,
+			southRoom,
+			northRoom,
+			bedCode,
+			elderlyInfo,
+			active,
+			bed,
+			room
+		} = this.state;
+	 	 
+		return(
+	        <Fragment>
+	        <BreadcrumbCustom first="基础信息" second='检查项' />
+            <Card 
+		        title="房间概览"
+		        bordered={false} 
+		    >
+                <Row gutter={24}>
+		            <Col  xs={{ span: 24}} lg={{ span: 4}}>
+                        <Tree
+			                defaultExpandAll
+					        onSelect={this.onTreeSelectChangeHandler}
+					    >
+					        {this.renderTreeNodes(areaTree)}
+					    </Tree>
+		            </Col>
+		            <Col  xs={{ span: 24}} lg={{ span:20}}>
+			             <div className="area">
+			             <div>
+				         {
+				           southRoom.map(room=>(
+				         	<div className="room" key={room.id}>
+				         	   <div>{room.roomName}</div>
+				         	   {
+				         	   room.tbBedInfos.map(bed=>{
+				         	   	  return(
+				         	   	  	<div className={bed.elderlyId&&bed.flag===0?"bed":bed.elderlyId&&bed.flag===1?'bed_1':bed.bedCode===active?"bed_2 active":"bed_2"} key={bed.bedCode}>
+					         	     <Icon type="user" style={{fontSize:'20px'}} /> 
+					         	     <div>{bed.bedCode}</div>
+					         	     <div>{elderlyInfo[bed.elderlyId]||bed.elderlyId}</div>
+					         	    </div>
+				         	   	 ) 
+				         	   })
+				         	   }
+				         	</div>
+				           ))
+				         }
+				         </div>
+			            </div>
+			            <div className="area">
+			              <div>
+				         {
+				           northRoom.map(room=>(
+				         	<div className="room" key={room.id}>
+				         	   <div>{room.roomName}</div>
+				         	   {
+				         	   room.tbBedInfos.map(bed=>{
+				         	   	  return(
+				         	   	  	<div className={bed.elderlyId&&bed.flag===0?"bed":bed.elderlyId&&bed.flag===1?'bed_1':bed.bedCode===active?"bed_2 active":"bed_2"} key={bed.bedCode} onClick={()=>{this.changeBed(bed,room)}}>
+					         	     <Icon type="user" style={{fontSize:'20px'}} /> 
+					         	     <div>{bed.bedCode}</div>
+					         	     <div>{elderlyInfo[bed.elderlyId]||bed.elderlyId}</div>
+					         	    </div>
+				         	   	 ) 
+				         	   })
+				         	   }
+				         	</div>
+				           ))
+				         }
+				         </div>
+			            </div>
+		            </Col>
+		        </Row>
+	        </Card>
+	        <style>{
+	        	`
+	        	.area{
+	        		width:100%;
+	        		overflow-x:auto;
+	        	}
+	        	.area>div{
+	        		display: inline-flex;
+	        	}
+	        	.room{
+	        		float:left;
+	        		width:108px;
+	        		padding:5px 0;
+	        		border-radius:3px;
+	        		margin:5px;
+	        		text-align:center;
+	        		color:yellow;
+	        		background:#3693D0;
+	        	}
+	        	.bed,.bed_1,.bed_2{
+	        		float:left;
+	        		width:48px;
+	        	 	height:95px;
+	        	 	margin:3px;
+	        	 	font-size:12px;
+	        	 	border-radius:2px;
+	        	 	padding-top:15px;
+	        	}
+	        	.bed{
+	        	 	color:#fff;
+	        	 	background:#2777AA;
+	        	 	margin:3px;
+	        	}
+	        	.bed_1{
+	        	   color:color:#fff;
+	        	   background:#00A65A;
+	        	}
+	        	.bed_2{
+	        	   color:#333;
+	        	   background:#ccc;
+	        	   cursor:default;
+	        	}
+	        	.bed>div,bed_1>div{
+	        		overflow: hidden;
+	        		white-space: nowrap;
+	        	 	text-overflow:ellipsis
+	        	}
+	        	`
+	        }</style>
+	    </Fragment>    
+		)
+	}
+}
+
+export default Plan;

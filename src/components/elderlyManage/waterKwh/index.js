@@ -27,7 +27,7 @@ class WaterKwh extends Component {
 			searchFlag: false,
 			value: '',
 			meterReaderPerson:'',
-			regDate:'',
+			regDate:moment(),
 			loadingRecord:{},
 			rq4:moment(),
 			rq3: moment().subtract('days', 15)
@@ -124,6 +124,7 @@ class WaterKwh extends Component {
 			record: {},
 			action: 'add',
 			optionsList: [],
+			loadingRecord:{}
 		});
 	}
 	handleClickModify(record) { //修改
@@ -177,17 +178,16 @@ class WaterKwh extends Component {
 		this.setState({meterReaderPerson})
 	}
 	changeDate=(v)=>{
-		const regDate = v.format("YYYY-MM-DD HH:mm:ss");
-		this.setState({regDate})
+		this.setState({regDate:v,loadingRecord:{}})
 	}
 	handleSubmit(room) {
 		const _this = this;
-		const {meterReaderPerson,regDate,loadingRecord} = this.state;
+		let {meterReaderPerson,regDate,loadingRecord} = this.state;
 		const {roomUuid,water,kwh,roomName} = room;
 	    if( !(water && kwh && meterReaderPerson && regDate)) {
 	      notification.warning({
 	        message: '提示：',
-	        description: '数据有误，请核对',
+	        description: '数据不完整，请核对',
 	      });
 	      return false
 	    }
@@ -195,7 +195,8 @@ class WaterKwh extends Component {
 			loadingRecord[room.roomUuid] = true;
 			this.setState({loadingRecord})
 		}
-		const data ={roomCode:roomUuid,water,kwh,meterReaderPerson,regDate,roomName};
+		let reg = regDate.format("YYYY-MM-DD HH:mm:ss");
+		const data ={roomCode:roomUuid,water,kwh,meterReaderPerson,regDate:reg,roomName};
 		httpServer.saveRegWaterKwh(data).then((res)=>{
 			loadingRecord[room.roomUuid] = false;
 			this.setState({loadingRecord})
@@ -216,12 +217,13 @@ class WaterKwh extends Component {
                 duration: 2,
               };
               notification.error(args);
+              loadingRecord[room.roomUuid] = null;
+              this.setState({loadingRecord})
              }
           }
 	    }).catch((err)=>{
-	    	loadingRecord[room.roomUuid] = false;
+	    	loadingRecord[room.roomUuid] = null;
 			this.setState({loadingRecord})
-	        console.log(err);
 	    });
 	}
 	
@@ -357,31 +359,39 @@ class WaterKwh extends Component {
 			title: '序号',
 			render: (text, record, index) => `${index+1}`,
 			key: 'serialNumber',
-			width: '10%'
+			width: '5%',
+			align:'center'
 		}, {
 			title: '房间名称',
 			dataIndex: 'roomName',
 			key: 'roomName',
+			align:'center',
+			width: '12%',
+			defaultSortOrder: 'ascend',
+			sorter: (a, b) => a.roomName-b.roomName,
 		}, {
 			title: '本次水表度数',
 			dataIndex: 'water',
 			key: 'water',
-			width: '12%'
+			width: '12%',
+			align:'center'
 		}, {
 			title: '本次电表度数',
 			dataIndex: 'kwh',
 			key: 'kwh',
-			width: '12%'
+			width: '12%',
+			align:'center'
 		}, {
 			title: '抄表人员',
 			dataIndex: 'meterReaderPerson',
 			key: 'meterReaderPerson',
-			width: '8%'
+			align:'center'
 		}, {
 			title: '抄表日期',
 			dataIndex: 'regDate',
 			key: 'regDate',
-			width: '10%',
+			width: '12%',
+			align:'center',
 			render:(t,r)=>{
 				return t?t.split(' ')[0]:t
 			}
@@ -389,7 +399,8 @@ class WaterKwh extends Component {
 			title:'记录日期',
 			dataIndex:'addtime',
 			key:'addtime',
-			width:'10%',
+			width:'12%',
+			align:'center',
 			render:(t,r)=>{
 				return t?t.split(' ')[0]:t
 			}
@@ -398,15 +409,12 @@ class WaterKwh extends Component {
 			dataIndex: 'action',
 			key: 'action',
 			width:'10%',
+			align:'center',
 			render: (text, record) => {
 				return(
-					<span>
-            <a href="javascript:;" onClick={() => { this.handleClickModify(record) }} style={{color:'#2ebc2e'}}>修改</a>
-            <Divider type="vertical" />
-            <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record)}>
-              <a href="javascript:;" style={{color:'#2ebc2e'}}>删除</a>
-            </Popconfirm>
-          </span>
+			            <Popconfirm title="确定删除?" onConfirm={() => this.handleRowDelete(record)}>
+			                 <Button icon="delete" type="primary" title="删除" size="small"></Button>
+			            </Popconfirm>
 				)
 			}
 		}];
@@ -419,17 +427,17 @@ class WaterKwh extends Component {
             title="水电记录"
             bordered={false} 
             extra={<span>
-            	 输入日期:   <DatePicker onChange={this.onChangeS} value={rq3}/>~<DatePicker onChange={this.onChangeE} value={rq4}/>&emsp;&emsp;
-            	<Button type="primary" onClick={this.handleRefresh} style={{marginRight:20}}>刷新</Button> 
-            	<Button type="primary" onClick={this.handleAdd} style={{marginRight:20}}>新增</Button>
-                <Button type="primary" onClick={() => { this.handleClickInquire() }}>房间查询</Button>
+            	 输入日期:<DatePicker onChange={this.onChangeS} value={rq3}/>~<DatePicker onChange={this.onChangeE} value={rq4}/>&emsp;&emsp;
+            	<Button type="primary" icon="search" title="查询"  onClick={this.handleRefresh} style={{marginRight:10}}></Button> 
+            	<Button type="primary" icon="plus" title="新增" onClick={this.handleAdd} style={{marginRight:20}}></Button>
+                <Button type="primary" icon="home" title="按房间搜索" onClick={() => { this.handleClickInquire() }}></Button>
                 </span>}
           >
             <Table 
-              bordered
+              size="middle"
               dataSource={data} 
               columns={columns} 
-              pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+              pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
               rowKey={record => record.id}
             />
           </Card>:
@@ -437,9 +445,9 @@ class WaterKwh extends Component {
             title="水电记录登记"
             extra={
             	<span>
-		          抄表人:<Input  style={{width:150}} value={meterReaderPerson} onChange={this.changePerson}  placeholder="请输入抄表人员"/>&emsp;&emsp;
-				      结算日期:<DatePicker format='YYYY-MM-DD HH:mm:ss' showTime value={regDate?moment(regDate,'YYYY-MM-DD HH:mm:ss'):null} onChange={this.changeDate} allowClear={false} showTime />&emsp;&emsp; 
-		            <Button type="primary" onClick={this.handleCancle}>返回</Button>
+		           抄表人:&emsp;<Input  style={{width:150}} value={meterReaderPerson} onChange={this.changePerson}  placeholder="请输入抄表人员"/>&emsp;&emsp;
+				      结算日期:&emsp;<DatePicker format='YYYY-MM-DD' showTime value={regDate} onChange={this.changeDate} allowClear={false} showTime />&emsp;&emsp; 
+		           <Button type="primary" icon="rollback" title="返回" onClick={this.handleCancle}></Button>
 		        </span>
             }
           >

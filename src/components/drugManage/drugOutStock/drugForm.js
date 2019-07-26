@@ -1,7 +1,7 @@
 import React ,{ Component } from 'react';
-import {Modal , Table ,Form ,InputNumber,DatePicker,Radio ,Input,Button,notification} from 'antd';
+import {Modal,Form ,InputNumber,DatePicker,Radio ,Input,Button,notification} from 'antd';
 import httpServer from '@/axios';
-import DrugListByStock from '@/common/drugListByStock'
+import DrugList from '@/common/drugListByStock'
 import moment from 'moment'
  
 const RadioGroup = Radio.Group;
@@ -11,15 +11,14 @@ class drugForm extends Component{
     super(props);
     this.state = {
       drugInfo:{},
-      max:0,
     }
   }
   handleDrug=()=>{
   	let that = this;
   	this.props.form.validateFieldsAndScroll((err, fieldsValue) => {
   		if(!err){
-  			let values = {...fieldsValue,drugCode:fieldsValue['drugCode'].drugCode}
-  			if(this.state.drugInfo.id)values.id= this.state.drugInfo.id;
+  			const {drug} = this.state;
+  			let values = {...fieldsValue['drugCode'],minUbit:fieldsValue['drugCode'].minUnit,quantity:fieldsValue['quantity']}
   			that.props.handleDrug(values);
   		}
   	})
@@ -27,19 +26,19 @@ class drugForm extends Component{
   cancle=()=>{
   	 this.props.cancel(); 
   }
+  
   componentDidMount(){
-  	 
+  	 const drugInfo = this.props.drugInfo;
+     this.setState({drugInfo}) 	
   }
-  drugChange=(v)=>{
-  	 this.setState({max:v.quantity});
-  }
+ 
   render(){
     const {
 		  getFieldDecorator
 		} = this.props.form;
 	const {units} = this.props;
-	const {drugCode,quantity,minUbit,validityDate} = this.state.drugInfo;
-
+	const {drugCode,quantity,minUbit,validityDate,} = this.state.drugInfo;
+	
     const formItemLayout = {
       labelCol: {
         xs: { span: 24 },
@@ -65,9 +64,9 @@ class drugForm extends Component{
    
     return (
 	       	<Modal
-		        title="出库单信息"
+		        title="入库单信息"
 		        okText='确认'
-		        width="40%"
+		        width={400}
 		        visible={true}
 		        onOk={this.handleDrug}
 		        onCancel={this.cancle}
@@ -80,10 +79,10 @@ class drugForm extends Component{
                 style={{marginBottom:'4px'}}
               >
                  {getFieldDecorator('drugCode', {
-                  rules: [{ required: true, message: '请选择老人药品'}],
+                  rules: [{ required: true, message: '请选择药品'}],
                   initialValue:drugCode
                 })(
-                   <DrugListByStock elderlyId={this.props.elderlyId} onChange={this.drugChange}/>
+                   <DrugList elderlyId={this.props.elderlyId}/>
                 )}
               </Form.Item>
               <Form.Item
@@ -95,9 +94,9 @@ class drugForm extends Component{
                   rules: [{ required: true, message: '请输入数量'}],
                   initialValue:quantity
                 })(
-                    <InputNumber placeHolder="请输入入库数量" min={0} max={this.state.max} style={{width:'100%'}}/>
+                    <InputNumber style={{width:'100%'}} placeHolder="请输入入库数量" min={1}/>
                 )}
-              </Form.Item>   
+              </Form.Item>
             </Form>
           </Modal>
     )

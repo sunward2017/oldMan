@@ -114,7 +114,7 @@ class NursingGrade extends Component{
       },
       width:'10%'
     },{
-      title: '添加日期',
+      title: '创建日期',
       dataIndex: 'addtime',
       key: 'addtime',
       width:'15%'
@@ -146,10 +146,9 @@ class NursingGrade extends Component{
         <BreadcrumbCustom first="基础信息" second="护理等级" />
         <Button onClick={this.handleAdd} style={{marginBottom:'20px'}}>新增</Button>
         <Table 
-          bordered
           dataSource={dataSource} 
           columns={columns} 
-          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50','100']}}
+          pagination={{ showSizeChanger:true , showQuickJumper:true , pageSizeOptions:['10','20','30','40','50']}}
           rowKey={record => record.id}
         />
         {
