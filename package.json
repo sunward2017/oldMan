@@ -47,7 +47,7 @@
     "qs": "^6.6.0",
     "rc-banner-anim": "^0.5.13",
     "react": "^16.4.1",
-    "react-dev-utils": "^3.0.2",
+    "react-dev-utils": "^11.0.4",
     "react-dom": "^16.4.1",
     "react-draft-wysiwyg": "^1.13.1",
     "react-draggable": "^2.2.6",
